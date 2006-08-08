@@ -1,0 +1,81 @@
+
+.thumbnailoutside {
+	width:158px !important;
+	height:170px !important;
+	float:left ;
+	text-align:center !important;
+}
+/*this is for a taller box*/
+.thumbnailoutside2 {
+	width:155px !important;
+	height:180px !important;
+	float:left !important;
+	text-align:center !important;
+}
+
+.alpha-shadow {
+	float:left;
+	background: url(/nucleus/plugins/gallery/update/shadow1.gif) no-repeat bottom right;
+	margin: 0px 0 0 10px !important;
+	margin: 10px 0 0 10px;
+	z-index:3;
+	padding: 0px;
+	}
+
+.alpha-shadow div {
+  background: url(/nucleus/plugins/gallery/update/shadow2.png) no-repeat left top !important;
+  background: url(/nucleus/plugins/gallery/update/shadow2.gif) no-repeat left top;
+  float: left;
+  margin-top: 0px;
+  padding: 0px 6px 6px 0px;
+  }
+
+.alpha-shadow img {
+  background-color: #fff;
+  border: 1px solid #a9a9a9;
+  padding: 4px !important;
+  }
+
+.tooltip2 {
+ background-image:none !important;
+ width:0px;
+ display:none;
+}
+
+#tooltip2 div.tooltip2div {
+border-style:dotted;
+border-color:#CCCCCC;
+ border-width:1px;
+float:left; 
+ background-image:url(/nucleus/plugins/gallery/transparent.gif)!important;
+ padding:0px !important;}
+#tooltip2 div.tooltip2div span {display:none;}
+#tooltip2 div.tooltip2div:hover {border-style:solid;border-color:#FFFFFF;float:left}
+#tooltip2 div.tooltip2div:hover span {display:block;background-color:white;padding-left:10px;padding-right:10px} 
+#tooltip2 div.over {border-style:none;display:block;float:left;border-color:#FFFFFF;float:left}
+#tooltip2 div.over span {float:left;display:block;background-color:white;padding-left:10px;padding-right:10px} 
+
+/* had to put float:left here because firefox before 1.0.5 has a bug with javascript element.stlye.float (fixed in 1.0.6)*/
+
+.drawingbox {
+border-style:solid;
+position:absolute;
+border-width:1px;
+border-color:#FFFFFF;
+float:left;
+display:block;
+z-index:5;
+}
+
+/* had to put float:left here because firefox before 1.0.5 has a bug with javascript element.stlye.float (fixed in 1.0.6)*/
+
+.captionformdiv {
+position:absolute;
+float:left;
+background-color:#FFFFFF;
+display:block;
+border-style:solid;
+border-color:#FFFFFF;
+}
+
+

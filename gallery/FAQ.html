@@ -1,0 +1,94 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Untitled Document</title>
+</head>
+
+<body>
+<p>Q1. My &quot;Today&quot; and &quot;Archive&quot; links stop working when I am in the NP_gallery photo gallery!</p>
+<p>A1.     the solution will have to be a hack, because of the way np_gallery works,
+np_gallery is a SEPERATE blog, so as any seperate blog would do, it  would have a &quot;today&quot; page. but in the context of NP_gallery, &quot;today&quot;  doesnt make any sense. you will have to go into the skin template (like header.inc) and edit the links to be static instead of &lt;% ... %&gt; like nucleus would like.</p>
+<p>Q2. I and error that looks like this:</p>
+<p> mySQL error with query create temporary table temptableview (tempid int  unsigned not null auto_increment primary key) select pictureid,  thumb_filename from nucleus_plug_gallery_picture where albumid=2 order  by pictureid ASC: Access denied for user: 'u1000855_phalcon@' to  database 'db1000855_phalcon' <br />
+mySQL error with query select tempid from temptableview where pictureid=2: Table 'db1000855_phalcon.temptableview' doesn't exist </p>
+<p>A2. Find the line </p>
+<p>sql_query('create temporary table temptableview (tempid int unsigned not null auto_increment primary key) '.$this-&gt;query);</p>
+<p>in picture_class.php and change to (around line 157) </p>
+<p>sql_query('create table temptableview (tempid int unsigned not null auto_increment primary key) '.$this-&gt;query);  </p>
+<p>this is due to your server having temporary SQL tables turned off. this fix simply makes the table not temporary and would leave a trash table in your database, but its okay, it gets overwritten everytime its needed again. </p>
+<p>Q3. why is there an empty space where my sidebar used to be on my photo gallery pages?</p>
+<p>A3.     this is a common problem when you use a skin with a sidebar such as  leaf. what is happening is that even though you removed the sidebar  from the main index template, the container and content are sell  leaving room for a side bar.  <br />
+</p>
+<table align="center" border="0" cellpadding="3" cellspacing="1" width="90%">
+  <tbody>
+    <tr>
+      <td>Quote:</td>
+    </tr>
+    <tr>
+      <td>#container{ <br />
+        width: 100%; <br />
+        float: left; <br />
+        margin-right: -230px; <br />
+        } <br />
+        #content{ <br />
+        margin-right: 230px; <br />
+        padding: 25px 0; <br />
+        } <br />
+        #sidebar{ <br />
+        width: 230px; <br />
+        float: right; <br />
+        padding: 25px 0; <br />
+        text-align: left; <br />
+        }</td>
+    </tr>
+  </tbody>
+</table>
+<p> what you can do to fix this is put in an inline css style to override  the css file. ( you dont want to change the css file because that would  screw up the rest of your site, naturally) <br />
+  <br />
+  so go into the NPGallery skin (the clone you made of leaf) find the  main index template, and take a look at the code I made below <br />
+  <br />
+</p>
+<table align="center" border="0" cellpadding="3" cellspacing="1" width="90%">
+  <tbody>
+    <tr>
+      <td>Code:</td>
+    </tr>
+    <tr>
+      <td>&lt;%parsedinclude(head.inc)%&gt; <br />
+        &lt;!--header.inc--&gt; <br />
+        &lt;%parsedinclude(header.inc)%&gt; <br />
+        &lt;!--Start Main Index--&gt; <br />
+        &lt;div id=&quot;container&quot;&gt; <br />
+        &nbsp; &lt;div id=&quot;content&quot; style=&quot;width:700px&quot;&gt; <br />
+        &nbsp; &nbsp; &lt;div class=&quot;contentdiv&quot; style=&quot;width:700px&quot;&gt; <br />
+        &nbsp; &nbsp; &lt;h2 class=&quot;weblog&quot;&gt;Weblog&lt;/h2&gt; <br />
+        &nbsp; &nbsp; &nbsp; &lt;div class=&quot;divweblog&quot;&gt; <br />
+        &lt;!--Database Generated Content--&gt; <br />
+        &lt;%gallery(gnoo/short,10)%&gt; <br />
+        &lt;!--End Database Generated Content--&gt; <br />
+        &nbsp; &nbsp; &nbsp; &lt;/div&gt; <br />
+        &nbsp; &nbsp; &lt;/div&gt; <br />
+        &nbsp; &lt;/div&gt; <br />
+        &lt;/div&gt; <br />
+        &lt;!--sidebar.inc--&gt; <br />
+        <br />
+        &lt;!--footer.inc--&gt; <br />
+        &lt;%parsedinclude(footer.inc)%&gt;</td>
+    </tr>
+  </tbody>
+</table>
+<p><br />
+  <br />
+notice the two inline styles for contentdiv and content <br />
+<br />
+style=&quot;width:700px&quot; <br />
+<br />
+go and add that to the main index template of your NPGallery skin  (change the 700px to the actual width for your skin, I think it is  actually 700px for leaf, but you can make it a little smaller, like  690px to avoid some IE6 bugs. keep tweaking it until its just right  because its different for everyone)</p>
+<p>&nbsp;</p>
+<p>Q4.     				I've enabled fancyurls on my blog and everything works fine except the gallery.   </p>
+<p>A4.     				fancy URLs dont work unless your nucleus site root is the same at the site root. </p>
+<p>&nbsp; </p>
+</body>
+
+</html>

@@ -1,0 +1,14 @@
+A2B
+AltaVista Intranet
+Ask Jeeves
+BlogPulse
+blogsnowbot
+Googlebot
+Infoseek Sidewinder
+Lycos_Spider
+msnbot
+ping.blo.gs
+Technoratibot
+WebCrawler
+W3C_
+Yahoo! Slurp

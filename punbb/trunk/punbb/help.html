@@ -1,0 +1,64 @@
+<h3>Plugin overview</h3>
+
+<p>Plugin interfaces Nucleus 3.2 with PunBB 1.2.5<p>
+<ol>
+<li>Adds all Nucleus users, items and comments from the plugin options screen.</li>
+<li>Adds new Nucleus user to PunBB from the createaccount.html process.</li>
+<li>Adds new Nucleus items to PunBB topics, can be toggled per post.</li>
+<li>Template var link to forum topic, with number of replies at the forum.</li>
+<li>Category option to map categories to forums, click edit next to category.</li>
+</ol>
+
+<h3>Configuration</h3>
+
+<p>Plugin configuration options</p>
+
+<ol>
+<li><strong>PunBB host name:</strong> MySQL host name.</li>
+<li><strong>PunBB database name:</strong> MySQL database name.</li>
+<li><strong>PunBB database username:</strong> MySQL user name.</li>
+<li><strong>PunBB database password:</strong> MySQL user password.</li>
+<li><strong>PunBB table prefix:</strong> Table prefix used at time of install.</li>
+<li><strong>PunBB Forum URL (should NOT end with a slash):</strong> URL to access the forum.</li>
+<li><strong>Copy all users, items and comments from Nucleus to PunBB now?</strong> If yes, will copy all registered users, items and comments to PunBB. Once an item is copied over, it will not be copied over again.</li>
+<li><strong>Drop tables on uninstall?</strong> Drop plugin related tables when an uninstall occurs.</li>
+<li><strong>Offer option to create topic in PunBB when adding/editing article?</strong> Display option to add item to forum on Item entry screen.</li>
+<li><strong>"Add Article To PunBB?" is on by default?</strong> Default to yes the adding of articles to forum.</li>
+<li><strong>Default PunBB forum number to create topics in:</strong> Default forum to add articles, if category does not contain a forum.</li>
+<li><strong>Text to post before article link:</strong> Text to precede article link.</li>
+<li><strong>Add article LINK to PunBB topic?</strong> Add the link back to the article in the forum post.</li>
+<li><strong>Add article BODY to PunBB topic?</strong> Add the item body to the forum post.</li>
+<li><strong>Add article MORE to PunBB topic?</strong> Add the item more part to the forum post</li>
+<li><strong>Embed images in posts?</strong> Add images in forum posts. If yes, image tags are inline, popup tags link to image via text. If no, image tags use the {text} from the tag as a placeholder, popup tags just use the text as part of the article.</li>
+<li><strong>Automatically close comments for articles in PunBB?</strong> Close commenting on the item when added to the forum.</li>
+</ol>
+
+<p>Category options in Blog settings screen</p>
+
+<ol>
+<li><strong>Forum number in PunBB (0 for default):</strong> If '0', defaults to the forum in the plugin options.</li>
+</ol>
+
+<h3>TemplateVars</h3>
+
+<p>Displays forum(0) in your template, '0' is replaced by the number of replies at the forum:
+
+<ul>
+<li><b><%PunBB( &lt;a href=","&gt; forum&lt;/a&gt; )%></b></li>
+</ul>
+
+<h3>Support and Bug reports</h3>
+
+<p>For additional support and/or bug reports please use this forum thread:
+<a href="http://forum.nucleuscms.org/viewtopic.php?t=7618">
+http://forum.nucleuscms.org/viewtopic.php?t=7618</a></p>
+
+<h3>Version History</h3>
+<p>
+<ul>
+<li>Version 1.0: Initial release for PunBB 1.1.5 (Radek Hulan)</li>
+<li>Version 1.2: Modifications for PunBB 1.2 (Bert Garcia)</li>
+<li>Version 1.2.1: Enhancements brought over from Blog:CMS (Rickard Andersson)</li>
+<li>Version 1.3: Copy over all items and comments (Rickard Andersson & Bert Garcia)</li>
+</ul>
+</p>

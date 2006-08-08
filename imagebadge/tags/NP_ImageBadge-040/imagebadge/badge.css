@@ -1,0 +1,57 @@
+div#badge {
+    width:180px;
+    height:150px;
+    position:relative;
+    overflow:hidden;
+}
+div#badge div#badge-loading {
+    position:absolute;
+    top:0px;
+    width:180px;
+    text-align:center;
+    line-height:150px;
+    font-size:10px;
+    color:#888;
+    font-family:arial, sans-serif;
+}
+div#badge div#badge-loading.hidden {
+    display:none;
+}
+div#badge a {
+    position:absolute;
+    z-index:0;
+    top:-1000px;
+    left:-1000px;
+    visibility:hidden;
+}
+div#badge a.set {
+    top:auto;
+    left:auto;
+    right:auto;
+    bottom:auto;
+    visibility:visible;
+}
+div#badge a img {
+    border:0;
+    margin:0;
+    padding:0;
+}
+div#badge img.tmp {
+    z-index:1;
+    position:absolute;
+    visibility:hidden;
+}
+div#badge img.tmp2 {
+    visibility:visible;
+}
+.opacity0  { opacity:0.1;filter:alpha(opacity=10); }
+.opacity10 { opacity:0.1;filter:alpha(opacity=10); }
+.opacity20 { opacity:0.2;filter:alpha(opacity=20); }
+.opacity30 { opacity:0.3;filter:alpha(opacity=30); }
+.opacity40 { opacity:0.4;filter:alpha(opacity=40); }
+.opacity50 { opacity:0.5;filter:alpha(opacity=50); }
+.opacity60 { opacity:0.6;filter:alpha(opacity=60); }
+.opacity70 { opacity:0.7;filter:alpha(opacity=70); }
+.opacity80 { opacity:0.8;filter:alpha(opacity=80); }
+.opacity90 { opacity:0.9;filter:alpha(opacity=90); }
+.opacity100{ opacity:0.99;filter:alpha(opacity=99); }

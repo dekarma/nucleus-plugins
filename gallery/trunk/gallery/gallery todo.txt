@@ -1,0 +1,61 @@
+np_gallery todo:
+
+--parents/children, subalbums
+--include album thumbs as option.
+--in album, picture sort order
+--picture script timeout problem - fixed intervals of uploads
+--picasa import
+--intermediate image in promo
+
+--gallerymakelink
+--global add album, etc
+--change default way shadows
+--documentation
+--admin tab plugin hook
+--import/export templates
+--next and prev thumbnails
+--thumbnail strip
+--(P)latest
+--(P)long descriptions
+--make install.sql
+--<%gallery(picture/album, byname)%>
+--override default popup behavior
+--display images in resized format for posts
+--finish internationalization
+--(P)<%gallery(int/thumb,random)%>
+--input checking
+--ticket checking in 3.2
+--clean up display of upload form
+
+
+done:
+--change location of add_picture
+--edit comments
+--fixed 'more' bug
+--rethumb by album
+--pages
+options: AdminCommentsPerPage, ThumbnailsPerPage
+--fancy urls
+--time in edit comments
+--massupload import
+
+done:
+--absolute paths to pictures
+--plugin hooks
+		NPgCollectionDisplay
+--<%breadcrumb(char)$>
+--template guillotine bug
+
+done:
+make captcha plugin work
+<%description%> in album and picture
+album setting -- comments allowed
+album setting -- thumbnail image
+template/form for promo post
+<%albumthumbnail%>
+update default template 
+	-- fix extra </div>
+	-- add stuff for promo post
+	-- add next/extra
+	-- add new visual albumlist
+hooks for tags plugin

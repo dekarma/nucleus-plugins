@@ -1,0 +1,50 @@
+<h3>Plugin overview</h3>
+
+<p>The purpose of this plugin is provide a linkage between Nucleus CMS and the phpBB forum software.  This plugin provides automatic authentication for Nucleus, while related plugins provide other integration functionality.</p>
+
+<h3>Installation</h3>
+
+<p>Instalation of the plugin is a multi-step process, of which you are likely on step 4.</p>
+
+<ol><li>Download the NP_phpBB.zip file, and upload the contents to the plugins directory of your nucleus instalation.</li>
+<li>Install the phpBB plugin, per its instructions</li>
+<li>From the Nucleus Plugins screen, install this plugin.  It has no configuration options, so none need to be set.</li>
+<li>Update skins to use desired skin variables (listed below).</li>
+</ol>
+
+<h3>Skinvars</h3>
+<h4>Member details skin variable (&lt;%phpBBvar%&gt;)</h4>
+<p>This skinvar is designed to replace the contents of the member details page with a redirect to the appropriate page in the phpBB instalation.  If the member can't be found in the phpBB database or the phpBB plugin isn't working, it tries to fall back to an existing skin.  To set up this skinvar, you will need to go through the following steps for each skin you wish to use the skinvar in.</p>
+<ol><li>From the 'Skins' page (under layout) in the Nucleus admin area, clone the skin you wish to alter (clone link under the actions column.)</li>
+<li>rename the cloned skin from 'clone_<i>skinname</i>' to 'fallback/<i>skinname</i>'.</li>
+<li>Delete all skinparts from 'fallback/<i>skinname</i>' except the Member Details skinpart</li>
+<li>Alter the Member Details section of '<i>skinname</i>' (not 'fallback/<i>skinname</i>') to contain '&lt;%phpBBvar%&gt;'
+</ol>
+
+<h4>Template and Comment Template variable (&lt;%phpBBvar(<i>foo</i>)%&gt;)</h4>
+<p>This template variable will expand to a piece of information about a member who is in the phpBB database.  The expansion is determined by the paramter passed, and the valid paramaters are listed below, along with their coresponding phpBB template variable names.</p>
+<table>
+<tr><td>postrow.POSTER_RANK</td><td>rank_title</td></tr>
+<tr><td>postrow.RANK_IMAGE</td><td>rank_image</td></tr>
+<tr><td>postrow.POSTER_JOINED</td><td>joined</td></tr>
+<tr><td>postrow.POSTER_POSTS</td><td>posts</td></tr>
+<tr><td>postrow.POSTER_FROM</td><td>location</td></tr>
+<tr><td>postrow.POSTER_AVATAR</td><td>avatar</td></tr>
+<tr><td>postrow.EMAIL</td><td>email</td></tr>
+<tr><td>postrow.WWW</td><td>www</td></tr>
+<tr><td>postrow.ICQ_STATUS_IMG</td><td>icq_status_img</td></tr>
+<tr><td>postrow.ICQ</td><td>icq</td></tr>
+<tr><td>postrow.AIM</td><td>aim</td></tr>
+<tr><td>postrow.MSN</td><td>msn</td></tr>
+<tr><td>postrow.YIM</td><td>yim</td></tr>
+</table>
+<h3>Support and Bug reports</h3>
+
+<p>For additional support and/or bug reports please use this forum thread:
+<a href="http://forum.nucleuscms.org/viewtopic.php?t=7735">
+http://forum.nucleuscms.org/viewtopic.php?t=7735</a></p>
+
+<h3>Version History</h3>
+
+<ul><li>phpBBvar Version 1.0: Template variable integration split off from main plugin.</li>
+<li>phpBB Version 1.1: Added support for template variable integration and ExtAuth.</li></ul>

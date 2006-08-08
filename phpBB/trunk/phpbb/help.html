@@ -1,0 +1,51 @@
+<h3>Plugin overview</h3>
+
+<p>The purpose of this plugin is provide a linkage between Nucleus CMS and the phpBB forum software.  This plugin provides automatic authentication for Nucleus, while related plugins provide other integration functionality.</p>
+
+<h3>Installation</h3>
+
+<p>Instalation of the plugin is a multi-step process, of which you are likely on step 4.</p>
+
+<ol><li><p>Download the NP_phpBB.zip file, and upload the contents to the plugins directory of your nucleus instalation.</p></li>
+<li><p><b>Back up your Nucleus database tables.</b>  Go to the 'Backup' page (under 'Management') in the Nucleus admin area and hit the 'Create Backup' button and save the file returned to disk.  It is a good idea to make backups regularly, and this plugin alters the schema of the member table.  If you have already installed the plugin, so be it.  This step may not be required, but is highly recomended.</p></li>
+<li><p>From the plugin management section of your admin area, install the phpBB plugin and optionally the phpBBvars and phpBBxpost plugins.</p></li>
+<li><p>From the Nucleus 'Global Settings' page (under Management), in the 'Member Settings' section, change the 'Allow Members to Change Login/Password' and 'Allow Visitors to Create a Member Account' settings to No.>/p></li>
+<li><p>From the phpBB 'Configuration' page (under General Admin), in the 'User and Forum Basic Settings' section, change 'Allow Username changes' to No.</p></li>
+<li>
+	<p>From the phpBB 'Configuration' page (under General Admin), in the 'Cookie settings' section, change the cookie domain and cookie path to values visible from both Nucleus and phpBB.</p>
+<div class="note"><strong>Notes:</strong>
+	<ul>
+		<li>For cases similar to the situation where the phpBB installation is shared.host.domain/~user/phpBB2/ and the nucleus installation is shared.host.domain/~user/nucleus/, the cookie domain would be 'shared.host.domain' and the cookie path would be '/~user/'</li>
+		<li>For cases similar to the situation where the phpBB installation is my.personal.domain/phpBB2/ and the nucleus installation is my.personal.domain/nucleus/, the cookie domain would be 'my.personal.domain' and the cookie path would be '/'</li>
+		<li>For cases similar to the situation where the phpBB installation is forum.my.domain/ and the nucleus installation is weblog.my.domain/, the cookie domain would be '.my.domain' (note the leading period.) and the cookie path would be '/'</li>
+	</ul>
+  </ul>
+</div><br/>
+</li>
+<li><p>From the Nucleus Plugins screen, edit the options for the phpBB plugin.  You may need to alter the file system path to the phpBB instalation (if it isn't in a directory named phpBB2 that is at the same level as your Nucleus instalation), then change the option labeled 'Enable phpBB authentication' to true.  Upon hitting the save options button, the path specified will be validated and an error message will be returned if it is an incorrect path.  Leave the option labeled 'Enable ExtAuth authentication support' set to no, as it requires some core hacks.</p></li>
+<li><p>At this point, the phpBB plugin should be installed.  You can check by logging out of nucleus, logging in to phpBB, then visiting a nucleus page.  If things are functioning correctly, you will find yourself logged in with the same username as you are logged in with in phpBB.  You now can move on to setting up the phpBBvar and/or phpBBxpost plugins.</p></li>
+</ol>
+
+<h3>Disaster Cleaup</h3>
+
+<p>Unlike most plugins, problems with this plugin have the potential to break your weblog instalation to the point that you would be unable to uninstall or disable it through the admin screens.  The reason for this is because it subscribes to an event that happens early in the page generation process (PostAuthentication), and this event is always called regardless of the page that is being generated.  Therefore, the following courses of action can be taken to deactivate the plugin.</p>
+<ol><li><p>The safer option is to use an SQL admin control panel, such as phpMyAdmin or the mysql command line client, and execute the following command.</p>
+<div class="note">
+UPDATE nucleus_plugin as P, nucleus_plugin_option as O, nucleus_plugin_option_desc as D SET O.ovalue='no' WHERE P.pfile = "NP_phpBB" AND P.pid=D.opid AND D.oname = "enable" AND D.oid=O.oid
+</div></li>
+<li><p>The simpler option is to just remove the NP_phpBB.php file from the plugins directory, then clean up the plugin subscriptions in the plugin screen.</p></li>
+</0l>
+
+<h3>Support and Bug reports</h3>
+
+<p>For additional support and/or bug reports please use this forum thread:
+<a href="http://forum.nucleuscms.org/viewtopic.php?t=7735">
+http://forum.nucleuscms.org/viewtopic.php?t=7735</a></p>
+
+<h3>Version History</h3>
+
+<ul><li>Version 1.2: Split template variable integration off into the phpBBvar plugin and added cross-posting capabilities in the phpBBxpost plugin</li>
+<li>Version 1.1: Added support for template variable integration and ExtAuth.</li>
+<li>Version 1.0-beta: first 'stable' version series, again passing through multiple itterations.  Key transition was addition of profile integration.
+<li>Version 1.0-alpha: Initial version passing through multiple debugging iterations.  A Key transition was moving from a hackish glue DB object to using the DB object that is part of the phpBB code.</li>
+<li>Version 0.0: Proof-of concept.</li></ul>

@@ -1,0 +1,114 @@
+<?php
+
+include('./fancyurls.config.php');
+include('./config.php');
+global $DIR_NUCLEUS;
+include_once($DIR_NUCLEUS.'/plugins/gallery/config.php');
+
+$data = explode("/",serverVar('PATH_INFO'));
+$itemid = intval($data[1]);
+
+$i = 2;
+while($data[$i]) {
+	$j = $i+1;
+	if ($data[$j]) $_GET[$data[$i]] = $data[$j];
+	$i = $i + 2;
+}
+$_GET['type'] = $data[1];
+$type = $_GET['type'];
+
+if(isset($_POST['type'])) $type=$_POST['type'];
+
+global $gmember, $CONF, $NPG_CONF;
+global $skinid,$manager,$blog,$blogid;
+
+
+switch($type) {
+	case 'addcomment': 
+		global $CONF;
+
+		$post['itemid'] =	intPostVar('itemid');
+		$post['user'] = 	postVar('user');
+		$post['userid'] = 	postVar('userid');
+		$post['body'] = 	postVar('body');
+
+		// set cookies when required
+		$remember = intPostVar('remember');
+		if ($remember == 1) {
+			$lifetime = time()+2592000;
+			setcookie($CONF['CookiePrefix'] . 'comment_user',$post['user'],$lifetime,'/','',0);
+			setcookie($CONF['CookiePrefix'] . 'comment_userid', $post['userid'],$lifetime,'/','',0);
+		}
+
+		$comments = new NPG_COMMENTS($post['itemid']);
+
+		$errormessage = $comments->addComment($post);
+		
+		//need to add code to display the error
+		if ($errormessage == '1') {
+			$_POST['id'] = $post['itemid'];
+		} 
+		break;
+	case 'addAlbum':
+		if($gmember->canAddAlbum() ){
+			$NPG_vars['ownerid'] = $gmember->getID();
+			$NPG_vars['title'] = requestVar('title'); 
+			$NPG_vars['description'] = requestVar('desc');
+			ALBUM::add_new($NPG_vars);
+		}
+		break;
+	case 'finaldeletepicture':
+		$id = requestVar('id');
+		$delpromo = requestVar('delpromo');
+		if($gmember->canModifyPicture($id)) {
+			
+			$manager->notify('NPgPreDeletePicture', array('pictureid' => $id));
+			$result = PICTURE::delete($id);
+			
+			if($result['status'] == 'error') {
+				echo $result['message'];
+			}
+			else {
+				$manager->notify('NPgPostDeletePicture', array('pictureid' => $id));
+				
+				if($delpromo == 'yes') {
+					$result2 = PICTURE::deletepromoposts($id);
+					if($result2['status'] == 'error') echo $result2['message'];
+				}
+				else {
+					$_POST['id'] = $result['albumid'];
+				}
+			}
+		} else echo 'No permission to delete picture<br/>';
+		break;
+	case 'editPicture':
+		$id = requestVar('id');
+		if($gmember->canModifyPicture($id)) {
+			$pict = new PICTURE($id);
+			$pict->setTitle(requestVar('ptitle'));
+			$pict->setDescription(requestVar('pdesc'));
+			$aid = requestVar('aid');
+			if($aid && $gmember->canAddPicture($aid)) {
+				ALBUM::decreaseNumberByOne($pict->getAlbumID());
+				ALBUM::increaseNumberByOne($aid);
+				$pict->setAlbumID($aid);
+			}
+			$pict->write();
+			$manager->notify('NPgPostUpdatePicture',array('picture', &$pict));
+		}
+	default: 
+	break;
+}
+
+if (!$blogid)
+$blogid = $CONF['DefaultBlog'];
+
+$b =& $manager->getBlog($blogid);
+$blog = $b;
+		
+selectSkin('NPGallery');
+		
+$skin =& new SKIN($skinid);
+$skin->parse('index');
+
+?>

@@ -1,0 +1,50 @@
+/* Version 0.5 1/4/2005 2:24 AM */
+body, td, th {
+	font-family: 'Lucida Grande', Verdana, Geneva, Lucida, Arial, Helvetica, sans-serif;
+	font-size: x-small;
+}
+
+a:link, a:visited {
+	color: #1D3565;
+	font-weight: bold;
+	text-decoration: none;
+}
+a:hover {
+	text-decoration: underline;
+}
+
+#content {
+	margin-left: 10px;
+
+	font-size: small;
+	font-style: normal;
+	text-decoration: none;
+	color: black;
+	text-align: justify;
+	line-height: 13pt;
+
+	border-width: 1px;
+	border-style: solid;
+	border-color: black;
+	
+	/* rounded borders in gecko-based browsers? why not :) */
+	-moz-border-radius: 10px;	
+
+	padding: 10px;	
+	
+	background-color: white;
+}
+
+#content h2 {
+	color: #596d9d; 
+
+	border-color: gray;
+	border-style: dashed;
+	border-width: 0px 0px 1px 0px;
+
+	font-size: 150%;
+	line-height: 120%;
+
+	text-decoration: none;
+	font-weight: bold; 
+}

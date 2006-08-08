@@ -1,0 +1,144 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<!-- $Id: sqltables.html,v 1.9 2005/03/05 13:19:30 dekarma Exp $ -->
+	<title>Nucleus - SQL Table Structure</title>
+	<link rel="stylesheet" type="text/css" href="manual.css" />
+	<style type="text/css">
+		/* auto increment table columns*/
+		.autoinc {
+		}
+
+		/* primary-keys */
+		.primary {
+			text-decoration: underline;
+			font-weight: bold;
+		}
+
+		/* NOT NULL */
+		.notnull {
+		}
+
+		/* unique key */
+		.unique {
+		}
+
+		/* foreign keys */
+		.foreign {
+			font-style: italic;
+		}
+
+		/* auto increment table columns*/
+		.autoinc {
+		}
+
+		/* fulltext index */
+		.fulltext {
+		}
+
+		/* columns/tables to remove in later versions */
+		.toremove {
+			color: red;
+		}
+
+	</style>
+</head>
+<body>
+
+<a name="top" id="top"></a>
+<div class="heading">
+Developer Documentation
+</div>
+<h1></h1>
+
+<h1>Introduction</h1>
+<p>This page is to document the database structure of NP_Gallery and the nucleus plugin API extensions.</p>
+
+<h1>Table of Contents</h1>
+<ul>
+<li><a href="#datastructure">Database Structure
+	<ul>
+		<li><a href="#table_album">album</a></li>
+		<li><a href="#table_album_team">album_team</a></li>
+		<li><a href="#table_picture">picture</a></li>
+		<li><a href="#table_template">template</a></li>
+		<li><a href="#table_template_desc">template_desc</a></li>
+		<li><a href="#table_config">config</a></li>
+		<li><a href="#table_member">member</a></li>
+		<li><a href="#table_comment">comment</a></li>
+		<li><a href="#table_promo">promo</a></li>
+		<li><a href="#table_views">views</a></li>
+		<li><a href="#table_views_log">views_log</a></li>
+	</ul>
+</li>
+<li><a href="#pluginhooks">Plugin Events</li>
+</ul>
+
+<h1><a name="datastructure"></a>Database structure</h1>
+
+<h1><a name="table_album"></a>album</h1>
+<table><thead><tr>
+	<th>Column Name</th>
+	<th>Type</th>
+	<th>Default</th>
+	<th>Description</th>
+</tr></thead><tbody><tr>
+	<th class="notnull autoinc primary">albumid</th>
+	<th></th>
+	<th></th>
+	<th></th>
+</tr><tr>
+	<th>title</th>
+	<th></th>
+	<th></th>
+	<th></th>
+</tr><tr>
+	<th>description</th>
+	<th></th>
+	<th></th>
+	<th></th>
+</tr><tr>
+	<th>ownerid</th>
+	<th></th>
+	<th></th>
+	<th></th>
+</tr><tr>
+	<th>modified</th>
+	<th></th>
+	<th></th>
+	<th></th>
+</tr><tr>
+	<th>numberofimages</th>
+	<th></th>
+	<th></th>
+	<th></th>
+</tr><tr>
+	<th>thumbnail</th>
+	<th></th>
+	<th></th>
+	<th></th>
+</tr><tr>
+	<th>commentsallowed</th>
+	<th></th>
+	<th></th>
+	<th></th>
+</tr></tbody>
+</table>
+
+
+<h2><a name="table_album_team"></a>album_team</h2>
+<h2><a name="table_picture"></a>picture</h2>
+<h2><a name="table_template"></a>template</h2>
+<h2><a name="table_template_desc"></a>template_desc</h2>
+<h2><a name="table_config"></a>config</h2>
+<h2><a name="table_member"></a>member</h2>
+<h2><a name="table_comment"></a>comment</h2>
+<h2><a name="table_promo"></a>promo</h2>
+<h2><a name="table_views"></a>views</h2>
+<h2><a name="table_views_log"></a>views_log</h2>
+
+<h1><a name="pluginhooks"></a>Gallery Events</h1>
+NPgCollectionDisplay
+
+</body>
+</html>

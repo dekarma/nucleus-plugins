@@ -1,0 +1,162 @@
+<?php
+/** 
+  * Miniforum - plugin for BLOG:CMS and Nucleus CMS
+  * 2005, (c) Josef Adamcik (blog.pepiino.info)
+  *
+  *
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License
+  * as published by the Free Software Foundation; either version 2
+  * of the License, or (at your option) any later version.
+  * 
+  *  
+*/
+
+/**
+* Language file for NP_MiniForum. 
+* language: czech
+* version: 0.5.0
+* Poznámky: - Pokud chcete mít pøeloženy i popisky v nastavení pluginu a popis pluginu, musíte plugin
+*           po zmìnì souboru pøeinstalovat.
+*           - nové øetìzce jsou od verze 0.5.0 pøidávány na konec souboru
+*/
+
+
+//plugin description
+define('MF_PLUGIN_DESCRIPTION', 'Tento plugin vam umoznuje pridat jednoduche forum (popr. fora) do vaseho blogu.'.
+        'Pro vlozeni prispevku z fora jmenem "mojeforum" pouzijte zapis "<%MiniForum(ShowPosts,mojeforum)%>"'.
+        'a "<%MiniForum(ShowForm,myforum)%>" k zobrazení formulare pro pridavani prispevku.'.
+        'Plugin poskytuje spravce, ktery vam  umozni vytvaret/mazat/upravovat fora a prispevky.');
+
+// plugin options 
+define('MF_ENABLE_QICK_MENU',           'Zobrazit plugin v menu?');
+define('MF_POSTS_TO_SHOW',              'Poèet pøíspìvkù, které se zobrazí na jedné stránce:');
+define('MF_MAX_LINE_LENGTH',            'Maximální délka nezalamovaného slova v pøíspìvku. Delší slova budou rozdìlena pomlèkou.');
+define('MF_COVERT_EMOTICONS',           'Pøevádìt smajlíky na obrázky? (<a href="http://wakka.xiffy.nl/miniforum#smileys">Více v dokumentaci</a>)');
+define('MF_COVERT_URLS',                'Pøevádìt url v textu na odkazy?');
+define('MF_EMOTICONS_DIR',				'Cesta k adresáøi se smajlíky.');
+
+//template options
+define('MF_POST_LIST_HEADER',           'Hlavièka seznamu komentáøù');
+define('MF_POST_BODY',                  'Tìlo komentáøe');
+define('MF_POST_LIST_FOOT',             'Patièka seznamu komentáøù');
+define('MF_FORM_LOGGED',                'Tìlo formuláøe pro pøihlášené uživatele');
+define('MF_FORM_NOTLOGGED',             'Tìlo formuláøe pro nepøihlášené uživatele');
+define('MF_NAVIGATION',                 'Šablona pro navigaci (tag <%navigation%>)');
+define('MF_NAME_NOURL',                 'Šablona pro zobrazení tagu <%name%>, pokud uživatel nezadal mail ani www');
+define('MF_NAME_URL',                   'Šablona pro zobrazení tagu <%name%>,pokud uživatel zadal www èi mail');
+define('MF_MEMBER_NAME',                'Šablona pro zobrazení tagu <%name%>, pro registrované uživatele.');
+define('MF_DATE',                       'Šablona pro zobrazení data (jako pro <a href="http://php.net/date" title="Odkaz na php manuál">php funkci date()</a>)');
+define('MF_TIME',                       'Šablona pro zobrazení èasu (stejnì jako v pøedchozím)');
+define('MF_NEXTPAGE',                   'Text pro odkaz na další stránku');
+define('MF_PREVIOUSPAGE',               'Text pro odkaz na pøedešlou stránku');
+define('MF_FIRSTPAGE',                  'Text pro odkaz na první stránku');
+define('MF_LASTPAGE',                   'Text pro odkaz na poslední stránku');
+
+// qick menu title and tooltip
+define('MF_QM_TITLE',                   'Mini forum');
+define('MF_QM_TOOLTIP',                 'Správa MiniFora');
+
+//errors
+define('MF_FORUM_DOESNT_EX',            'zvolené fórum neexistuje');
+define('MF_UNKNOWN_OPTION',             'neznámá volba ');
+define('MF_NAME_PROTECTED',             'Jméno \'$uname\' patøí regisrivanému uživateli. Zvolte si prosím jiné, nebo se pøihlašte.'); //instead of $uname will be insertet user name
+define('MF_NAME_MISSING',               'Musíte zadat jméno!!');
+define('MF_TEXT_MISSING',               'Musíte zadat text pøíspìvku!!');
+
+
+// **** Admin Area ****
+
+define('MF_ADMIN_AREA_HEADING',         'Mini forum - správce');
+define('MF_FORUM_LIST_HEADING',         'Seznam fór');
+define('MF_CREATE_FORUM_HEADING',       'Nové fórum');
+
+//common
+define('MF_FORUM',                      'Fórum');
+define('MF_TITLE',                      'Název');
+define('MF_DESCRIPTION',                'Popisek');
+define('MF_POSTS',                      'pøíspìvky');
+define('MF_ACTIONS',                    'Akce');
+define('MF_SHOW',                       'zobraz');
+define('MF_EDIT_INFO',                  'uprav informace');
+define('MF_DELETE',                     'smaž');
+define('MF_EDIT',                       'uprav');
+define('MF_YES',                        'Ano');
+define('MF_NO',                         'Ne');
+define('MF_SHORT_NAME',                 'Krátké jméno');
+define('MF_SHORT_NAME_CHARS',           '(pouze znaky: a-z,A-Z,0-9,-,_)');
+define('MF_ERR','Error');
+define('MF_NOT_LOGGED_IN',              'Nejste pøihlášen');
+define('MF_NOT_LOGGED_IN_UPGRADE',      'Není možno provést upgrade. Musíte být pøihlášen(a) jako administrátor.');
+define('MF_UPGRADED',                   'Upgrade proveden.');
+
+
+
+//creating and managing forum
+define('MF_CREATE_FORUM_BUTTON',        'Založ fórum');
+define('MF_MISSING_SHORT_NAME',         'Musíte zvolit krátké jméno!'); //error message
+define('MF_WRONG_SHORT_NAME',           'Pro krátké jméno mùžete použít pouze následující znaky : 0-9,a-z,A-z,_,-'); //error message
+define('MF_SHORT_NAME_USED',            'Fórum s tímto krátkým jménem již existuje. Prosím zvolte jiné');//error message
+define('MF_CONFIRM_FORUM_DELETE',       'Chcete opravdu smazat toto fórum a všechny pøíspìvky v nìm?');
+define('MF_CHANGE_FORUM',               'Zmìna informací o fóru  \'$forum_name\''); //$forum_name will be replaced with forum short name
+define('MF_CHANGE_FORUM_BUTTON',        'zmìnit');
+
+
+
+// managing posts
+define('MF_LISTED_POSTS',               'Pøíspìvky ve fóru'); //will be falowed by forum name
+define('MF_FORUM_EMPTY',                'V tomto fórum (\'$forum_name\') nejsou zatím žádné pøíspìvky');  //$forum_name will be repleaced with forum short name
+define('MF_PLIST_PREV',                 '&lt;&lt; Pøedchozí'); //button text
+define('MF_PLIST_NEXT',                 'Další &gt;&gt;');//button text
+define('MF_PLIST_CURRENT_PAGE',         'Stránka $current_page z $page_count '); //$current_page and $page_count will be repleaced with numbers
+define('MF_PLIST_INF',                  'Informace'); //column title
+define('MF_PLIST_ACTIONS',              'Akce'); //column title
+define('MF_CONFIRM_POST_DELETE',        'Chcete opravdu smazat tento pøíspìvek?');
+define('MF_POST_DELETED',               'Pøíspìvek smazán.');
+define('MF_EDIT_POST',                  'Uprav pøíspìvek'); 
+define('MF_POST_CHANGED',               'Pøíspìvek zmìnìn');
+define('MF_USER_NAME',                  'Jméno');
+define('MF_USER_URL',                   'adresa (http nebo e-mail)');
+define('MF_POST_BODY',                  'Text pøíspìvku');
+define('MF_CHANGE_POST_BUTTON',         'Zmìnit');
+
+//******************************************************************************
+// Since 0.5.0
+//******************************************************************************
+//templates
+define('MF_TEMPLATES',					'Šablony');
+define('MF_TEMPLATE',					'Šablona');
+define('MF_NEW_TEMPLATE',				'Nová šablona');
+define('MF_COPY',						'Kopírovat');
+define('MF_EDIT_TEMPL',					'Upravit');
+define('MF_DEFAULT_TEMPLATE',			'Vytvoøit novou šablonu s implicitními hodnotami');
+define('MF_CONFIRM_TEMPLATE_DELETE',	'Chcete opravdu smazat tuto šablonu?');
+define('MF_TEMPLATE_NAME',				'Jméno šablony');
+define('MF_CREATE_TEMPLATE_BUTTON',		'Vytvoøit šablonu');
+define('MF_TEMPLATE_CREATED',			'Nová šablona vytvoøena.');
+define('MF_TEMPLATE_NAME_USED',			'Šablona tohot jména již existuje. Zvolte jiné.');
+define('MF_CHANGE_TEMPLATE',			'Zmìnit šablonu');
+define('MF_GRAV_SIZE',					'Velikost ikonky gravataru');
+define('MF_GRAV_DEFAULT',				'Sndartní ikonka pro uživatele bez gravataru (Více o podpoøe gravataru viz <a href="http://wakka.xiffy.nl/miniforum#gravatar">documentace/a>.)');
+define('MF_TEMPLATE_DOESNT_EX',			'Šablona neexistuje.');
+define('MF_REFRESH',					'Rychlost obnovy (v sekundách).');
+
+//upgrade
+define('MF_CURRENT_VERSION',			'Souèasná verze je:');
+define('MF_UPGRADE_NOTE',				"<p>Tato verze používá nový systém šablon.".
+					 "(Viz <a href='http://wakka.xiffy.nl/miniforum'>dokumentace</a>). ".
+					 "Nyní je mùžete je nalézt v administraèní èásti pluginu.".
+					 "Vaše šablona byla skopírována do šablony se jménem default. Pouze ". 
+					 "šablona pro formuláø byla nahrazena novou.</p>");
+define('MF_UPGRADE_HEADING',			'NP_MiniForum upgrade');
+define('MF_CHOOSE_VERSION',				'Prosím, vyberte pøedchozi verzi vašeho pluginu: ');
+define('MF_UPGRADE_BUTTON',				'Upgrade');
+
+//******************************************************************************
+// Since 0.6.5
+//******************************************************************************
+define('MF_CAPTCHA',				'Povolit Captcha test. (Vyžaduje nainstalovaný NP_Captcha)');
+define('MF_DOCLINK',				'dokumentace Minifóra v NucleusCMS wiki');
+define('MF_FORUMLINK',				'navštivte vlákno Minifóra v NucleusCMS fóru');
+?>

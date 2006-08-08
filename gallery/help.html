@@ -1,0 +1,70 @@
+<h3>Plugin overview</h3>
+<p>For Version 0.94</p>
+<p>NP_Gallery provides a nucleus-native integrated photo and image gallery. It is designed to be 'nucleus-like' in its function and usage.</p>
+
+<h3><a name="toc" ></a>Table of Contents</h3>
+<ul>
+<li><a href="#features">Features</a></li>
+<li><a href="#links">Important links</a></li>
+<li><a href="#requirements">Plugin Requirements</a></li>
+<li><a href="#installtion">Installation</a></li>
+<li><a href="#skinvars">SkinVars</a></li>
+<li><a href="#options">Plugin Options</a></li>
+<li><a href="#configuration">Configuration</li>
+<li><a href="#templates">Templates</li>
+<li>Internationalization</li>
+<li><a href="#version">Version History</li>
+</ul>
+
+<h3><a name="features"></a>Features</h3>
+<ul>
+<li>Controllable from Nucleus Admin Area</li>
+<li>Fully template driven, CSS tableless output</li>
+<li>Automatic thumbnail creation using GD or Imagemagick</li>
+<li>Extends nucleus plugin API</li>
+<li>Compatible with captcha plugin</li>
+<li>Use keywords to assign pictures to sets, dynamically display the sets on your blog</li>
+<li>Ability to create 'hover tooltips,' drawing boxes around people and naming them </li>
+<li>Massupload via FTP - infinite amount </li>
+<li>Slideshow feature </li>
+<li>Previous and next thumbnails </li>
+<li>Album teams, public/private albums </li>
+<li>album thumbnails per page</li>
+<li>display dynamic &quot;promotional posts&quot; in your blog.  </li>
+<li>More</li>
+</ul>
+
+<h3><a name="links"></a>Important links</h3>
+<ul>
+<li>Newest versions hosted here :<a href="http://www.sircambridge.net/nucleus/index.php?itemid=57">Link </a></li>
+<li>Versions up to 0.8 can be downloaded from the nucleusplugin sourceforge page: <a href="http://sourceforge.net/projects/nucleusplugs/">link</a></li>
+<li>Gallery plugin wiki page <a href="http://wakka.xiffy.nl/gallery">link</a></li>
+<li>Nucleus support forum threads</li>
+</ul>
+
+<h3><a name="requirements"></a>Plugin Requirements</h3>
+<p>Besides the nucleus requirements of php 4 or greater and mysql 3.58 or greater, NP_Gallery requires either GD v2 or greater or Imagemagick be installed on the server. Additionally, the database user (as set in nucleus' config.php) needs to be able to create temporary tables in mysql.</p>
+
+<h3><a name="installation"></a>Installation</h3>
+<p>NP_Gallery installs as any other plugin in nucleus, but requires some extra steps to be fully functional.</p>
+<p><strong>First,</strong> clone your current skin and rename it NPGallery. Click on all of the skin parts EXCEPT for 'main index' (ie archive, archive list, etc), delete the contents and click 'update skin'. As 'main index' part is the only skin part used by the plugin, the other parts are superfluous and can be deleted. If you don't want to delete them, they will not interfere with the function of the plugin.</p>
+<p>Now modify the main index part of NPGallery skin to display the gallery instead of your blog. Do this by replacing your &lt;%blog(default/index,10)%&gt; statement with &lt;%gallery%&gt;. This will make the gallery page look just like your blog page (with the obvious differences) including the right/left menus (if you have them). These can be omitted, or you can make your gallery page look totally different than your blog page. The NPGallery skin is what controls the look. Some skins such as leila do not have this in the skin template, but in some other file that is included, just copy and paste everything from that included file into the skin template and replace blog with gallery. </p>
+<p><strong>Second,</strong> create your gallery directory and make it writable. By default this directoy is media/gallery, but it can be any directory you want it to be, however if you change from the default directory you will need to change the gallery configuration in the admin area. To make the directory writable, chmod the directory to 0777. Search for one of the many tutorials on the web if you are unsure how to do this. If you want to use massuploads, create an empty directory /upload in your blog root and chmod it to 777. </p>
+<p><strong>Third,</strong> Create a new blog, and set that blog to use the &quot;NPGallery&quot; skin you created in step 1. </p>
+<p>Finally, make a link to your gallery somewhere in your main blog page. This is usually something like www.mysite.com/index.php?blogid=2 where the number is whichever blog you created. </p>
+<p>Some Frequently Asked Questions are answered in <a href="FAQ.html">FAQ.html</a> , such as removing the sidebar and getting the gallery to put thumbnails that will the whole page.
+
+<p>Now you can configure your gallery by going to the gallery admin area. This initial configuring is important in getting the gallery to work. </p>
+
+<h3><a name="skinvars"></a>SkinVars</h3>
+<p>Note: These skinvars are intended to be used in general nucleus skins. They are not designed to be used in np_gallery templates.</p>
+<ul><li><b>Gallery(link)</b>: returns a hyperlink to the gallery album list page. Usage example: &lt;a href=&quot;&lt;%gallery(link)%&gt;&quot;&gt;Gallery&lt;/a&gt;</li>
+  <li><strong>Gallery(sets,keywords,aesc/desc)</strong>: displays the pictures with keywords &quot;keyword&quot;, supports multiple keywords, seperated with ' and ',aesc/desc for aescending or descending.example &lt;%gallery(sets,pets and girls,desc)%&gt;, will show pictures with the keywords 'pets' and 'girls' in a descending order. </li>
+<li><b>Gallery</b>: displays the Gallery page (album list, album, picture, etc). It is meant to be used in the NPGallery skin. Usage: &lt;%gallery%&gt;</li></ul>
+
+<h3><a name="options"></a>Plugin Options</h3>
+<p>Most of NP_gallery options are configured on the gallery admin page, but there are some basic options in &quot;edit options&quot; for NP_Gallery in the plugin menu. </p>
+
+<h3><a name="configuration"></a>Configuration</h3>
+
+<h3><a name="templates"></a></h3>

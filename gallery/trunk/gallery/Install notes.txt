@@ -1,0 +1,135 @@
+NP_gallery
+johnkbradshaw@yahoo.com
+
+See bottom for version history.
+Current release is 0.77 (5-4-05)
+
+To Upgrade:
+ -- To upgrade from 0.61, run np_gallery_update061.php in your base nucleus directory
+ -- To upgrade from 0.75, run np_gallery_update075.php
+ -- Delete both np_gallery_update files
+
+To install:
+1. make a skin called NPGallery with a call to <%gallery%> in it. For example mine looks like this:
+	<%ExtraSkin(header2)%>
+	<div id="contents">
+	   <%gallery%>
+	</div>
+	<%ExtraSkin(menu2)%>
+	<%ExtraSkin(footer2)%>
+
+2. Create a link to the gallery in another skin with the skinvar <%gallery(link)%>, i.e. with this code: <a href="<%gallery(link)%>">Gallery</a>.
+
+3. upload the files in the zip to your webserver into the base directory (add_picture.php should be in the same directory as your index.php)
+
+4. create the folder media/gallery and make it writable (chmod 0777 or 0755)
+
+5. add the following to your CSS file:
+		#NPG_gallery {
+			margin-top: 5px;
+			margin-bottom: 5px;
+			padding-left: 5px;
+			padding-right: 5px;
+			position:relative;
+		}
+
+		/*thumbnails are displayed as a 'list'*/
+		ul.thumbnail {list-style: none;}
+		
+		ul.thumbnail li {
+			float: left; 
+			width: 115px; 
+			height: 140px;
+			padding: 10px;
+			margin: 10px;
+			background-color: rgb(225,225,225);
+		} 
+	
+		/*thumbnail container*/
+		#NPG_thumbnail {
+			margin-top: 5px;
+			margin-bottom: 5px;
+			padding-left: 5px;
+			padding-right: 5px;
+			position:relative;
+		}
+		/*footer container -- used so that the footer contents are actually displayed below the thumbnails, without clear:both the footer is displayed under the thumbnails*/
+		#NPG_footer {
+			clear:both;
+		}
+
+ 
+6. install the plugin
+
+7. play around with it and let me know what you think.
+
+version history:
+--NP_gallery v0.4 alpha 3-8-2005: first alpha release
+--NP_gallery v0.45 alpha 3-9-2005:
+	fixed bugs with permission system
+	changed the way albums are modified (moved to admin area)
+	added preliminary album team support
+	other bug fixes
+--NP_gallery v0.5 alpha 3-9-2005:
+	album teams (in admin area)
+	delete album (in admin area)
+	delete picture
+	can now select add album permission level
+	next, previous nav links on picture view
+	move picture to different album
+	bug fixes
+--NP_gallery v0.55 alpha 3-17-2005:
+	changed the default media directory style -- used to be something like ./foo/, now it is just foo/
+	(previous change will mean that you should uninstall the plugin and delete the pictures in your gallery folder and reinstall them)
+	thumbnail size can be changed
+	rethumb (which resizes the thumbnails and intermediate pictures) function in admin area
+	some bug fixes to address base_redirect
+--NP_gallery v0.56 alpha 3-19-2005:
+	fixed so that the plugin will work with 3.2
+	couple other bug fixes
+--NP_gallery v0.6 alpha 3-21-2005:
+	new feature: promote to blog
+		please configure this option in the admin area before using
+		I need to do cosmetic cleanup for the forms and the post, but wanted to try out the concept
+	bug fixes to re-thumb admin function
+--NP_gallery v0.61 alpha 3-22-2005
+	*changes made in this release require uninstall/reinstall	
+	added title template var -- displays title under thumbnail by default
+	updated default css class: ul.thumbnail li (see above for change)
+	fixed message after adding promo post
+	fixed sql error when adding pictures
+	when deleting a picture, there is an option to delete promo post associated with the picture
+	number of picture upload slots is now an option in the admin area
+	removed reference to a file in album_class.php that was triggering open_basedir problems
+	added allowable tag to item body: <%gallery(link,picture|album,#)%>
+	added cancel promo post
+	promo post now uses bookmarklet.php edititem form
+	fixed another bug with the rethumb function -- now works (on my system) with gd or imagemagick
+--NP_gallery v0.75 4-6-2005
+	moved to a class to handle admin page (like nucleus)
+	started the move to allowing for translation to other languages (see english.php)
+	added album template vars: centeredtopmargin(height, offset) and pictureviews
+		centeredtopmargin inserts a margin-top that will vertically align a thumbnail using inline css (ie <img style="<%centeredtopmargin(140,-7)%>" src= ...)
+		pictureviews displays the number of time a picture has been viewed
+	comment system
+	multiple templates
+--NP_gallery v0.76 4-12-2005
+	comment system works with np_captcha plugin
+	new templatevars: 
+		<%albumdescription%> and <%picturedescription%> in album view
+		<%if(next)%>, <%if(prev)%>, <%description%> in picture view
+		<%if(commentsallowed)%> in picture view
+		<%albumthumbnail%> in gallery list view
+	album option for thumbnail
+	album option for comments allowed or not
+	plugin hooks: NPgPrePicture, NPgPostAddPicture, NPgPostUpdatePicture, NPgPostDeletePicture, NPgAddPictureFormExtras, NPgEditPictureFormExtras
+	new default templates
+	pictures are now prefixed by a random string
+--NP_gallery v0.77 5-4-2005
+	plugin hooks: NPgCollectionDisplay
+	included NP_GalleryMostViewed
+	bug fixes: 
+		problems with templates
+	absolute filenames for pictures and links
+	modified <%breadcrumb%> tag to have an option for a different separator: <%breadcrumb(separator)%>, default is >
+	the word 'Gallery' as part of the breadcrumb is now defined in english.php

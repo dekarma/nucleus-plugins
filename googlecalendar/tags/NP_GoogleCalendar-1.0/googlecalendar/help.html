@@ -1,0 +1,70 @@
+<h3>Plugin overview</h3>
+
+<p>This plugin lets you display appointments from your Google Calendar into your blog.</p>
+
+<h3>Setup</h3>
+
+<ol>
+	<li>
+		<h4>Make the <code>cache</code> folder writeable</h4>
+		<p>
+			If you have administrative access to your webserver, you probably already know how to do this securely. If not, the easy way to do it is to load up your preferred FTP program and connect to your web host's FTP server. Browse to the <code>nucleus/plugins/GoogleCalendar/cache</code> folder and modify the <code>cache</code> folder's properties (or attributes). It should look something like this:<br />
+			<img src="plugins/googlecalendar/help/chmod.png" width="464" height="492" border="0" alt="Make sure the folder is writeable by public. chmod 777"><br />
+			Click <strong>OK</strong> and you should be ready to proceed.
+		</p>
+	</li>
+	<li>
+		<h4>Enable public sharing for your Google Calendar</h4>
+		<p><em>Note that this step will make your Google Calendar viewable by anyone else on Google Calendar, but if you're willing to show your appointments on your blog then that shouldn't be a problem anyway.</em></p>
+		<p>
+			Log in to <a href="http://calendar.google.com" target="_blank">Google Calendar</a> and click on <strong>Manage Calendars</strong> in the little blue Calendars section on the left. Locate the calendar you want to enable sharing for and click the <strong>Edit Settings</strong> link. Then make sure the <strong>Share all information with everyone</strong> radio button is selected, like so:<br />
+			<img src="plugins/googlecalendar/help/calendar-share-settings.png" width="541" height="107" border="0" alt="Share all information on this calendar with everyone"><br />
+			Click the <strong>Save</strong> button and let's move on.
+		</p>
+	</li>
+	<li>
+		<h4>Find your calendar's public XML file</h4>
+		<p>
+			Click on <strong>Manage Calendars</strong> again and this time click on your calendar's name. This should bring you to your <strong>Calendar Details</strong> tab. Look near the bottom of the page for the <strong>Calendar Address</strong> section and find the orange XML button. (<em>Note that you do NOT want the Private Address set of buttons.</em>)<br />
+			<img src="plugins/googlecalendar/help/public-xml.png" width="423" height="222" border="0" alt="The public XML button"><br />
+			Right-click this button and select <strong>Copy Link Location</strong> or your browser's equivalent. It should look something like <code>http://www.google.com/calendar/feeds/<em>your_account@gmail.com</em>/public/basic</code>.
+		</p>	
+	</li>
+	<li>
+		<h4>Edit your Nucleus skin</h4>
+		<p>
+			Log in to your <a href="./" name="Nucleus Admin">Nucleus admin page</a> and click on <strong>Skin Files</strong> in your sidebar. Navigate to the file you want to put your Google Calendar in. At the appropriate place, insert this code:<br />
+			<code><%GoogleCalendar(http://www.google.com/calendar/feeds/<em>your_account@gmail.com</em>/public/basic)%></code>
+		</p>
+	</li>
+	<li>
+		<h4>Customise your calendar's appearance</h4>
+		<p>
+			Congratulations! At this point your Google Calendar appointments should be showing up on your blog. Chances are, however, that the layout won't match your blog skin's layout.
+		</p>
+		<p>
+			Go back to your <a href="./" name="Nucleus Admin">Nucleus Admin page</a> and click on the <strong>Settings</strong> link for your blog. (<em>Yes, the settings for this plugin are in your blog settings, not under Plugin options.</em>) Scroll down to the NP_GoogleCalendar section and you will find the various options for the display of your appointments. Modify them to your liking, then click the <strong>Change Settings</strong> button.
+		</p>
+	</li>
+</ol>
+
+
+
+<h3>Template Options</h3>
+
+In the blog's settings page, you can specify how appointments will appear on your page. You can use these variables to display appointment-specific information in the templates:
+<ul>
+<li><code>&lt;%name%&gt;</code>: the event title </li>
+<li><code>&lt;%desc%&gt;</code>: a brief description of the event</li>
+<li><code>&lt;%date%&gt;</code>: the event's start date</li>
+<li><code>&lt;%link%&gt;</code>: the URL for the Google Calendar page for the event</li>
+</ul>
+
+<h3>Support and Bug reports</h3>
+
+<p>For additional support and/or bug reports please use this forum thread:
+<a href="http://forum.nucleuscms.org/viewtopic.php?t=12495">
+http://forum.nucleuscms.org/viewtopic.php?t=12495</a></p>
+
+<h3>License Information</h3>
+<p><a href="http://creativecommons.org/licenses/GPL/2.0/">Copyright &copy; 2006</a> <a href="http://ketsugi.com">Joel Pan</a> </p>

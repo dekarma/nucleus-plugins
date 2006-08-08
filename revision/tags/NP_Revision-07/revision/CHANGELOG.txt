@@ -1,0 +1,11 @@
+
+
+	NP_Revision:
+
+	0.5   	Initial public release
+	0.6	Bugfix: The plugin now issues a notification to other plugins after a revert, 
+		        so they could modify the new content.
+	0.7	Bugfix: Fixed PHP warning when viewing a diff for an item which does not have 
+		        any revision history.
+	
+

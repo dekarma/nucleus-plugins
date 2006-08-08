@@ -1,0 +1,368 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Untitled Document</title>
+</head>
+
+<body>
+<h3>Templates</h3>
+<p>The plugin is displayed using a template system very similar to nucleus skins and templates.</p>
+<p>The first step in the display is when the plugin calls the nucleus NPGallery skin. This provides the general look, ie banner, side menus, footers, whatever. The &lt;%gallery(link)%&gt; tag in the NPGallery skin is where the gallery page (list, album or picture) is displayed. To display the requested gallery page the appropriate gallery template is used. These templates are freely editable in the gallery admin area and are a powerful way to control how gallery is displayed</p>
+<p>In general, each template has a header, body and footer segment. With pages with repeated information such as thumbnails in an album, the header is displayed, followed by repitions of the body, then the footer. For example if we call the header H, the body B and footer F, an album page would be contructed H B B (repeated) B B F. Following is list of template tags and the information they represent</p>
+Gallery List: Displayed by &lt;%gallery(link)%&gt; and by clicking on Gallery in the breadcrumb<br/>
+<table>
+  <thead>
+    <tr>
+      <th>Tag</th>
+      <th>Description</th>
+      <th>Section</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>breadcrumb</td>
+      <td>Displays Breadcrumb navigation (in gallery list only the word Gallery)</td>
+      <td>All</td>
+    </tr>
+    <tr>
+      <td>sortbytitle</td>
+      <td>Generates a <b>link</b> to display gallery list sorted by album title, ie &lt;a href=&quot;&lt;%sortbytitle%&gt;&quot;&gt;</td>
+      <td>Header</td>
+    </tr>
+    <tr>
+      <td>sortbydescription</td>
+      <td>Generates a <b>link</b> to display gallery list sorted by album description.</td>
+      <td>Header</td>
+    </tr>
+    <tr>
+      <td>sortbyowner</td>
+      <td>Generates a <b>link</b> to display gallery list sorted by album owner.</td>
+      <td>Header</td>
+    </tr>
+    <tr>
+      <td>sortbymodified</td>
+      <td>Generates a <b>link</b> to display gallery list sorted by date last modified.</td>
+      <td>Header</td>
+    </tr>
+    <tr>
+      <td>sortbynumber</td>
+      <td>Generates a <b>link</b> to display gallery list sorted by number of images in album.</td>
+      <td>Header</td>
+    </tr>
+    <tr>
+      <td>albumlink</td>
+      <td><b>link</b> to album</td>
+      <td>Body</td>
+    </tr>
+    <tr>
+      <td>albumthumbnail</td>
+      <td>absolute reference to the album thumbnail (assignable in admin area|gallery|configuration). Usage: &lt;img src=&quot;&lt;%albumthumbnail%&gt;&quot; /&gt;</td>
+      <td>Body</td>
+    </tr>
+    <tr>
+      <td>centeredtopmargin(height,adjustment)</td>
+      <td>CSS inline style used to vertically align thumbnail (if using albumthumbnail). Height is the height of the thumbnail container, adjustment is a number: a negative value to shift the thumbnail up, positive to shift down. Used to make space for text under thumbnail. Usage: </td>
+      <td>Body</td>
+    </tr>
+    <tr>
+      <td>title</td>
+      <td></td>
+      <td>Body</td>
+    </tr>
+    <tr>
+      <td>description</td>
+      <td></td>
+      <td>Body</td>
+    </tr>
+    <tr>
+      <td>ownerid</td>
+      <td></td>
+      <td>Body</td>
+    </tr>
+    <tr>
+      <td>ownername</td>
+      <td></td>
+      <td>Body</td>
+    </tr>
+    <tr>
+      <td>modified</td>
+      <td></td>
+      <td>Body</td>
+    </tr>
+    <tr>
+      <td>numberofimages</td>
+      <td></td>
+      <td>Body</td>
+    </tr>
+    <tr>
+      <td>addalbumlink</td>
+      <td></td>
+      <td>H/F</td>
+    </tr>
+    <tr>
+      <td>addpictureslink</td>
+      <td></td>
+      <td>H/F</td>
+    </tr>
+    <tr>
+      <td>if(canaddpicture)</td>
+      <td></td>
+      <td>All</td>
+    </tr>
+    <tr>
+      <td>if(canaddalbum)</td>
+      <td></td>
+      <td>All</td>
+    </tr>
+  </tbody>
+</table>
+<br/>
+Album: Displayed by clicking on album link in gallery list<br/>
+<table>
+  <thead>
+    <tr>
+      <th>Tag</th>
+      <th>Description</th>
+      <th>Section</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>breadcrumb(sep)</td>
+      <td>Displays Breadcrumb navigation with the specified seperator, default is &gt;. For example to change the breadcrumb to Gallery -&gt; Album change the tag to &lt;%breadcrumb(-&gt;)%&gt;</td>
+      <td>All</td>
+    </tr>
+    <tr>
+      <td>albumtitle</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>albumdescription</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>picturedescription</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>picturelink</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>thumbnail</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>centeredtopmargin</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>pictureviews</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>editalbumlink</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>addpicturelink</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>picturetitle</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>pages</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>albumlink</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>if(canaddpicture)</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>if(caneditalbum)</td>
+      <td></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+<br/>
+Picture: Displayed by clicking on thumbnail in album<br/>
+<table>
+  <thead>
+    <tr>
+      <th>Tag</th>
+      <th>Description</th>
+      <th>Section</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>breadcrumb(sep)</td>
+      <td>Displays Breadcrumb navigation with the specified seperator, default is &gt;. For example to change the breadcrumb to Gallery -&gt; Album change the tag to &lt;%breadcrumb(-&gt;)%&gt;</td>
+      <td>All</td>
+    </tr>
+    <tr>
+      <td>albumlink</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>albumtitle</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>description</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>fullsizelink</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>intermediatepicture</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>title</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>height</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>width</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>owner</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>date</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>editpicturelink</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>deletepicturelink</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>nextlink</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>previouslink</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>comments</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>commentform</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>if(caneditpicture)</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>if(commentsallowed)</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>if(next)</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>if(prev)</td>
+      <td><p>&nbsp;</p></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+<br/>
+Comments<br/>
+<table>
+  <thead>
+    <tr>
+      <th>Tag</th>
+      <th>Description</th>
+      <th>Section</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+<br/>
+Promo post template<br/>
+<table>
+  <thead>
+    <tr>
+      <th>Tag</th>
+      <th>Description</th>
+      <th>Section</th>
+    </tr>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
+<h3><a name="version" id="version"></a>Version History</h3>
+<ul>
+  <li>Version 0.1: initial testcaseversion</li>
+  <li>Version 0.0: pre-initial version ;-)</li>
+</ul>
+</body>
+</html>
