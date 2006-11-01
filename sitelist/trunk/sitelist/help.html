@@ -1,0 +1,318 @@
+<h3>Plugin overview</h3>
+
+<p>This plugin is used to manage a list of links, such as that showing Nucleus sites on <a href="http:/www.nucleuscms.org/sites.php" title="Nucleus Sites">nucleuscms.org.</a> Users can add new sites themselves for approval by the site administrator, who can be notified through e-mail. When logged in as administrator, the list of sites can be managed through the admin area or, when enabled, from the list of sites where displayed in your skins. If the sites in the list should meet certain conditions, the administrator can automate verification by setting up to two preg expressions (or strings) to check against. For example, sites listed on the NucleusCMS site might be required to either contain a link to nucleuscms.org or have some form of the &lt;meta name="generator" content="Nucleus CMS v3.22" /&gt;.</p>
+<ul>
+<li><a href="#requirements">Requirements</a></li>
+<li><a href="#upgrade">Upgrade</a></li>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#options">Plugin Options</a></li>
+<li><a href="#skinvars">SkinVars</a></li>
+<li><a href="#manage">SiteList Management</a></li>
+<li><a href="#action">Management Actions</a></li>
+<li><a href="#test">SiteList Test Application</a></li>
+<li><a href="#browser">SiteList Browser Application</a></li>
+<li><a href="#future">Future Plans</a></li>
+<li><a href="#support">Support and Bugs</a></li>
+<li><a href="#history">Version History</a></li>
+</ul>
+<h3><a name="requirements">Requirements</h3>
+
+<p>The PHP Pear extension framework is required for the verification features. The file &lsquo;PEAR.php&rsquo; should be in the php include path. Supplied with NP_SiteList are the HTTP_Request, Net_URL, and Net_Socket Pear packages, which rely on PEAR.php. Contact your system administrator if you are not sure whether PEAR is available at your site. You can see if the pear framework is in your php path by copying the pearcheck.php file (distributed with NP_SiteList) to an accessible place in your web space. Then point your browser to it and look for the term 'pear' in the listed paths. If it is not there, you probably do not have the files you need. Alternatively, if you have access to a command on your web server, type <code>php -r "echo get_include_path();"</code> and look for 'pear' in the output.</p>
+<p> Nucleus CMS v 3.23 or greater is recommended for security reasons.</p>
+<p> PHP 4.0.6 or greater is recommended.</p>
+
+<h3><a name="upgrade">Upgrade</a></h3>
+<p>Versions 1.0 and 1.2 both add a database table field and/or a few plugin options, so users of previous versions must re-install the plugin when upgrading to one or these or later versions. Please follow this procedure if you wish to keep the data in your tables.</p>
+<ol>
+<li>Backup your database.</li>
+<li>If starting from a pre-1.0 version or if going from 1.0 to 1.2 or greater, you need to perform this step. Go to the plugins directory of your nucleus installation and edit the following line in NP_SiteList.php:</li>
+<pre><code>
+	function unInstall() {
+		sql_query('DROP TABLE nucleus_plug_sitelist');
+	}
+</code></pre>
+
+to read :
+<pre><code>
+	function unInstall() {
+		//sql_query('DROP TABLE nucleus_plug_sitelist');
+	}
+</code></pre>
+<li>Uninstall the NP_SiteList plugin using the Nucleus Admin GUI.</li>
+<li>Install the new NP_SiteList version as described below.</li>
+</ol>
+
+<h3><a name="installation">Installation</a></h3>
+
+<p>The NP_SiteList plugin can be downloaded from <a href="http://www.iai.com/NP_SiteList.zip" title="Download NP_SiteList">here</a>.</p>
+
+<p>Download and extract the zip file. Copy the NP_SiteList.php file and the sitelist directory to the nucleus/plugins directory.</p>
+
+<p>Use the Nucleus Admin GUI to register the NP_SiteList plugin into Nucleus. Be sure to click the &lsquo;Update subscription list&rsquo; button.</p>
+
+<p>You will need to edit and save the plugin options before using the plugin. The options are described below.</p>
+
+<h3><a name="options">Plugin Options</a></h3>
+<p>There are a number of options that control the operation of the SiteList plugin. Most of these options are set from the &lsquo;edit options&rsquo; link in the Plugin Admin area, but some advanced options are only available by editing variables in the plugin files. Both types of options are described below.</p>
+
+<h4>Plugin Options</h4>
+<ul>
+<li><code>Show Admin Area in quick menu</code> : Whether the SiteList admin area should be shown in the Quick Menu area. yes or no. (yes)</li>
+<li><code>Delete SiteList data table on uninstall?</code> : Whether the database table should be deleted on an uninstall. This should be set to &lsquo;yes&rsquo; only when permanently removing NP_SiteList. yes or no. (no)</no></li>
+<li><code>Default number of sites to show in skinvar</code> : This is the default number of sites to show when the &lt;%SiteList%&gt; sitevar is called. This can be overridden by skinvar parameters as described in Available Skinvars section below. Positive Integer. 0 removes limit. (20)</li>
+<li><code>Default html tag to enclose site links</code> : This allows the user to set the list tag type enclosing each listed site. This should be a simple tag and not include the &lt; and &gt; special characters. This can be overridden by skinvar parameters as described in SkinVar section. Example values could be &lsquo;li&rsquo;, &lsquo;dd&rsquo;, &lsquo;br&rsquo;. (li)</li>
+<li><code>Default setting for show management links in skinvar</code> : Sets the default for whether management links should be shown next to the listed sites in skinvars. Can be overridden by sitevar parameters. (yes)</li>
+<li><code>Notify on new additions</code> : Sets whether admin wants to be notified when a user submits a url. yes or no. (no)</li>
+<li><code>Send notifications to this address</code> : Address to send notification. Email address. ()</li>
+<li><code>Send notifications from this address</code> : From address for notification. Email address. ()</li>
+<li><code>Pregex condition (or simple string) to verify against (blank disables verification)</code> : This is a string or pregex expression to use for verifying the submitted sites. If this option is blank, verification is disabled. It is a good idea to test this expression using the sltest.php application described below before using it on real data. ()</li>
+<li><code>Pregex condition (or simple string) to verify against (blank is OK)&ndash;2nd instance</code> : This is a string or pregex expression to use for verifying the submitted sites. If this option is blank, it becomes identical to the first condition, so be careful when using complex Logical Operators. It is a good idea to test this expression using the sltest.php application described below before using it on real data. ()</li>
+<li><code>Logic Operator to apply on conditions</code> : Sets the logical operator to use on the verification conditions. See table below for description of the 6 choices. OR, AND, AND!, !AND!, OR!, !OR!. (OR)</li>
+<table width="500px">
+<tr>
+<td style="{width:40px;text-align:center;}">Oper.</td>
+<td style="{width:250px;text-align:left;padding:4px;}">Description</td>
+<td style="{width:50px;text-align:center;}">T | T</td>
+<td style="{width:50px;text-align:center;}">T | F</td>
+<td style="{width:50px;text-align:center;}">F | T</td>
+<td style="{width:50px;text-align:center;}">F | F</td>
+</tr>
+<tr>
+<td style="{width:40px;text-align:center;}">OR</td>
+<td style="{width:250px;text-align:left;padding:4px;}">Condition1 OR Condition2</td>
+<td style="{width:50px;text-align:center;}">T</td>
+<td style="{width:50px;text-align:center;}">T</td>
+<td style="{width:50px;text-align:center;}">T</td>
+<td style="{width:50px;text-align:center;}">F</td>
+</tr>
+<tr>
+<td style="{width:40px;text-align:center;}">AND</td>
+<td style="{width:250px;text-align:left;padding:4px;}">Condition1 AND Condition2</td>
+<td style="{width:50px;text-align:center;}">T</td>
+<td style="{width:50px;text-align:center;}">F</td>
+<td style="{width:50px;text-align:center;}">F</td>
+<td style="{width:50px;text-align:center;}">F</td>
+</tr>
+<tr>
+<td style="{width:40px;text-align:center;}">AND!</td>
+<td style="{width:250px;text-align:left;padding:4px;}">Condition1 AND NOT Condition2</td>
+<td style="{width:50px;text-align:center;}">F</td>
+<td style="{width:50px;text-align:center;}">T</td>
+<td style="{width:50px;text-align:center;}">F</td>
+<td style="{width:50px;text-align:center;}">F</td>
+</tr>
+<tr>
+<td style="{width:40px;text-align:center;}">!AND!</td>
+<td style="{width:250px;text-align:left;padding:4px;}">NOT Condition1 AND NOT Condition2</td>
+<td style="{width:50px;text-align:center;}">F</td>
+<td style="{width:50px;text-align:center;}">F</td>
+<td style="{width:50px;text-align:center;}">F</td>
+<td style="{width:50px;text-align:center;}">T</td>
+</tr>
+<tr>
+<td style="{width:40px;text-align:center;}">OR!</td>
+<td style="{width:250px;text-align:left;padding:4px;}">Condition1 OR NOT Condition2</td>
+<td style="{width:50px;text-align:center;}">T</td>
+<td style="{width:50px;text-align:center;}">T</td>
+<td style="{width:50px;text-align:center;}">F</td>
+<td style="{width:50px;text-align:center;}">T</td>
+</tr>
+<tr>
+<td style="{width:40px;text-align:center;}">!OR!</td>
+<td style="{width:250px;text-align:left;padding:4px;}">NOT Condition1 OR NOT Condition2</td>
+<td style="{width:50px;text-align:center;}">F</td>
+<td style="{width:50px;text-align:center;}">T</td>
+<td style="{width:50px;text-align:center;}">T</td>
+<td style="{width:50px;text-align:center;}">T</td>
+</tr>
+</table>
+<li><code>Apply verification to submitted URLs?</code> : If set to &lsquo;yes&rsquo; verification will take place on the sites as they are submitted by users. Sites that fail the initial verification will remain as unchecked and require admin review. yes or no. (no)</li>
+<li><code>Thank You Text (including any html tags) to display above add form when user submits a site.</code> : This is the text (and html formating) that users will see when they submit a site. It will appear directly above the submission form.</li>
+<li><code>Number of sites to show on single page in SiteList Admin Area.</code> : Set the number of sites to show per page in the Admin Area. All, 10, 25, 50, 100, 500. (All).</li>
+</ul>
+
+<h4>Advanced Options</h4>
+<p>These options are set by editing variables in the NP_SiteList.php and should only be done by those comfortable doing so. The default values for these options should suffice for most cases. All variables are found near the top of the file.</p>
+<ul>
+<li><code>$maxsusp</code> (5) : Sites that fail a verification are put into the suspended state. If a site fails <code>$maxsusp</code> consecutive verifications, it is deleted from the database.</li>
+<li><code>$maxdesc</code> (48) : This limits the length of the Site Description as entered by the user. Any Site Description longer than <code>$maxdesc</code> will be truncated at <code>$maxdesc</code>.</li>
+<li><code>$sleepsec</code> (0) : The verification process makes your web server act like a browser. For processing long lists of sites, this might cause troubles with your provider if too many requests are made per minute. This setting willcause the processing to pause for <code>$sleepsec</code> seconds between every 10 requests for the actions that require verification on large sets of sites.</li>
+<li><code>$phost</code> (null) : If your web server must use a proxy to access the internet, set this variable to the IP address or Fully-Qualified Domain Name of the proxy. You will probably want to set <code>$sleepsec</code> as well.</li>
+<li><code>$pport</code> (null) : Set to tcp port number of the proxy.</li>
+<li><code>$tout</code> (8) : Time in seconds to wait for connection during http request. If timeout is reached, the site fails verification.</li>
+<li><code>$rtout</code> (array(8,500)) : Time in seconds,milliseconds to wait to complete the reading of the site during the http request. If timeout is reached, the site fails verification.</li>
+<li><code>$allowredir</code> (true) : If set to true, the http request will follow up to <code>$maxredirs</code> http redirects when fetching the site.</li>
+<li><code>$maxredirs</code> (3) : If <code>$allowredir</code> is true, limits the number of http redirects to allow.</li>
+<li><code>$allowedProtocols</code> (array("http","https")) : Only protocols listed here are permitted in sitelist urls.</li>
+<li><code>$a_blockedExtensions</code> (array(".exe",".bat",".vbs")) : Page or domain extensions listed here cannot be used in urls in sitelist.</li>
+</ul>
+
+<h3><a name="skinvars">SkinVars</a></h3>
+
+<p>There are four skinvars for this plugin:</p>
+
+<ul>
+<li><b>&lt;%SiteList%&gt;</b>: Same as &lt;%SiteList(item)%&gt; with all default values.</li>
+<li><b>&lt;%SiteList(form,$isize)%&gt;</b>: Displays the Submit Site form for users. Form is enclosed by &lt;div class="sitelistform"&gt;...&lt;/div&gt;, each input field has a class of formfield and the Submit Sites button has a class of formbutton. $isize is an integer and sets the size of the input boxes. If not set, input box size is determined by CSS.</li>
+<li><b>&lt;%SiteList(count)%&gt;</b>: Displays the number of approved sites in the database.</li>
+<li><b>&lt;%SiteList(item, $nshow, $sort, $litag, $sman)%&gt;</b>: Displays a list of approved sites with the parameters given.</li>
+</ul>
+where:<br />
+<ul>
+<li><code>$nshow</code> : integer. Number of sites to show. If empty, will show the default as set in the Plugin Options. If 0, will show all approved sites. (set in Plugin Options)</li>
+<li><code>$sort</code> : string. Method of sorting the list of sites. Choices are asc, desc, random. (random)</li>
+<li><code>$litag</code> : string. Simple html tag to enclose sites between. Should not include the &lt; or &gt;. Possible choices are li, dd, br. (set in Plugin Options)</li>
+<li><code>$sman</code> : yes or no. Whether to show the site managements links along side the sites when the logged in user in the admin. (set in Plugin Options)</li>
+</ul>
+
+<h3><a name="manage">SiteList Management</a></h3>
+<p>All SiteList management should be done by a user with Administrator privileges for the site. Each site can be in one of four states&mdash;unchecked, checked, exempt, or suspended. Only sites in the checked (approved) and exempt states are displayed to non-admin site visitors by the &lt;%SiteList(item)%&gt; skinvar. Checked and Exempt sites are sites that the admin deems approved to display on the site. Exempt sites are not verified with the Checked sites when running batch verification actions. Exempting sites is useful if a site does not pass the verification conditions, but is desired anyway, or if it loads slowly and often fails verifications because of timeouts. Unchecked sites are sites that have been submitted by a non-admin user that are awaiting review and approval. Suspended sites are those that have been reviewed, but do not meet the requirements of the site administrator. Suspended sites stay in the database until they are deleted manually by the admin, or until they are suspended five times. Sites can be manually placed in any of these states (by clicking links), or a site admin can setup verification conditions which can be applied to sites to automate the review process.</p>
+<p>The list of sites can be managed from any of three places depending on your settings, as follows:</p>
+<ol>
+<li><b>Your Skins</b> : A limited number of actions are available to a site admin when he views the site links as displayed by &lt;%SiteList(item)%&gt;. A site can be deleted, verified, suspended, or approved by clicking the appropriate links next to the desired site. By default this is disabled. It can be enabled by setting a Plugin Option, or by using the appropriate skinvar parameter.</li>
+<li><b>Your Plugins Page</b> : Full management is available by going to the Plugins page in your Nucleus Admin GUI. Click on the &lsquo;admin&rsquo; link in the right column of the row for the Site List plugin. The full management functions will be described below. This management method is always available.</li>
+<li><b>Your QuickMenu</b> : If enabled, by a Plugin Option, a &lsquo;SiteList&rsquo; link will appear at the bottom of the left column of your Nucleus Admin GUI, under the Plugins heading. This is a link to the same admin page as available from the Plugins Page.</li>
+</ol>
+<p><a name="action"></a>On the SiteList Admin page, the following functions can be performed:</p>
+<ul>
+<li><b>[Edit SiteList Options]</b> : This is a link to the Plugin Options for the SiteList plugin.</li>
+<li><b>[Set]</b> : Sets the Sites per Page variable for this session.</li>
+<li><b>[Show Unchecked]</b> : Clicking this will show the list of sites in the Unchecked state.</li>
+<li><b>[Verify All Unchecked Sites]</b> : If verification is enabled, this action will be available when [Show Unchecked] is selected. Clicking this action will apply the verification conditions against all the Unchecked sites and move them to Checked (PASS) or Suspended (FAIL), as appropriate.</li>
+<li><b>[Show Approved]</b> : Clicking this will show the list of sites in the Exempt and Checked states. Exempt sites are listed first.</li>
+<li><b>[Verify All Checked Sites]</b> : If verification is enabled, this action will be available when [Show Approved] is selected. Clicking this action will apply the verification conditions against all Checked sites and move the ones that FAIL to the Suspended state.</li>
+<li><b>[Show Suspended]</b> : Clicking this will show the list of sites in the Suspended state. Sites are displayed in ascending order by number of times suspended. So sites suspended for the first time are listed first and sites that have failed multiple verifications (manual or programatic) are listed later.</li>
+<li><b>[Delete Suspended Sites]</b> : This action is available when [Show Suspended] is selected. Clicking this will delete all the Suspended sites from the database. You will be prompted to confirm before the action is executed. A log of the actions will be printed to the screen in a format that can be saved to a file and used to restore the list to the datbase with a proper mysql query, but that is currently unsupported.</li>
+<li><b>[Verify All Suspended Sites]</b> : If verification is enabled, this action will be available when [Show Suspended] is selected. Clicking this action will apply the verification conditions against all Suspended sites and move those that PASS to the Checked state. Sites that fail will have their suspension number increased, and sites failing their fifth suspension will be deleted from the database.</li>
+<li><b>[Add URLs]</b> : Clicking this will show the Add URL form where the admin user can add sites to the list. Sites added by the admin user will be marked as Checked upon submission.</li>
+<li><b>[Verify This Page]</b> : If verification is enabled and there are more sites in the current list than the page size, this action will be available. Clicking this action will apply the verification conditions against the sites on the current page only.</li>
+<li><b>[Delete This Page]</b> : If there are more sites in the cuurent list of suspended sites than the page size, this action will be available. Clicking it will delete the sites on the current page. You will be prompted to confirm before the action is executed.</li>
+<li><b>[Search]</b> : Enter some text to search for matching sites (url or title). Clicking this button will perform a simple search and display the matching sites.</li>
+</ul>
+<p>The following actions are available to the right of each site listed by [Show Unchecked], [Show Approved], and [Show Suspended], and apply only to that one site.</p>
+<ul>
+<li><b>[edit]</b> : Clicking this will open the Add URL form with the current sites url and description in the appropriate fields. The admin user can modify it and resubmit it. All edited sites become Checked upon resubmission.</li>
+<li><b>[delete]</b> : Clicking this will delete the site from the database. There is no confirmation prompt.</li>
+<li><b>[approve]</b> : Clicking this will move the site to the Checked state. Only available for sites in the Unchecked state.</li>
+<li><b>[suspend]</b> : Clicking this will move a site to the Suspended state. When applied to a Suspended site, it will increase its suspension number. When applied to a site with a suspension number of 4, the result will be same as [delete] action.</li>
+<li><b>[exempt]</b> : Clicking this will move the site into the Exempt state. This action is not available for Exempt sites or if verification is disabled.</li>
+<li><b>[verify]</b> : Clicking this will apply the verification conditions against the site and adjust its state according to whether it passed or failed.</li>
+<li><b>[manual verify]</b> : Clicking this will apply the verification conditions against the site, but no changes are made to the database. You will see a page displaying the results of the verification condition, whether the site would have passed or failed using the current conditions and logic operator, what the result would have been for the other logic operators, the HTTP response code, the number of redirects followed, and the html source code of the page loaded. There are also links to perform some of the other actions listed above, if so desired.</li>
+</ul>
+
+<h3><a name="test">SiteList Test Application</a></h3>
+<p>Before you start using the verification functions on your real data, you will want to test the conditions against a set of known, and maybe unknown sites, to confirm that the verification process will pass the sites you want and fail the others. Provided in the sitelist directory is a php application to allow testing your conditions against any site. It can be called by the [manual verify] action for sites in your database, or by typing a URL in your browser, as described below. Only logged in (to Nucleus) site administrators can use this test applicaiton.</p>
+<p>For a single url (adjust the url to fit your site).</p>
+<code>http://yoursite.domain/nucleus/plugins/sitelist/sltest.php?testurl=http://url-of-site-to-test.domain</code>
+<p>For multiple sites at once, create a text file with one url per line and write it to your nucleus/plugins/sitelist directory, or make it available by url as shown below.</p>
+<p>File on your webserver. Set the path from the sitelist directory. This example assumes the file is in the sitelist directory. If your file is in the same directory as your config.php file, you can specify testfile=../../../testlist.txt. Or you can use an absolute path, like testfile=/home/user1/testlist.txt</p>
+<code>http://yoursite.domain/nucleus/plugins/sitelist/sltest.php?testfile=testlist.txt</code>
+<p>Remote File. This is a text file being served on a different web server.</p>
+<code>http://yoursite.domain/nucleus/plugins/sitelist/sltest.php?testfile=http://site-of-test-file.domain/path-to-file/testlist.txt</code>
+<p>File on your local system. This works for Firefox, but not for IE browsers. I have not tested on other browsers.</p>
+<code>http://yoursite.domain/nucleus/plugins/sitelist/sltest.php?testfile=file:///c:/path-to-file/testlist.txt</code>
+
+<h3><a name="browser">SiteList Browser Application</a></h3>
+<p>This is a semi-supported feature that allows you to show the sites within a frame-based browser page patterned after the one used to display skins at the <a href="http://skins.nucleuscms.org/">Nucleus Skins Site</a>. This feature is available as of version 1.1. To use this feature, install version 1.1 or later and copy the contents of the sitelist/browser directory into the directory containing your config.php file. The sitelist/browser directory should contain three files ("sbmain.html", "sbintro.html", and "sbtop2.php") and a directory ("img") of image files. You will need to edit the sbintro.html file to customize the text shown to your needs. By default, 25 random sites are shown in each set, but this can be changed by editing the variable $setlimit at the top of the sbtop2.php file.</p>
+<p>Once the files are customized to your needs and moved to the same directory as your config.php file, you can link to the sbmain.html file anywhere in your skins, templates or items where you can use a &lt;a&gt; tag.</p>
+<p>If you perform the verify action on the sites, any sites using a frame buster script in the header will be flagged in the database and not shown in the sitelist browser results.</p>
+
+<h3><a name="future">Future Plans</a></h3>
+
+<p>Some added features under consideration, if there is interest, are the following:</p>
+<ul>
+<li>Optional form to allow site visitors to check status of their submitted sites (or really any site).</li>
+<li>Extend to permit per blog SiteLists for sites hosting multiple blogs. NP_BlogRoll does this well already, including categorized lists and per-user lists for members, but doesn't do the verification. Might not be a demand for this.</li>
+<li>add actions to export SiteList data table to file, and to load data from a file</li>
+<li>add logging to file for auditing and recovery. Depends on above.</li>
+</ul>
+
+<h3><a name="support">Support and Bug reports</a></h3>
+<ul>
+<li>When PHP is in safe mode, Admin page actions where verification is done on large sets of sites will timeout after the max_execution_time is exceeded (default = 30 sec).
+ For sites with safe mode on, work with small page sizes (10 or 25) when running verification on sets of sites.</li>
+<li>needed to make a change to pear/HTTP/Request.php to disable gzip encoding of requested sites. Some sites would cause hang when downloading html text for verification.</li>
+</ul>
+<p>For additional support and/or bug reports please use this forum thread:
+<a href="http://forum.nucleuscms.org/viewtopic.php?t=11914">
+http://forum.nucleuscms.org/viewtopic.php?t=11914</a></p>
+
+<h3><a name="history">Version History</a></h3>
+
+<ul>
+<li>Version 1.3.3: (2006-10-21)
+        <ul>
+        <li>fixes a bug where first exempt site does not show up in admin interface</li>
+		<li>adds a ticket system to discourage direct submissions without loading the
+		submission form (anti-spam). Just copy new files over existing 1.2 or 1.3 installs. See
+		included help file for more info on upgrading from versions previous to 1.2</li>
+        </ul>
+</li>
+<li>Version 1.3.2: (2006-08-29)
+        <ul>
+        <li>fixes a bug in skinvar when sort order not random caused MySQL error</li>
+		<li>adds a stringStripTags() function if it does not exist in Nucleus (versions prior to 3.22)</li>
+        </ul>
+</li>
+<li>Version 1.3.1: (2006-08-17)
+		<ul>
+        <li>fixes minor bug in how Verify This Page action works when exempted sites
+		are present. Just copy new files over existing 1.2 or 1.3 installs. See
+		included help file for more info on upgrading from versions previous to 1.2</li>
+        </ul>
+</li>
+<li>Version 1.3: (2006-06-03)
+        <ul>
+        <li>security improvements in how user input is handled and more careful about how includes are done.</li>
+        <li>Continued code cleanup.</li>
+        <li>Added execution timing function to time set processing functions.</li>
+        <li>used set_time_limit(0) to override max_execution_time setting in php.ini to allow verifying of large site sets. will only work when safe_mode is off.</li>
+        <li>Fixed bug that was verifying exempted sites when using verifychecked action.</li>
+        <li>Use of ob_flush() and flush() to update output to browser after each site in a set is verified.</li>
+        <li>Set mbstring.func_overload="2" to disable gzip encoding in the HTTP_REQUEST objects (in pear library) Also disabled gzip encoding in Request.php (pear/HTTP). This seems to solve a problem for certain sites that hang during verification and cause process to fail.</li>
+        <li>Internationalized the plugin. Only english file available.</li>
+        <li>Made to work for all PHP versions >= 4.0.6</li>
+        <li>no uninstall/reinstall needed for upgrade from version 1.2</li>
+        </ul>
+</li>
+<li>Version 1.2: (2006-05-17)
+        <ul>
+        <li>added code to save plugin options during uninstall if user sets option to not delete sitelist data on uninstall.
+		<li>added parameter to form type of skinvar to allow overriding input box size.</li>
+        <li>Added page size option for handling large lists in the admin area.</li>
+		<li>Some other cleaning of admin area presentation</li>
+        </ul>
+</li>
+<li>Version 1.1: (2006-05-05) No Public Release. Included in 1.2.
+        <ul>
+        <li>added support for sitelist browser.
+        <li>now verification checks for existence of frame buster code and sets a table field that will exclude it from the SiteList Browser sets.</li>
+        <li>Requires uninstall and reinstall.</li>
+        <li>Also so minor bug fixes to the sleepsec function.</li>
+        <li>Requires uninstall and re-install.</li>
+        </ul>
+</li>
+<li>Version 1.0.1: (2006-04-28) made so to use &lt;?php instead of &lt;? for
+		better compatibility with all php installations.
+</li>
+<li>Version 1.0: (2006-04-19) extensive modifications to add site verification by Frank Truscott
+Among the new features added are the following:
+        <ul>
+            <li>added preg-based site verification</li>
+            <li>added admin area to manage links</li>
+            <li>added 'suspended' status and extended db table</li>
+            <li>added admin site edit feature</li>
+            <li>added option to save data table on uninstall</li>
+            <li>no longer require sites-thanks.php</li>
+            <li>sites added by admin can be auto-verified</li>
+            <li>added skinvar parameters to control how lists look
+                  can now get # of approved sites, limit # shown,
+                  spcify html tag to enclose elements, and turn off
+                  the management links for site admins from displayed
+                  SiteList</li>
+            <li>see the help.html file for more information on use
+                  of the plugin.</li>
+        </ul>
+</li>
+<li>Version 0.1: (2002-08-16) initial version by Wouter Demuynck</li>
+</ul>
