@@ -1,0 +1,134 @@
+<h3>Plugin overview</h3>
+
+<p>This plugin displays all kinds of information about your Nucleus CMS
+installation, including data about PHP, MySQL, and Apache. This data
+can be used in troubleshooting and determining your server capabilities. It is
+meant to be like the System Info... feature that is part of the Help->About menu
+item in Microsoft Office products. </p>
+
+<ul>
+<li><a href="#requirements">Requirements</a></li>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#options">Plugin Options</a></li>
+<li><a href="#skinvars">SkinVars</a></li>
+<li><a href="#usage">Usage</a></li>
+<li><a href="#future">Future Plans</a></li>
+<li><a href="#support">Support and Bugs</a></li>
+<li><a href="#history">Version History</a></li>
+</ul>
+<h3><a name="requirements">Requirements</h3>
+
+<p>This plugin should work on any system that meets the minimum requirements of
+Nucleus CMS v3.2 or higher, but may work on earlier versions as well. It requires
+PHP v 4.0.6 or higher. It has only been tested using MySQL version 4.1.16 and
+higher, but should theoretically work on all MySQL versions supported by
+Nucleus CMS 3.2+.</p>
+
+<h3><a name="installation">Installation</a></h3>
+
+<p>The NP_SystemInfo plugin can be downloaded from
+<a href="http://www.iai.com/NP_SystemInfo.zip" title="Download NP_SystemInfo">here</a>.</p>
+
+<p>Download and extract the zip file. Copy the NP_SystemInfo.php file and the
+systeminfo directory to the nucleus/plugins directory.</p>
+
+<p>Use the Nucleus Admin GUI to register the NP_SystemInfo plugin into Nucleus.
+Be sure to click the &lsquo;Update subscription list&rsquo; button.</p>
+
+<p>You will need to edit and save the plugin options before using the plugin.
+The options are described below.</p>
+
+<h3><a name="options">Plugin Options</a></h3>
+<p>There are two options that control the operation of the SystemInfo plugin.
+These options are set from the &lsquo;edit options&rsquo; link in the Plugin
+Admin area.</p>
+
+<h4>Plugin Options</h4>
+<ul>
+<li><code>Show Admin Area in quick menu</code> : Whether the SystemInfo admin area
+should be shown in the Quick Menu area. yes or no. (yes)</li>
+<li><code>Who should have access to SystemInfo</code> : Set the level of user who
+can access the SystemInfo Admin Area. Each level includes the levels above it.
+You should be very cafeful about setting the level to All Logged-In Users as you
+will be exposing a lot of site data to non-admin users.
+Site Admins|Blog Admins|Team Members|All Logged-In Users. (Site Admins)</li>
+</ul>
+
+<h3><a name="skinvars">SkinVars</a></h3>
+
+<p>There are no skinvars for this plugin:</p>
+
+<h3><a name="usage">Usage</a></h3>
+
+<p>From the Nucleus Management Area, the SystemInfo is available from the QuickMenu,
+if enabled, or from the Plugins page by clicking admin on the SystemInfo row.</p>
+
+<p>There are pages, selected by clicking on tabs, for Nucleus CMS, PHP, MySQL,
+and Apache. Most of these have subpages controlled by clicking on subtabs that
+display subsets of data for the main page. There is too much information displayed
+to describe it all. Below are some examples of the information available for
+each of the main pages.</p>
+
+<h4>Nuclues CMS</h4>
+<ul>
+<li>Global Variables set in config.php</li>
+<li>The values stored in the $CONF global variable (includes the values stores in
+nucleus_config table).</li>
+<li>List of installed plugins, plugin event subscriptions, and skins</li>
+<li>Installed version and patch level</li>
+</ul>
+
+<h4>PHP</h4>
+<ul>
+<li>All info from phpinfo() function</li>
+<li>Loaded PHP Modules</li>
+<li>Available php functions</li>
+<li>PHP configuration settings</li>
+<li>PHP Variables</li>
+</ul>
+
+<h4>MySQL</h4>
+<ul>
+<li>MySQL Server and client versions</li>
+<li>MySQL stats and status</li>
+<li>List of database tables and fields</li>
+<li>Field definitions, type, key, etc...</li>
+<li>Table creation query, index details, and stats for each table</li>
+<li>Data lookup queries to view any data stored in database. (passwords and
+cookiekeys are not displayed)</li>
+</ul>
+
+<h4>Apache</h4>
+<ul>
+<li>Basically what phpinfo() displayes for apache</li>
+<li>Apache version</li>
+<li>Loaded Apache modules</li>
+<li>Apache environment variables</li>
+<li>HTTP Header data</li>
+</ul>
+
+<h3><a name="future">Future Plans</a></h3>
+
+<p>Some added features under consideration, if there is interest, are the following:</p>
+<ul>
+<li>View file permissions and properties.</li>
+<li>Add some simple management actions, like chmod, or resetting table indices
+(but I think I really want to keep this exclusively as a viewing tool).</li>
+</ul>
+
+<h3><a name="support">Support and Bug reports</a></h3>
+<ul>
+<li>For PHP version less than 4.3.0, a few properties are not available for display,
+including get_apache_version, mysql_client_encoding, mysql_get_proto_info.</li>
+</ul>
+<p>For additional support and/or bug reports please use this forum thread:
+<a href="http://forum.nucleuscms.org/viewtopic.php?t=12433">
+http://forum.nucleuscms.org/viewtopic.php?t=12433</a></p>
+
+<h3><a name="history">Version History</a></h3>
+
+<ul>
+<li>Version 1.1: (2006-08-31) added plugin event subscription list and search
+functionality for php modules/configuration.
+<li>Version 1.0: (2006-06-07) initial version by Frank Truscott</li>
+</ul>
