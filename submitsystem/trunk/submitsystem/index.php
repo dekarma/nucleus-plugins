@@ -118,7 +118,7 @@ if (isset($_GET['allow']) || isset($_GET['deny'])) {
 				//	. ')');
 
 				$blog =& $manager->getBlog($array['ss_blogid']);
-				$blog->additem(0, $array['ss_title'], $body, null, $array['ss_blogid'], $member->getID(), time(), 0, 0);
+				$blog->additem(0, $array['ss_title'], $body, null, $array['ss_blogid'], $member->getID(), $blog->getCorrectTime(), 0, 0);
 			}
 			else {
 				foreach (explode('|', $array['ss_files']) as $file) {
@@ -231,8 +231,13 @@ elseif ($_GET['page'] == 'log' && $ssadmin->plugin->getOption('log') == 'yes' &&
 	echo('</table>');
 }
 elseif ($_GET['page'] == 'showbody' && is_numeric($_GET['id']) && $_GET['id'] > 0) {
+	$bloginfos = array();
 	$result = sql_query('SELECT *, UNIX_TIMESTAMP(ss_date) AS ss_date FROM ' . $ssadmin->plugin->dbtable . ' WHERE ss_id = ' . $_GET['id']);
 	while($row = mysql_fetch_array($result)) {
+		if (!isset($bloginfos[$row['ss_blogid']])) {
+			 $bloginfos[$row['ss_blogid']] =& $manager->getBlog($row['ss_blogid']);
+		}
+	
 		echo('<div style="padding: 5px; border: 1px solid #000000;">');
 		echo('<h3>' . $row['ss_title'] . '</h3>');
 
@@ -272,7 +277,7 @@ elseif ($_GET['page'] == 'showbody' && is_numeric($_GET['id']) && $_GET['id'] > 
 		echo('</div>');
 
 		echo('<p>');
-		echo('Posted at ' . date('d-m-Y H:i', $row['ss_date']) . ' by ' . $row['ss_poster_name'] . ' (<a href="mailto:' . $row['ss_poster_email'] . '">email</a>');
+		echo('Posted at ' . date('d-m-Y H:i', $bloginfos[$row['ss_blogid']]->getCorrectTime($row['ss_date'])) . ' by ' . $row['ss_poster_name'] . ' (<a href="mailto:' . $row['ss_poster_email'] . '">email</a>');
 		if (!empty($row['ss_poster_website'])) {
 			echo(' | <a href="' . $row['ss_poster_website'] . '">website</a>');
 		}
@@ -305,7 +310,7 @@ else {
 				echo(' | <a href="' . $row['ss_poster_website'] . '">website</a>');
 			}
 			echo(')</td>');
-			echo('<td>' . date('d-m-Y H:i', $row['ss_date']) . '</td>');
+			echo('<td>' . date('d-m-Y H:i', $bloginfo->getCorrectTime($row['ss_date'])) . '</td>');
 			//echo('<td>');
 			//if (!empty($row['ss_extrafields'])) {
 			//	$extrafields = unserialize($row['ss_extrafields']);
