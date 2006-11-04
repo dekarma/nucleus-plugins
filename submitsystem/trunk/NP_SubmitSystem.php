@@ -15,7 +15,7 @@ class NP_SubmitSystem extends NucleusPlugin {
 		return 'http://www.legolasweb.nl/';
 	}
 	function getVersion() {
-		return '2.0.1';
+		return '2.0.2';
 	}
 	function getDescription() {
 		return 'Submit stuff...';
