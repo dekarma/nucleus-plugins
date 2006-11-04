@@ -70,9 +70,11 @@ if (isset($_GET['allow']) || isset($_GET['deny'])) {
 				if ($ssadmin->plugin->getOption('previewmode') == 'yes' && isset($_POST['body']) && isset($_POST['title'])) {
 					$array['ss_title'] = $_POST['title'];
 					$body = $_POST['body'];
+					$more = $_POST['more'];
 				}
 				else {
 					$body = null;
+					$more = null;
 					$body .= '<p>' . $array['ss_poster_name'] . ' (<a href="mailto:' . $array['ss_poster_email'] . '">email</a>';
 					if (!empty($array['ss_poster_website'])) {
 						$body .= ' | <a href="' . $array['ss_poster_website'] . '">website</a>';
@@ -118,7 +120,7 @@ if (isset($_GET['allow']) || isset($_GET['deny'])) {
 				//	. ')');
 
 				$blog =& $manager->getBlog($array['ss_blogid']);
-				$blog->additem(0, $array['ss_title'], $body, null, $array['ss_blogid'], $member->getID(), $blog->getCorrectTime(), 0, 0);
+				$blog->additem(0, $array['ss_title'], $body, $more, $array['ss_blogid'], $member->getID(), $blog->getCorrectTime(), 0, 0);
 			}
 			else {
 				foreach (explode('|', $array['ss_files']) as $file) {
@@ -192,7 +194,7 @@ if (isset($_GET['preview']) && intval($_GET['preview']) > 0) {
 		echo('<!--' . "\n");
 		echo('function updatePreview() {' . "\n");
 		echo('goal = document.getElementById(\'preview\');' . "\n");
-		echo('goal.innerHTML = \'<h3>\' + document.getElementById(\'title\').value + \'</h3><p>\' + document.getElementById(\'body\').value + \'</p>\';' . "\n");
+		echo('goal.innerHTML = \'<h3>\' + document.getElementById(\'title\').value + \'</h3><p>\' + document.getElementById(\'body\').value + \'</p><p>\' + document.getElementById(\'more\').value + \'</p>\';' . "\n");
 		echo('}' . "\n");
 		echo('//-->' . "\n");
 		echo('</script>');
@@ -208,6 +210,7 @@ if (isset($_GET['preview']) && intval($_GET['preview']) > 0) {
 		echo('<table>');
 		echo('<tr><td>Title:</td><td><input type="text" id="title" name="title" ' . $javascriptpreview . ' value="' . $array['ss_title'] . '" /></td></tr>');
 		echo('<tr><td>Body:</td><td><textarea id="body" name="body" ' . $javascriptpreview . ' rows="10">' . $body . '</textarea></td></tr>');
+		echo('<tr><td>Extended:</td><td><textarea id="more" name="more" ' . $javascriptpreview . ' rows="10"></textarea></td></tr>');
 		echo('<tr><td colspan="2"><input type="submit" value="Add" /></td></tr>');
 		echo('</table>');
 		echo('</form>');
