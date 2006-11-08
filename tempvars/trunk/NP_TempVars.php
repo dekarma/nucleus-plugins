@@ -78,7 +78,7 @@ class NP_TempVars extends NucleusPlugin
 
    function doTemplateCommentsVar(&$item, &$comment) {
        //$commentactions = array('commentauthor');
-       $commentactions = array();
+       $commentactions = array('userwebsitelink','useremaillink');
        $params = func_get_args();
        array_shift($params);
        array_shift($params);
@@ -268,6 +268,47 @@ class NP_TempVars extends NucleusPlugin
         call_user_func_array(array($this,'tv_iauthor'),array(&$params));
     }
 
+    function tv_userwebsitelink(&$params) {
+        $item =& array_shift($params);
+        $comment =& array_shift($params);
+        if ($comment['userlinkraw']) {
+			if (!(strpos($comment['userlinkraw'], 'http://') === false)) {
+				echo '<a href="'.$comment['userlinkraw'].'" rel="nofollow">'.$comment['user'].'</a>';
+			}
+			else {
+				echo $comment['user'];
+			}
+		}
+		else {
+			echo $comment['user'];
+		}
+    }
+
+	function tv_useremaillink(&$params) {
+        $item =& array_shift($params);
+        $comment =& array_shift($params);
+        if ($comment['memberid'] > 0)
+		{
+			$member = new MEMBER();
+			$member->readFromID($comment['memberid']);
+
+			if ($member->email != '') {
+				echo '<a href="mailto:'.$member->email.'" rel="nofollow">'.$comment['user'].'</a>';
+			}
+			else {
+				echo $comment['user'];
+			}
+		}
+		else
+		{
+			if (!(strpos($comment['userlinkraw'], 'mailto:') === false)) {
+				echo '<a href="'.$comment['userlinkraw'].'" rel="nofollow">'.$comment['user'].'</a>';
+			}
+			else {
+				echo $comment['user'];
+			}
+		}
+    }
 /*
 // This is a test function to verify doTemplateCommentVar() works as desired
 // see COMMENTACTIONS class in COMMENTS.php for ideas of using $comment object
