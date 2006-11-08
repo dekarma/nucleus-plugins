@@ -209,7 +209,7 @@
 	}
 	else echo "<h3>"._SITELIST_ADMIN_S_HEAD." [$rows] </h3><div>\n";
 	if ($safe == 'true') {
-		echo ' <a style="'.$linkstyle.'" href="'.$thispage.'?showlist='.$showlist.'&amp;safe=false&amp;nshow='.$nshow.'">'._SITELIST_ADMIN_S_DELETE_ALL."</a> . \n";
+		if ($verify) echo ' <a style="'.$linkstyle.'" href="'.$thispage.'?showlist='.$showlist.'&amp;safe=false&amp;nshow='.$nshow.'">'._SITELIST_ADMIN_S_DELETE_ALL."</a> . \n";
 		if ($verify) echo ' <a style="'.$linkstyle.'" href="'.$action_url.'?action=plugin&amp;name=SiteList&amp;type=verifysuspended">'._SITELIST_ADMIN_S_VERIFY_ALL."</a>\n";
 	}
 	else {

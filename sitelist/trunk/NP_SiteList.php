@@ -11,6 +11,10 @@
 
 /*
 	Version history:
+	- 1.3.3.01:
+		* fixes bug in Admin page where non-admin could see delete all link for suspended sites.
+		Could not run action, so not major bug.
+		* redo conditional in install() for restoring options. Some users had problems with it.
 	- 1.3.3: (2006-10-21)
         * fixes bug in skinvar concerning sort order when not random
 		* adds a stringStripTags() function if it doesn't exist (pre Nucleus 3.22)
@@ -205,8 +209,8 @@ class NP_SiteList extends NucleusPlugin {
 		$this->createOption('ThanksText','Thank You Text (including any html tags) to display above add form when user submits a site.','textarea','<p style="color:#ff2222;background-color:#eeeeee;">Thanks for your submission. Your site will be reviewed and added to the list as soon as possible.</p>');
 		$this->createOption('PageSize','Number of sites to show on single page in SiteList Admin Area','select','All','All|All|10|10|25|25|50|50|100|100|500|500');
 
-		$ot_result = mysql_query("SHOW TABLES LIKE '".sql_table($this_tablename.'_options')."'");
-		if ($ot_result) {
+		$ot_result = sql_query("SHOW TABLES LIKE '%".sql_table($this_tablename.'_options')."%'");
+		if (mysql_num_rows($ot_result) > 0) {
 			$so_query = "SELECT * FROM ".sql_table($this->tablename.'_options');
 			$savedopt = mysql_fetch_object(mysql_query($so_query));
 			$this->setOption('quickmenu',$savedopt->quickmenu);
