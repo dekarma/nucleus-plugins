@@ -49,7 +49,7 @@ class NP_TempVars extends NucleusPlugin
    function getName() { return 'TempVars'; }
    function getAuthor() { return 'Frank Truscott'; }
    function getURL() { return 'http://www.iai.com/'; }
-   function getVersion() { return '0.2.01'; }
+   function getVersion() { return '0.3'; }
 
    function getDescription()
    {
