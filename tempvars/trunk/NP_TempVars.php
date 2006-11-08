@@ -11,6 +11,7 @@
 
 /*
 * History
+* [Version 0.3] - 11-07-2006 - added userwebsitelink, useremaillink
 * [Version 0.2] - 05-23-2006 - initial release.
 */
 class NP_TempVars extends NucleusPlugin
@@ -48,7 +49,7 @@ class NP_TempVars extends NucleusPlugin
    function getName() { return 'TempVars'; }
    function getAuthor() { return 'Frank Truscott'; }
    function getURL() { return 'http://www.iai.com/'; }
-   function getVersion() { return '0.2'; }
+   function getVersion() { return '0.2.01'; }
 
    function getDescription()
    {
