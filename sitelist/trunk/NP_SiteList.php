@@ -210,7 +210,7 @@ class NP_SiteList extends NucleusPlugin {
 		$this->createOption('PageSize','Number of sites to show on single page in SiteList Admin Area','select','All','All|All|10|10|25|25|50|50|100|100|500|500');
 
 		$ot_result = sql_query("SHOW TABLES LIKE '%".sql_table($this_tablename.'_options')."%'");
-		if (mysql_num_rows($ot_result) > 0) {
+		if ($ot_result) {
 			$so_query = "SELECT * FROM ".sql_table($this->tablename.'_options');
 			$savedopt = mysql_fetch_object(mysql_query($so_query));
 			$this->setOption('quickmenu',$savedopt->quickmenu);
