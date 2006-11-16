@@ -24,8 +24,8 @@
  * To replace the blog  or otherblog skinvar use this form:
  * &lt;%Ordered('blog', show, templatename, amount, category, blogname)%&gt;
  * where
- * show is either 'ordered' or 'unordered' and indicates which to show. blank shows just the ordered items.
- * templatename is the name of template to use to display items
+ * show is either 'ordered' or 'unordered' or 'all' and indicates which to show. blank shows just the ordered items.
+ * templatename is the name of template to use to display items. To force use of this template for all categories, follow by "(strict)", like this templatename(strict)
  * amount is an integer indicating how many items to show on page. can have offset like blog skinvar
  * category is category name to show (leave blank to show current category).
  *   Use 'cat_ord' to show only items from ordered categories. 'cat_unord' to exclude items from ordered categories.
@@ -34,14 +34,27 @@
  * To replace the categorylist skinvar use this form:
  * &lt;%Ordered('categorylist', show, templatename, blogname)%&gt;
  * where
- * show is either 'ordered' or 'unordered' and indicates which to show. blank shows just the ordered items.
+ * show is either 'ordered' or 'unordered' or 'all' and indicates which to show. blank shows just the ordered items.
  * templatename is the name of template to use to display items
  * blogname is the shortname of blog to show (leave blank to show current blog)
-
+ *
+ * To set the order for nextlink and prevlink, use this skinvar in the head section above first call to nextlink or prevlink. Th form is:
+ * &lt;%Ordered('setnavigation', show, amount, setcat)%&gt;
+ * where
+ * show is either 'ordered' or 'unordered' or 'all' and indicates which to show. Should match your use of blog form of skinvar. blank shows just the ordered items.
+ * amount is an integer indicating how many items to show on page. can have offset like blog skinvar
+ * setcat is yes or no and indicates whether the catid variable should be set according to category of item, even if not set in uri
  */
 
 /* History:
  *
+ * 1.01 - 11/11/2006 - added catiscurrent as template var in category List.
+ *						Useful for putting a class param in the links for
+ *						cats that can be different is listing the current cat.
+ *					   Added templatemode to override special cat template if wanted.
+ *					   Added setnavigation form to set next and prev item for item pages.
+ *						Put in head section, above any call to nextlink or prevlink
+ *					   Fixed how hande offset in blog form.
  * 1.00 - 11/10/2006 - initial release
  */
 
@@ -49,6 +62,7 @@ class NP_Ordered extends NucleusPlugin {
 
     var $amountfound;
     var $showWhat = 1;
+	var $templatemode = '';
 	//var $showOnlyCat = 0;
 
 	// name of plugin
@@ -69,7 +83,7 @@ class NP_Ordered extends NucleusPlugin {
 
 	// version of the plugin
 	function getVersion() {
-		return '1.0';
+		return '1.01';
 	}
 
 	// a description to be shown on the installed plugins listing
@@ -215,8 +229,10 @@ class NP_Ordered extends NucleusPlugin {
 
 		switch ($kind) {
 		case 'blog':
-			if (!is_numeric($amount)) $amount = 10;
+			if (!intval($amount)) $amount = 10;
 			list($limit, $offset) = sscanf($amount, '%d(%d)');
+			list($template,$tmode) = explode("(",$template);
+			$this->templatemode = str_replace(")","",$tmode);
 			if ($blogname != '') {
 				$b =& $manager->getBlog(getBlogIDFromName($blogname));
 				$btype = 'otherblog';
@@ -227,17 +243,6 @@ class NP_Ordered extends NucleusPlugin {
 				$btype = 'blog';
 				$useSP = 1;
 			}
-/*
-			if (strtolower($category) == 'cat_ord') {
-				$this->setshowOnlyCat(1);
-				$category = '';
-			}
-			elseif (strtolower($category) == 'cat_unord') {
-				$this->setshowOnlyCat(2);
-				$category = '';
-			}
-			else $this->setshowOnlyCat(0);
-*/
 
 			if (strtolower($show) == 'unordered') $this->setshowWhat(0);
 			elseif (strtolower($show) == 'all') $this->setshowWhat(2);
@@ -272,6 +277,53 @@ class NP_Ordered extends NucleusPlugin {
 			$this->_preBlogContent('categorylist',$b);
 			$this->showCategoryList($b,$template);
 			$this->_postBlogContent('categorylist',$b);
+			break;
+		case 'setnavigation':
+			if ($skinType != 'item') break;
+			global $itemidprev,$itemtitleprev,$itemidnext,$itemtitlenext,$itemid,$catid;
+			$setcat = $amount;
+
+			if (!intval($template)) $amount = 10;
+			else $amount = $template;
+			list($limit, $offset) = sscanf($amount, '%d(%d)');
+			$b =& $manager->getBlog(getBlogIDFromItemID($itemid));
+			$useSP = 1;
+			if (strtolower($setcat) == 'yes') {
+				if (intval($itemid) && $manager->existsItem(intval($itemid),0,0)) {
+					$iobj =& $manager->getItem(intval($itemid));
+					$catid = intval($iobj['catid']);
+					$b->setSelectedCategory($catid);
+				}
+			}
+
+			if (strtolower($show) == 'unordered') $this->setshowWhat(0);
+			elseif (strtolower($show) == 'all') $this->setshowWhat(2);
+			else $this->setshowWhat(1);
+			$query = $this->_getBlogQuery($b,$extraQuery,$limit,$offset,$startpos);
+			$res = sql_query($query);
+			$idarr = array();
+			$titarr = array();
+			$i = 0;
+			$curritemloc = 0;
+			while ($row = mysql_fetch_object($res)) {
+				$idarr[$i] = $row->itemid;
+				$titarr[$i] = $row->title;
+				if ($itemid == $row->itemid) $curritemloc = $i;
+				$i = $i + 1;
+			}
+			$itemidprev = 0;
+			$itemtitleprev = '';
+			$itemidnext = 0;
+			$itemtitlenext = '';
+			if ($curritemloc > 0) {
+				$itemidprev = $idarr[$curritemloc - 1];
+				$itemtitleprev = $titarr[$curritemloc - 1];
+			}
+			if ($curritemloc < ($i - 1)) {
+				$itemidnext = $idarr[$curritemloc + 1];
+				$itemtitlenext = $titarr[$curritemloc + 1];
+			}
+			//doError("$curritemloc $itemidprev $itemtitleprev<br />$itemidnext $itemtitlenext");
 			break;
 		default:
 			echo "Incorect usage of &lt;%Ordered(...)%&gt;. The first parameters must be either 'blog' or 'categorylist'.<br />";
@@ -357,7 +409,11 @@ class NP_Ordered extends NucleusPlugin {
 	}
 // this is a slight mod of readLogAmount method of NucleusCMS class BLOG, BLOG.php
     function readLogAmount(&$b, $template, $amountEntries, $extraQuery, $highlight, $comments, $dateheads, $offset = 0, $startpos = 0) {
-
+		$query = $this->_getBlogQuery($b,$extraQuery,$amountEntries,$offset, $startpos);
+		return $this->showUsingQuery($b,$template, $query, $highlight, $comments, $dateheads);
+	}
+// this gets the query for the blog form of the skinvar
+	function _getBlogQuery(&$b,$extraQuery,$amountEntries,$offset = 0, $startpos = 0) {
 		if ($this->getshowWhat() == 2) {
 			$this->setshowWhat(1);
 			$query = '(';
@@ -370,13 +426,14 @@ class NP_Ordered extends NucleusPlugin {
 		}
 		else $query = $this->getSqlBlog($b, $extraQuery);
 //echo $query."<br />";
+//doError($query);
 		if ($amountEntries > 0) {
 		        // $offset zou moeten worden:
 		        // (($startpos / $amountentries) + 1) * $offset ... later testen ...
 
 		       $query .= ' LIMIT ' . intval($startpos + $offset).',' . intval($amountEntries);
 		}
-		return $this->showUsingQuery($b,$template, $query, $highlight, $comments, $dateheads);
+		return $query;
 	}
 // this is a slight mod of getSqlBlog method of NucleusCMS class BLOG, BLOG.php
     function getSqlBlog(&$b, $extraQuery, $mode = '')
@@ -406,17 +463,6 @@ class NP_Ordered extends NucleusPlugin {
 		if ($b->getSelectedCategory())
 			$query .= ' and i.icat=' . $b->getSelectedCategory() . ' ';
 		else $query .= ' and oc.omainpage=1 ';
-
-		/*
-		if ($this->getshowOnlyCat() > 0) {
-			if ($this->getshowOnlyCat() == 1) {
-				$query .= ' and oc.onumber>0';
-			}
-			elseif ($this->getshowOnlyCat() == 2) {
-				$query .= ' and oc.onumber=0';
-			}
-		}
-		*/
 
         if ($this->showWhat == 0 ) {
             $query .= ' and o.onumber=0 ';
@@ -470,20 +516,22 @@ class NP_Ordered extends NucleusPlugin {
 		while ($item = mysql_fetch_object($items)) {
 
 			// reset template if needed
-			if ($item->otemplate == '') {
-				if ($currtemplate != $origtemplate) {
-					$template =& $manager->getTemplate($origtemplate);
-					$actions->setTemplate($template);
-					$currtemplate = $origtemplate;
-					$currentTemplateName = $origtemplate;
+			if (strtolower(trim($this->templatemode)) != 'strict') {
+				if ($item->otemplate == '') {
+					if ($currtemplate != $origtemplate) {
+						$template =& $manager->getTemplate($origtemplate);
+						$actions->setTemplate($template);
+						$currtemplate = $origtemplate;
+						$currentTemplateName = $origtemplate;
+					}
 				}
-			}
-			else {
-				if ($currtemplate != $item->otemplate) {
-					$template =& $manager->getTemplate($item->otemplate);
-					$actions->setTemplate($template);
-					$currtemplate = $item->otemplate;
-					$currentTemplateName = $item->otemplate;
+				else {
+					if ($currtemplate != $item->otemplate) {
+						$template =& $manager->getTemplate($item->otemplate);
+						$actions->setTemplate($template);
+						$currtemplate = $item->otemplate;
+						$currentTemplateName = $item->otemplate;
+					}
 				}
 			}
 
@@ -606,6 +654,28 @@ class NP_Ordered extends NucleusPlugin {
 								)
 							   );
 			$data['self'] = $CONF['Self'];
+			if ($b->getSelectedCategory()) {
+				if ($b->getSelectedCategory() == $data['catid']) {
+					$data['catiscurrent'] = 'yes';
+				}
+				else {
+					$data['catiscurrent'] = 'no';
+				}
+			}
+			else {
+				global $itemid;
+				//echo intval($itemid);
+				if (intval($itemid) && $manager->existsItem(intval($itemid),0,0)) {
+					$iobj =& $manager->getItem(intval($itemid));
+					$cid = $iobj['catid'];
+					if ($cid == $data['catid']) {
+						$data['catiscurrent'] = 'yes';
+					}
+					else {
+						$data['catiscurrent'] = 'no';
+					}
+				}
+			}
 
 			$temp = TEMPLATE::fill($template['CATLIST_LISTITEM'],$data);
 			echo strftime($temp,$current->itime);
