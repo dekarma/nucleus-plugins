@@ -48,13 +48,14 @@
 
 /* History:
  *
- * 1.01 - 11/11/2006 - added catiscurrent as template var in category List.
+ * 1.03 - 11/11/2006 - added catiscurrent as template var in category List.
  *						Useful for putting a class param in the links for
  *						cats that can be different is listing the current cat.
  *					   Added templatemode to override special cat template if wanted.
  *					   Added setnavigation form to set next and prev item for item pages.
  *						Put in head section, above any call to nextlink or prevlink
  *					   Fixed how hande offset in blog form.
+ *                     Add API function getQueryResult(). Made most methods protected.
  * 1.00 - 11/10/2006 - initial release
  */
 
@@ -63,7 +64,7 @@ class NP_Ordered extends NucleusPlugin {
     var $amountfound;
     var $showWhat = 1;
 	var $templatemode = '';
-	//var $showOnlyCat = 0;
+	var $getresult = 0;
 
 	// name of plugin
 	function getName() {
@@ -83,7 +84,7 @@ class NP_Ordered extends NucleusPlugin {
 
 	// version of the plugin
 	function getVersion() {
-		return '1.01';
+		return '1.03';
 	}
 
 	// a description to be shown on the installed plugins listing
@@ -208,22 +209,6 @@ class NP_Ordered extends NucleusPlugin {
         $this->_generateForm($currentorder);
     }
 
-    function _generateForm($keywordstring='')
-    {
-		global $member, $itemid;
-
-        echo "<h3>NP_OrderedBlog</h3>\n";
-		$blogid = getBlogIDFromItemID($itemid);
-
-		if ($member->blogAdminRights($blogid)) {
-			printf('<p>Item Order: <input name="plug_ob_order" type="text" size="60" maxlength="256" value="%s"></p>', $keywordstring);
-		}
-		else {
-			printf('<p>Item Order: %s</p>', $keywordstring);
-		}
-        echo "\n";
-    }
-
 	function doSkinVar($skinType,$kind = 'blog', $show = '',$template,$amount = '',$category = '', $blogname = '') {
         global $manager, $blog, $startpos;
 
@@ -247,17 +232,24 @@ class NP_Ordered extends NucleusPlugin {
 			if (strtolower($show) == 'unordered') $this->setshowWhat(0);
 			elseif (strtolower($show) == 'all') $this->setshowWhat(2);
 			else $this->setshowWhat(1);
-			//echo "show = $show, and showWhat = ".$this->getShowWhat()."<br />";
 
 			$this->_setBlogCategory($b, $category);
-			$this->_preBlogContent($btype,$b);
-			if ($useSP) {
-				$this->amountfound = $this->readLog($b,$template, $limit, $offset, $startpos);
-			}
-			else {
-				$this->amountfound = $this->readLog($b,$template, $limit, $offset);
-			}
-			$this->_postBlogContent($btype,$b);
+            if ($this->getresult) {
+                $oquery = $this->_getBlogQuery($b,$extraQuery,$limit,$offset,$startpos);
+                $oresult = sql_query($oquery);
+                $this->getresult = 0;
+                return $oresult;
+            }
+            else {
+                $this->_preBlogContent($btype,$b);
+                if ($useSP) {
+                    $this->amountfound = $this->readLog($b,$template, $limit, $offset, $startpos);
+                }
+                else {
+                    $this->amountfound = $this->readLog($b,$template, $limit, $offset);
+                }
+                $this->_postBlogContent($btype,$b);
+            }
 			break;
 		case 'categorylist':
 			if ($blogname == '' && $amount != '') {
@@ -274,9 +266,17 @@ class NP_Ordered extends NucleusPlugin {
 				$b =& $manager->getBlog(getBlogIDFromName($blogname));
 			}
 
-			$this->_preBlogContent('categorylist',$b);
-			$this->showCategoryList($b,$template);
-			$this->_postBlogContent('categorylist',$b);
+            if ($this->getresult) {
+                $oquery = $this->_getCatQuery($b);
+                $oresult = sql_query($oquery);
+                $this->getresult = 0;
+                return $oresult;
+            }
+            else {
+                $this->_preBlogContent('categorylist',$b);
+                $this->showCategoryList($b,$template);
+                $this->_postBlogContent('categorylist',$b);
+            }
 			break;
 		case 'setnavigation':
 			if ($skinType != 'item') break;
@@ -371,22 +371,43 @@ class NP_Ordered extends NucleusPlugin {
 
 	}
 
-    function setshowWhat($value) {
+    function getQueryResult($kind = 'blog', $show = '',$amount = '',$category = '', $blogname = '') {
+        global $type;
+        $template = 'dummy';
+        if (trim(strtolower($kind)) == 'setnavigation') doError("Not a permitted action for this method - setnavigation");
+        $this->getresult = 1;
+        $oresult = $this->doSkinVar($type,$kind,$show,$template,$amount,$category,$blogname);
+        return $oresult;
+    }
+/******************************************************
+ *          Protected Methods                         *
+ ******************************************************/
+    protected function _generateForm($keywordstring='')
+    {
+		global $member, $itemid;
+
+        echo "<h3>NP_OrderedBlog</h3>\n";
+		$blogid = getBlogIDFromItemID($itemid);
+
+		if ($member->blogAdminRights($blogid)) {
+			printf('<p>Item Order: <input name="plug_ob_order" type="text" size="60" maxlength="256" value="%s"></p>', $keywordstring);
+		}
+		else {
+			printf('<p>Item Order: %s</p>', $keywordstring);
+		}
+        echo "\n";
+    }
+
+    protected function setshowWhat($value) {
         if (intval($value) == 0) $this->showWhat = 0;
         else $this->showWhat = intval($value);
     }
-    function getshowWhat() {
+    protected function getshowWhat() {
         return $this->showWhat;
     }
-	function setshowOnlyCat($value) {
-        if (intval($value) == 0) $this->showOnlyCat = 0;
-        else $this->showOnlyCat = intval($value);
-    }
-    function getshowOnlyCat() {
-        return $this->showOnlyCat;
-    }
+
 // these next three functions are directly taken from the SKIN class of NucleusCMS, SKIN.php
-    function _setBlogCategory(&$blog, $catname) {
+    protected function _setBlogCategory(&$blog, $catname) {
 		global $catid;
 		if ($catname != '')
 			$blog->setSelectedCategoryByName($catname);
@@ -394,26 +415,26 @@ class NP_Ordered extends NucleusPlugin {
 			$blog->setSelectedCategory($catid);
 	}
 
-	function _preBlogContent($type, &$blog) {
+	protected function _preBlogContent($type, &$blog) {
 		global $manager;
 		$manager->notify('PreBlogContent',array('blog' => &$blog, 'type' => $type));
 	}
 
-	function _postBlogContent($type, &$blog) {
+	protected function _postBlogContent($type, &$blog) {
 		global $manager;
 		$manager->notify('PostBlogContent',array('blog' => &$blog, 'type' => $type));
 	}
 // this is a slight mod of readLog method of NucleusCMS class BLOG, BLOG.php
-    function readLog(&$b, $template, $amountEntries, $offset = 0, $startpos = 0) {
+    protected function readLog(&$b, $template, $amountEntries, $offset = 0, $startpos = 0) {
 		return $this->readLogAmount($b, $template,$amountEntries,'','',1,1,$offset, $startpos);
 	}
 // this is a slight mod of readLogAmount method of NucleusCMS class BLOG, BLOG.php
-    function readLogAmount(&$b, $template, $amountEntries, $extraQuery, $highlight, $comments, $dateheads, $offset = 0, $startpos = 0) {
+    protected function readLogAmount(&$b, $template, $amountEntries, $extraQuery, $highlight, $comments, $dateheads, $offset = 0, $startpos = 0) {
 		$query = $this->_getBlogQuery($b,$extraQuery,$amountEntries,$offset, $startpos);
 		return $this->showUsingQuery($b,$template, $query, $highlight, $comments, $dateheads);
 	}
 // this gets the query for the blog form of the skinvar
-	function _getBlogQuery(&$b,$extraQuery,$amountEntries,$offset = 0, $startpos = 0) {
+	protected function _getBlogQuery(&$b,$extraQuery,$amountEntries,$offset = 0, $startpos = 0) {
 		if ($this->getshowWhat() == 2) {
 			$this->setshowWhat(1);
 			$query = '(';
@@ -436,7 +457,7 @@ class NP_Ordered extends NucleusPlugin {
 		return $query;
 	}
 // this is a slight mod of getSqlBlog method of NucleusCMS class BLOG, BLOG.php
-    function getSqlBlog(&$b, $extraQuery, $mode = '')
+    protected function getSqlBlog(&$b, $extraQuery, $mode = '')
 	{
 		if ($mode == '') {
 			$query = 'SELECT i.inumber as itemid, i.ititle as title, i.ibody as body, m.mname as author, m.mrealname as authorname, i.itime as itime, i.imore as more, m.mnumber as authorid, m.memail as authormail, m.murl as authorurl, c.cname as category, i.icat as catid, i.iclosed as closed, o.onumber as myorder, oc.otemplate as otemplate, oc.onumber as ocnumber';
@@ -484,7 +505,7 @@ class NP_Ordered extends NucleusPlugin {
 		return $query;
 	}
 
-	function showUsingQuery(&$b, $templateName, $query, $highlight = '', $comments = 0, $dateheads = 1) {
+	protected function showUsingQuery(&$b, $templateName, $query, $highlight = '', $comments = 0, $dateheads = 1) {
 		global $CONF, $manager;
 
 		$lastVisit = cookieVar($CONF['CookiePrefix'] .'lastVisit');
@@ -595,7 +616,7 @@ class NP_Ordered extends NucleusPlugin {
 	/**
 	  * Shows the list of categories using a given template
 	  */
-	function showCategoryList(&$b, $template) {
+	protected function showCategoryList(&$b, $template) {
 		global $CONF, $manager;
 
 		// determine arguments next to catids
@@ -627,20 +648,9 @@ class NP_Ordered extends NucleusPlugin {
 								'self' => $CONF['Self']
 							));
 
-		if ($this->getshowWhat() == 2) {
-			$this->setshowWhat(1);
-			$query = '(';
-			$query .= $this->getCatQuery($b);
-			$query .= ') UNION (';
-			$this->setshowWhat(0);
-			$query .= $this->getCatQuery($b);
-			$query .= ') ORDER BY mysortcol ASC, myorder ASC, catname ASC';
-			$this->setshowWhat(2);
-		}
-		else $query = $this->getCatQuery($b);
+		$query = $this->_getCatQuery($b);
 
 		$res = sql_query($query);
-
 
 		while ($data = mysql_fetch_assoc($res)) {
 			$data['blogid'] = $b->getID();
@@ -692,7 +702,22 @@ class NP_Ordered extends NucleusPlugin {
 							));
 	}
 
-	function getCatQuery(&$b) {
+    protected function _getCatQuery(&$b) {
+        if ($this->getshowWhat() == 2) {
+			$this->setshowWhat(1);
+			$query = '(';
+			$query .= $this->getSqlCat($b);
+			$query .= ') UNION (';
+			$this->setshowWhat(0);
+			$query .= $this->getSqlCat($b);
+			$query .= ') ORDER BY mysortcol ASC, myorder ASC, catname ASC';
+			$this->setshowWhat(2);
+		}
+		else $query = $this->getSqlCat($b);
+        return $query;
+    }
+
+	protected function getSqlCat(&$b) {
 		$query = 'SELECT c.catid, c.cdesc as catdesc, c.cname as catname, o.onumber as myorder';
 		if ($this->getshowWhat() == 1 ) {
 			$query .= ', 1 as mysortcol';
