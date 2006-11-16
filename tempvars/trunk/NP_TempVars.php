@@ -11,6 +11,7 @@
 
 /*
 * History
+* [Version 0.4] - 11-14-2006 - updated blogsetting to mimic changes in Nucleus v3.24, added iscurrentitem
 * [Version 0.3] - 11-07-2006 - added userwebsitelink, useremaillink
 * [Version 0.2] - 05-23-2006 - initial release.
 */
@@ -43,13 +44,19 @@ class NP_TempVars extends NucleusPlugin
             of item's blog, not the calling page.
         author, type
             synonym of iauthor
+        userwebsitelink
+            comment variable. like userlink, but only shows website address,
+            never displays email address
+        useremaillink
+            comment variable. like userlink, but only shows email address,
+            never displays website address
 */
 
    function getEventList() { return array(); }
    function getName() { return 'TempVars'; }
    function getAuthor() { return 'Frank Truscott'; }
    function getURL() { return 'http://www.iai.com/'; }
-   function getVersion() { return '0.3'; }
+   function getVersion() { return '0.4'; }
 
    function getDescription()
    {
@@ -99,25 +106,25 @@ class NP_TempVars extends NucleusPlugin
       $itemblog = $ib;
       switch ($params[0]) {
          case 'url':
-            echo $itemblog->getURL();
+            echo htmlspecialchars($itemblog->getURL());
             break;
          case 'short':
-            echo $itemblog->getShortName();
+            echo htmlspecialchars($itemblog->getShortName());
             break;
          case 'id':
-            echo $itemblogid;
+            echo htmlspecialchars($itemblogid);
             break;
          case 'desc':
-            echo $itemblog->getDescription();
+            echo htmlspecialchars($itemblog->getDescription());
             break;
          case 'name':
-            echo $itemblog->getName();
+            echo htmlspecialchars($itemblog->getName());
             break;
          case 'link':
-            echo $itemblog->getURL();
+            echo htmlspecialchars($itemblog->getURL());
             break;
          default:
-            echo $itemblog->getName();
+            echo htmlspecialchars($itemblog->getName());
             break;
       }
    }
@@ -269,6 +276,14 @@ class NP_TempVars extends NucleusPlugin
         call_user_func_array(array($this,'tv_iauthor'),array(&$params));
     }
 
+	function tv_iscurrentitem(&$params) {
+		global $itemid;
+		$item =& array_shift($params);
+		if (intval($itemid) == $item->itemid) echo 'yes';
+		else echo 'no';
+	}
+
+// these actions are for comment-related template vars
     function tv_userwebsitelink(&$params) {
         $item =& array_shift($params);
         $comment =& array_shift($params);
