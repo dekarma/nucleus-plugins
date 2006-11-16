@@ -48,7 +48,7 @@
 
 /* History:
  *
- * 1.03 - 11/11/2006 - added catiscurrent as template var in category List.
+ * 1.04 - 11/16/2006 - added catiscurrent as template var in category List.
  *						Useful for putting a class param in the links for
  *						cats that can be different is listing the current cat.
  *					   Added templatemode to override special cat template if wanted.
@@ -84,7 +84,7 @@ class NP_Ordered extends NucleusPlugin {
 
 	// version of the plugin
 	function getVersion() {
-		return '1.03';
+		return '1.04';
 	}
 
 	// a description to be shown on the installed plugins listing
@@ -718,7 +718,7 @@ class NP_Ordered extends NucleusPlugin {
     }
 
 	protected function getSqlCat(&$b) {
-		$query = 'SELECT c.catid, c.cdesc as catdesc, c.cname as catname, o.onumber as myorder';
+		$query = 'SELECT c.catid, c.cdesc as catdesc, c.cname as catname, o.onumber as myorder, o.otemplate as mytemplate, o.omainpage as myshowonmainpage';
 		if ($this->getshowWhat() == 1 ) {
 			$query .= ', 1 as mysortcol';
 		}
