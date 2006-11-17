@@ -145,7 +145,7 @@ blog form of the skinvar.</p>
 </code></pre>
 <p>Example of use. This outputs the catid of each category of the current blog then the itemid of each item in the order set by NP_Ordered
 <pre><code>/* example use of API function getQueryResult()*/
-    $plugin =& $manager->getPlugin('Ordered');
+    $plugin =& $manager->getPlugin('NP_Ordered');
 	$b =& $manager->getBlog(intval($blogid));
 	$bname = $b->getShortName();
 	$res = $plugin->getQueryResult('categorylist','all',$bname);

@@ -288,7 +288,7 @@ class NP_Ordered extends NucleusPlugin {
 			$useSP = 1;
 			if (strtolower($setcat) == 'yes') {
 				if (intval($itemid) && $manager->existsItem(intval($itemid),0,0)) {
-					$iobj =& $manager->getItem(intval($itemid));
+					$iobj =& $manager->getItem(intval($itemid),0,0);
 					$catid = intval($iobj['catid']);
 					$b->setSelectedCategory($catid);
 				}
@@ -667,7 +667,7 @@ class NP_Ordered extends NucleusPlugin {
 				global $itemid;
 				//echo intval($itemid);
 				if (intval($itemid) && $manager->existsItem(intval($itemid),0,0)) {
-					$iobj =& $manager->getItem(intval($itemid));
+					$iobj =& $manager->getItem(intval($itemid),0,0);
 					$cid = $iobj['catid'];
 					if ($cid == $data['catid']) {
 						$data['catiscurrent'] = 'yes';
