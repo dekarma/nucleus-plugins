@@ -193,20 +193,6 @@ border-bottom: 1px solid #778;
 	}
 
 	echo "</table>\n";
-/* example use of API function getQueryResult()
-	$b =& $manager->getBlog(intval($bshow));
-	$bname = $b->getShortName();
-	//echo $bname;
-	$res = $plugin->getQueryResult('categorylist','all',$bname);
-	while ($row = mysql_fetch_field($res)) {
-		echo $row->name."<br />";
-	}
-	echo "<br /><br />";
-	$res = $plugin->getQueryResult('blog','all',10,'',$bname);
-	while ($row = mysql_fetch_field($res)) {
-		echo $row->name."<br />";
-	}
-*/
 	echo $toplink;
 	echo "</div>\n"; // end
 	echo "</div>\n"; // end

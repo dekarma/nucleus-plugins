@@ -20,7 +20,7 @@
  */
 
 /* Usage:
- * There are two skinvars.
+ * There are three skinvars.
  * To replace the blog  or otherblog skinvar use this form:
  * &lt;%Ordered('blog', show, templatename, amount, category, blogname)%&gt;
  * where
@@ -48,14 +48,12 @@
 
 /* History:
  *
- * 1.04 - 11/16/2006 - added catiscurrent as template var in category List.
- *						Useful for putting a class param in the links for
- *						cats that can be different is listing the current cat.
- *					   Added templatemode to override special cat template if wanted.
- *					   Added setnavigation form to set next and prev item for item pages.
- *						Put in head section, above any call to nextlink or prevlink
- *					   Fixed how hande offset in blog form.
- *                     Add API function getQueryResult(). Made most methods protected.
+ * 1.10 - 11/16/2006 -
+ *  * added catiscurrent as template var in category List fields. (Useful for putting a class param in the links for cats that can be different is listing the current cat.
+ *	* Added templatemode to override special cat template if wanted.
+ *	* Added setnavigation form of skinvar to set next and prev item for item pages. Put in head section, above any call to nextlink or prevlink
+ *	* Fixed how handle offset in blog form of skinvar.
+ *  * Add API function getQueryResult().
  * 1.00 - 11/10/2006 - initial release
  */
 
@@ -84,7 +82,7 @@ class NP_Ordered extends NucleusPlugin {
 
 	// version of the plugin
 	function getVersion() {
-		return '1.04';
+		return '1.1';
 	}
 
 	// a description to be shown on the installed plugins listing
@@ -323,7 +321,6 @@ class NP_Ordered extends NucleusPlugin {
 				$itemidnext = $idarr[$curritemloc + 1];
 				$itemtitlenext = $titarr[$curritemloc + 1];
 			}
-			//doError("$curritemloc $itemidprev $itemtitleprev<br />$itemidnext $itemtitlenext");
 			break;
 		default:
 			echo "Incorect usage of &lt;%Ordered(...)%&gt;. The first parameters must be either 'blog' or 'categorylist'.<br />";
@@ -349,17 +346,13 @@ class NP_Ordered extends NucleusPlugin {
 			doError("You do not have access to this function");
 		}
 
-		//doError($bid);
-
 		switch ($type) {
 			case 'modorderi':
-				//doError("UPDATE ".sql_table('plug_ordered_blog')." SET onumber='$onumber' WHERE oitemid='$iid'");
 				sql_query("UPDATE ".sql_table('plug_ordered_blog')." SET onumber='$onumber' WHERE oitemid='$iid'");
 				$destURL = $CONF['PluginURL'] . "ordered/index.php?showlist=items&bshow=$bid";
 				header('Location: ' . $destURL);
 			break;
 			case 'modorderc':
-				//doError("UPDATE ".sql_table('plug_ordered_cat')." SET onumber='$onumber' WHERE ocatid='$cid'");
 				sql_query("UPDATE ".sql_table('plug_ordered_cat')." SET onumber='$onumber', omainpage='$omp', otemplate='".addslashes($otemplate)."' WHERE ocatid='$cid'");
 				$destURL = $CONF['PluginURL'] . "ordered/index.php?showlist=cats&bshow=$bid";
 				header('Location: ' . $destURL);
@@ -382,7 +375,7 @@ class NP_Ordered extends NucleusPlugin {
 /******************************************************
  *          Protected Methods                         *
  ******************************************************/
-    protected function _generateForm($keywordstring='')
+    function _generateForm($keywordstring='')
     {
 		global $member, $itemid;
 
@@ -398,16 +391,16 @@ class NP_Ordered extends NucleusPlugin {
         echo "\n";
     }
 
-    protected function setshowWhat($value) {
+    function setshowWhat($value) {
         if (intval($value) == 0) $this->showWhat = 0;
         else $this->showWhat = intval($value);
     }
-    protected function getshowWhat() {
+    function getshowWhat() {
         return $this->showWhat;
     }
 
 // these next three functions are directly taken from the SKIN class of NucleusCMS, SKIN.php
-    protected function _setBlogCategory(&$blog, $catname) {
+    function _setBlogCategory(&$blog, $catname) {
 		global $catid;
 		if ($catname != '')
 			$blog->setSelectedCategoryByName($catname);
@@ -415,26 +408,26 @@ class NP_Ordered extends NucleusPlugin {
 			$blog->setSelectedCategory($catid);
 	}
 
-	protected function _preBlogContent($type, &$blog) {
+	function _preBlogContent($type, &$blog) {
 		global $manager;
 		$manager->notify('PreBlogContent',array('blog' => &$blog, 'type' => $type));
 	}
 
-	protected function _postBlogContent($type, &$blog) {
+	function _postBlogContent($type, &$blog) {
 		global $manager;
 		$manager->notify('PostBlogContent',array('blog' => &$blog, 'type' => $type));
 	}
 // this is a slight mod of readLog method of NucleusCMS class BLOG, BLOG.php
-    protected function readLog(&$b, $template, $amountEntries, $offset = 0, $startpos = 0) {
+    function readLog(&$b, $template, $amountEntries, $offset = 0, $startpos = 0) {
 		return $this->readLogAmount($b, $template,$amountEntries,'','',1,1,$offset, $startpos);
 	}
 // this is a slight mod of readLogAmount method of NucleusCMS class BLOG, BLOG.php
-    protected function readLogAmount(&$b, $template, $amountEntries, $extraQuery, $highlight, $comments, $dateheads, $offset = 0, $startpos = 0) {
+    function readLogAmount(&$b, $template, $amountEntries, $extraQuery, $highlight, $comments, $dateheads, $offset = 0, $startpos = 0) {
 		$query = $this->_getBlogQuery($b,$extraQuery,$amountEntries,$offset, $startpos);
 		return $this->showUsingQuery($b,$template, $query, $highlight, $comments, $dateheads);
 	}
 // this gets the query for the blog form of the skinvar
-	protected function _getBlogQuery(&$b,$extraQuery,$amountEntries,$offset = 0, $startpos = 0) {
+	function _getBlogQuery(&$b,$extraQuery,$amountEntries,$offset = 0, $startpos = 0) {
 		if ($this->getshowWhat() == 2) {
 			$this->setshowWhat(1);
 			$query = '(';
@@ -446,8 +439,7 @@ class NP_Ordered extends NucleusPlugin {
 			$this->setshowWhat(2);
 		}
 		else $query = $this->getSqlBlog($b, $extraQuery);
-//echo $query."<br />";
-//doError($query);
+
 		if ($amountEntries > 0) {
 		        // $offset zou moeten worden:
 		        // (($startpos / $amountentries) + 1) * $offset ... later testen ...
@@ -457,7 +449,7 @@ class NP_Ordered extends NucleusPlugin {
 		return $query;
 	}
 // this is a slight mod of getSqlBlog method of NucleusCMS class BLOG, BLOG.php
-    protected function getSqlBlog(&$b, $extraQuery, $mode = '')
+    function getSqlBlog(&$b, $extraQuery, $mode = '')
 	{
 		if ($mode == '') {
 			$query = 'SELECT i.inumber as itemid, i.ititle as title, i.ibody as body, m.mname as author, m.mrealname as authorname, i.itime as itime, i.imore as more, m.mnumber as authorid, m.memail as authormail, m.murl as authorurl, c.cname as category, i.icat as catid, i.iclosed as closed, o.onumber as myorder, oc.otemplate as otemplate, oc.onumber as ocnumber';
@@ -505,7 +497,7 @@ class NP_Ordered extends NucleusPlugin {
 		return $query;
 	}
 
-	protected function showUsingQuery(&$b, $templateName, $query, $highlight = '', $comments = 0, $dateheads = 1) {
+	function showUsingQuery(&$b, $templateName, $query, $highlight = '', $comments = 0, $dateheads = 1) {
 		global $CONF, $manager;
 
 		$lastVisit = cookieVar($CONF['CookiePrefix'] .'lastVisit');
@@ -530,7 +522,6 @@ class NP_Ordered extends NucleusPlugin {
 		$actions->setShowComments($comments);
 
 		// execute query
-		//echo "$query<br />";
 		$items = sql_query($query);
 
 		// loop over all items
@@ -616,7 +607,7 @@ class NP_Ordered extends NucleusPlugin {
 	/**
 	  * Shows the list of categories using a given template
 	  */
-	protected function showCategoryList(&$b, $template) {
+	function showCategoryList(&$b, $template) {
 		global $CONF, $manager;
 
 		// determine arguments next to catids
@@ -702,7 +693,7 @@ class NP_Ordered extends NucleusPlugin {
 							));
 	}
 
-    protected function _getCatQuery(&$b) {
+    function _getCatQuery(&$b) {
         if ($this->getshowWhat() == 2) {
 			$this->setshowWhat(1);
 			$query = '(';
@@ -717,7 +708,7 @@ class NP_Ordered extends NucleusPlugin {
         return $query;
     }
 
-	protected function getSqlCat(&$b) {
+	function getSqlCat(&$b) {
 		$query = 'SELECT c.catid, c.cdesc as catdesc, c.cname as catname, o.onumber as myorder, o.otemplate as mytemplate, o.omainpage as myshowonmainpage';
 		if ($this->getshowWhat() == 1 ) {
 			$query .= ', 1 as mysortcol';
