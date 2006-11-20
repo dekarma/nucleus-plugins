@@ -70,6 +70,11 @@ History:
 		Converts existing tables to MyISAM if not already. OK
   v2.03 - 3rd release of version 2 adds the following to the 2.02 version
     * XHTML compliance in links (replaced alt attribute with  title attribute). Thanks, bakaelite!
+  v2.04 - 4th release of version 2 adds the following to the 2.03 version
+    * Forces chmod of uploaded files to 644. Thanks, wessite!
+    * Allows additional protocols for type url (set in Options field of field def). semi-colon separated list.
+    * Allows textarea to allow tags as decided in field def (Options field).string of angle-braketed tags to allow. Like &lt;b&gt;&lt;img&gt;.
+    * fix bug in how short textarea values are handled in editting (was losing last two characters of field).
 
 To do:
 * Offer some validation options for fields, i.e. isEmail, isURL, isList
@@ -85,6 +90,8 @@ class NP_Profile extends NucleusPlugin {
 	var $nutypes = array('date','dropdown','file','list','mail','number','password','radio','text','textarea','url'); // supported field types
 	var $req_emp = array();
 	var $showEmail = 0;
+    var $allowedProtocols = array("http","https"); // protocols that will be allowed in sitelist links
+	//var $a_blockedExtensions = array(".exe",".bat",".vbs"); // page or domain extensions that can not be linked to. Do not put .com here
 
 
 	function getName() { return 'Profile Plugin'; }
@@ -93,7 +100,7 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://www.iai.com/';	}
 
-	function getVersion() {	return '2.03'; }
+	function getVersion() {	return '2.04'; }
 
 	function getDescription() {
 		return 'Gives each member a customisable profile';
@@ -853,6 +860,7 @@ class NP_Profile extends NucleusPlugin {
 							break;
 						case 'textarea':
 							$value = $this->getValue($pmid,$param1);
+
 							$cols = $this->getFieldAttribute($param1,'fsize');
 							$rows = $this->getFieldAttribute($param1,'flength');
 							if ($skinType == 'member' && $member->id == $pmid && $param2 != 'show' && $isEdit) {
@@ -1348,6 +1356,7 @@ class NP_Profile extends NucleusPlugin {
 								case 'url':
 									if ($value != $member->url) {
 										$value = stringStripTags($value);
+                                        $value = $this->prepURL($value);
 										if (($this->validUrl($value)) || ($value == '')) {
 											$member->setURL($value);
 											$member->write();
@@ -1395,7 +1404,9 @@ class NP_Profile extends NucleusPlugin {
 								$type = $this->getFieldAttribute($field,'ftype');
 								if ($type == 'textarea') {
 									$value = nl2br($value);
-									$value = $this->_myStringStripTags($value,'<br>');
+                                    $allowedTags = strtolower($this->getFieldAttribute($field,'foptions'));
+                                    //doError('allowedTags are '.htmlentities($allowedTags));
+									$value = $this->_myStringStripTags($value,'<br>'.$allowedTags);
 								}
 								else {
 									$value = stringStripTags($value);
@@ -1428,7 +1439,9 @@ class NP_Profile extends NucleusPlugin {
 									break;
 								case 'url':
 									$value = substr($value,0,$this->getFieldAttribute($field,'flength'));
-									if ($this->validUrl($value) || $value == '') {
+                                    $value = $this->prepURL($value);
+                                    $custProt = $this->getFieldAttribute($field,'foptions');
+									if ($this->validUrl($value,$custProt) || $value == '') {
 										if(mysql_num_rows(sql_query("SELECT * FROM ".sql_table('plugin_profile')." WHERE memberid=$memberid AND field='".addslashes($field)."'")) > 0) {
 											sql_query("UPDATE ".sql_table('plugin_profile')." SET value='$value' WHERE field='".addslashes($field)."' AND memberid=$memberid");
 										}
@@ -1441,10 +1454,15 @@ class NP_Profile extends NucleusPlugin {
 									}
 									break;
 								case 'textarea':
-									$cvalue = substr(trim(chunk_split($value,250,'::')),0,-2);
+                                    if (strlen($value) > 250) {
+                                        $cvalue = substr(trim(chunk_split($value,250,'::')),0,-2);
+                                    }
+                                    else $cvalue = trim($value);
+                                    //doError(htmlentities($cvalue));
 									$cvaluearr = explode('::',$cvalue);
 									$t = 0;
 									foreach ($cvaluearr as $tord=>$val) {
+                                        //doError(htmlentities($val));
 										if ($tord > 13) break;
 										if(mysql_num_rows(sql_query("SELECT * FROM ".sql_table('plugin_profile')." WHERE memberid=$memberid AND field='".addslashes($field)."' AND torder=$tord")) > 0) {
 											sql_query("UPDATE ".sql_table('plugin_profile')." SET value='$val' WHERE field='".addslashes($field)."' AND memberid=$memberid AND torder=$tord");
@@ -1622,6 +1640,11 @@ class NP_Profile extends NucleusPlugin {
 						// Copy the file
 						$newname = $member->id . ".$field.$extention";
 						copy ($tmp_name, $DIR_MEDIA.$newname) or doError(_PROFILE_ACTION_BAD_FILE_COPY);
+                        // chmod uploaded file
+                        $oldumask = umask(0000);
+                        @chmod($mediadir . $filename, 0644);
+                        umask($oldumask);
+                        //prep for database write
 						$newname = addslashes($newname);
 						$field = addslashes($field);
 
@@ -1854,10 +1877,24 @@ class NP_Profile extends NucleusPlugin {
 		}
 	}
 
-	function validUrl($url) {
-		if (substr($url,0,7) == 'http://') {
+	function validUrl($url, $custProtocols = '') {
+        $cprots = explode(';',str_replace(',',';',$custProtocols));
+        $cprots = array_merge($cprots,$this->allowedProtocols);
+        if ( in_array(substr($url, 0, intval(strpos($url,'://'))), $cprots) ) {
+		//if (substr($url,0,7) == 'http://') {
 			return true;
 		}
+	}
+
+    function prepURL($url) {
+        if (trim($url) == '') return '';
+		//$blockedExtensions = $this->_set_blockedExtensions($this->a_blockedExtensions);
+		if (strpos($url,'://') === false) $url = 'http://'.$url;
+		if (in_array(substr($url,-1,1),array('&','?'))) $url = substr($url,0,-1);
+		//$url = preg_replace($blockedExtensions, "<badext>", $url);
+		//if (strpos($url,'<badext>')) return "Error: 002 - "._SITELIST_ERR_002;
+		$url = preg_replace('|[^a-z0-9-~+_.?#=&;,/:@%]|i', '', $url);
+		return $url;
 	}
 
 	function showExtention($filename) {
@@ -1933,6 +1970,7 @@ class NP_Profile extends NucleusPlugin {
 
 	// function to change <br /> tags back to newlines for display in textareas
 	function _br2nl($text) {
+        // this reg expr below is messing with th <b> tag as well!!!
 		$text = trim(preg_replace('|<br?\s*?\/??>|i', "\n", $text));
 		$text = trim(str_replace("\n ", "\n", $text));
 		return $text;
