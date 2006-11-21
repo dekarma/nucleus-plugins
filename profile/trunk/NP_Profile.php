@@ -91,8 +91,6 @@ class NP_Profile extends NucleusPlugin {
 	var $req_emp = array();
 	var $showEmail = 0;
     var $allowedProtocols = array("http","https"); // protocols that will be allowed in sitelist links
-	//var $a_blockedExtensions = array(".exe",".bat",".vbs"); // page or domain extensions that can not be linked to. Do not put .com here
-
 
 	function getName() { return 'Profile Plugin'; }
 
@@ -672,8 +670,6 @@ class NP_Profile extends NucleusPlugin {
 					case 'editlink':
 						if ($skinType == 'member' && $member->id == $pmid) {
 							if ($isEdit) {
-								//$qstring = serverVar('QUERY_STRING');
-								//$qstringarr = explode('&',$qstring);
 								$rstring = serverVar('REQUEST_URI');
 								if (strpos($rstring, '?') !== false ) {
 									$rstringarr = explode('?',$rstring);
@@ -696,8 +692,6 @@ class NP_Profile extends NucleusPlugin {
 								echo '<a class="profileeditlink" href="'.$editlink.'">'._PROFILE_SV_EDITLINK_FORM.'</a>';
 							}
 							else {
-								//$qstring = serverVar('QUERY_STRING');
-								//$qstringarr = explode('&',$qstring);
 								$rstring = serverVar('REQUEST_URI');
 								if (strpos($rstring, '?') !== false ) {
 									$rstringarr = explode('?',$rstring);
@@ -860,7 +854,6 @@ class NP_Profile extends NucleusPlugin {
 							break;
 						case 'textarea':
 							$value = $this->getValue($pmid,$param1);
-
 							$cols = $this->getFieldAttribute($param1,'fsize');
 							$rows = $this->getFieldAttribute($param1,'flength');
 							if ($skinType == 'member' && $member->id == $pmid && $param2 != 'show' && $isEdit) {
@@ -1405,7 +1398,6 @@ class NP_Profile extends NucleusPlugin {
 								if ($type == 'textarea') {
 									$value = nl2br($value);
                                     $allowedTags = strtolower($this->getFieldAttribute($field,'foptions'));
-                                    //doError('allowedTags are '.htmlentities($allowedTags));
 									$value = $this->_myStringStripTags($value,'<br>'.$allowedTags);
 								}
 								else {
@@ -1458,11 +1450,9 @@ class NP_Profile extends NucleusPlugin {
                                         $cvalue = substr(trim(chunk_split($value,250,'::')),0,-2);
                                     }
                                     else $cvalue = trim($value);
-                                    //doError(htmlentities($cvalue));
 									$cvaluearr = explode('::',$cvalue);
 									$t = 0;
 									foreach ($cvaluearr as $tord=>$val) {
-                                        //doError(htmlentities($val));
 										if ($tord > 13) break;
 										if(mysql_num_rows(sql_query("SELECT * FROM ".sql_table('plugin_profile')." WHERE memberid=$memberid AND field='".addslashes($field)."' AND torder=$tord")) > 0) {
 											sql_query("UPDATE ".sql_table('plugin_profile')." SET value='$val' WHERE field='".addslashes($field)."' AND memberid=$memberid AND torder=$tord");
@@ -1881,18 +1871,14 @@ class NP_Profile extends NucleusPlugin {
         $cprots = explode(';',str_replace(',',';',$custProtocols));
         $cprots = array_merge($cprots,$this->allowedProtocols);
         if ( in_array(substr($url, 0, intval(strpos($url,'://'))), $cprots) ) {
-		//if (substr($url,0,7) == 'http://') {
 			return true;
 		}
 	}
 
     function prepURL($url) {
         if (trim($url) == '') return '';
-		//$blockedExtensions = $this->_set_blockedExtensions($this->a_blockedExtensions);
 		if (strpos($url,'://') === false) $url = 'http://'.$url;
 		if (in_array(substr($url,-1,1),array('&','?'))) $url = substr($url,0,-1);
-		//$url = preg_replace($blockedExtensions, "<badext>", $url);
-		//if (strpos($url,'<badext>')) return "Error: 002 - "._SITELIST_ERR_002;
 		$url = preg_replace('|[^a-z0-9-~+_.?#=&;,/:@%]|i', '', $url);
 		return $url;
 	}
@@ -1971,7 +1957,8 @@ class NP_Profile extends NucleusPlugin {
 	// function to change <br /> tags back to newlines for display in textareas
 	function _br2nl($text) {
         // this reg expr below is messing with th <b> tag as well!!!
-		$text = trim(preg_replace('|<br?\s*?\/??>|i', "\n", $text));
+		/*$text = trim(preg_replace('|[<][b][r]?\s*?\/??>|i', "\n", $text));*/
+		$text = preg_replace("/<br[^>]*>/isU", "\n", $text);
 		$text = trim(str_replace("\n ", "\n", $text));
 		return $text;
 		//return str_replace("<br />", "\n", $text);
