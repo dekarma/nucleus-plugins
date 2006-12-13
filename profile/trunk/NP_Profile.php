@@ -77,6 +77,8 @@ History:
     * fix bug in how short textarea values are handled in editting (was losing last two characters of field).
   v2.05 - 5th release of version 2 adds the following to the 2.04 version
 	* adds support for comment template variable
+  v2.06 -- 6th release of version 2 adds the following to the 2.06 version
+	* adds knowledge of NP_Friends with privacylevel concept.
 
 To do:
 * Offer some validation options for fields, i.e. isEmail, isURL, isList
@@ -93,6 +95,7 @@ class NP_Profile extends NucleusPlugin {
 	var $req_emp = array();
 	var $showEmail = 0;
     var $allowedProtocols = array("http","https"); // protocols that will be allowed in sitelist links
+	var $restrictView = 0;
 
 	function getName() { return 'Profile Plugin'; }
 
@@ -100,7 +103,7 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://www.iai.com/';	}
 
-	function getVersion() {	return '2.05'; }
+	function getVersion() {	return '2.05.01'; }
 
 	function getDescription() {
 		return 'Gives each member a customisable profile';
@@ -635,6 +638,7 @@ class NP_Profile extends NucleusPlugin {
 					echo $bstyle.$this->getFieldAttribute($param1,'flabel').$estyle;
 				}
 				else {
+					$this->restrictView = $this->restrictViewer();
 					switch($param1) {
 					case 'password':
 						if ($skinType == 'member' && $member->id == $pmid && $isEdit) {
@@ -731,6 +735,7 @@ class NP_Profile extends NucleusPlugin {
 						}
 						break;
 					case 'mail':
+						if ($this->restrictView) break;
 						$result = sql_query("SELECT memail FROM ".sql_table(member)." WHERE mnumber=" . $pmid);
 						$value = mysql_result($result,'memail');
 						$size = $this->getFieldAttribute($param1,'fsize');
@@ -773,6 +778,7 @@ class NP_Profile extends NucleusPlugin {
 						}
 						break;
 					case 'realname':
+						if ($this->restrictView) break;
 						$result = sql_query("SELECT mrealname FROM ".sql_table(member)." WHERE mnumber=" . $pmid);
 						$value = mysql_result($result,'mrealname');
 						$size = $this->getFieldAttribute($param1,'fsize');
@@ -785,6 +791,7 @@ class NP_Profile extends NucleusPlugin {
 						}
 						break;
 					case 'url':
+						if ($this->restrictView) break;
 						$result = sql_query("SELECT murl FROM ".sql_table(member)." WHERE mnumber=" . $pmid);
 						$value = mysql_result($result,'murl');
 						$size = $this->getFieldAttribute($param1,'fsize');
@@ -805,6 +812,7 @@ class NP_Profile extends NucleusPlugin {
 						}
 						break;
 					case 'notes':
+						if ($this->restrictView) break;
 						$result = sql_query("SELECT mnotes FROM ".sql_table(member)." WHERE mnumber=" . $pmid);
 						$value = mysql_result($result,'mnotes');
 						$rows = $this->getFieldAttribute($param1,'flength');
@@ -822,6 +830,7 @@ class NP_Profile extends NucleusPlugin {
 						}
 						break;
 					default:
+						if ($this->restrictView) break;
 						$type = $this->getFieldAttribute($param1,'ftype');
 						switch($type) {
 						case 'text':
@@ -1829,7 +1838,9 @@ class NP_Profile extends NucleusPlugin {
 
 	function getFieldAttribute($field,$attribute) {
 		$query = "SELECT ".$attribute.", ftype FROM ".sql_table('plugin_profile_fields')." WHERE fname='".$field."'";
-		$res = mysql_fetch_assoc(sql_query($query));
+		$resa = sql_query($query);
+		if (mysql_num_rows($resa) == 0) return '';
+		$res = mysql_fetch_assoc($resa);
 		$result = $res[$attribute];
 		$field_type = $res['ftype'];
 		if (in_array($result, array('','0')) && !in_array($attribute, array('fname','flabel','ftype','required','enabled'))) {
@@ -1975,6 +1986,28 @@ class NP_Profile extends NucleusPlugin {
 		$text = trim(str_replace("\n ", "\n", $text));
 		return $text;
 		//return str_replace("<br />", "\n", $text);
+	}
+
+	function restrictViewer() {
+		global $member, $memberinfo, $manager;
+		if (!$this->getFieldAttribute('privacylevel','enabled')) return 0;
+		if (isset($memberinfo)) {
+			$privlevel = $this->getValue($memberinfo->getID(),'privacylevel');
+		}
+		else $privlevel = 0;
+		if ($privlevel == '' || $privlevel == 0) return 0;
+		if ($privlevel == 1 ) {
+			if ($member->isLoggedIn()) return 0;
+			else return 1;
+		}
+		if ($privlevel == 2) {
+			if ($manager->pluginInstalled('NP_Friends')) {
+				$plug_friends =& $manager->getPlugin('NP_Friends');
+				if (isset($plug_friends) && $plug_friends->isFriend($memberinfo->getID(),$member->getID())) return 0;
+				else return 1;
+			}
+			else return 0;        }
+
 	}
 
 }
