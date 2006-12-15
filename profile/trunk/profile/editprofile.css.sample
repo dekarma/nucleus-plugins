@@ -1,6 +1,162 @@
+/* CSS for NP_Profile editprofile page */
+body
+{
+	background-color: #505050;
+	color: #494949;
+	font-family: "Lucida Grande", "Lucida Sans Unicode", "Trebuchet MS", Trebuchet, Arial, sans-serif;
+	font-size: 11px;
+	padding: 15px 0;
+	margin: 0;
+	margin-bottom: 10px;
+}
+img
+{
+	border: 0;
+}
+form
+{
+	margin: 0;
+}
+
+/* Headings */
+h1
+{
+    font-family: "Georgia", "Lucida Grande", "Lucida Sans Unicode", "Trebuchet MS", Trebuchet, Arial, sans-serif;
+	font-weight: heavy;
+	font-size: 18px;
+	height: 24px;
+	vertical-align: bottom;
+	margin: 0;
+}
+h2
+{
+    font-family: "Georgia", "Lucida Grande", "Lucida Sans Unicode", "Trebuchet MS", Trebuchet, Arial, sans-serif;
+	font-weight: heavy;
+	font-size: 14px;
+	height: 22px;
+	vertical-align: bottom;
+	margin: 0;
+}
+h3
+{
+    font-family: "Georgia", "Lucida Grande", "Lucida Sans Unicode", "Trebuchet MS", Trebuchet, Arial, sans-serif;
+	font-weight: heavy;
+	font-size: 12px;
+	height: 20px;
+	vertical-align: bottom;
+	margin: 0;
+}
+h4,h5,h6
+{
+    font-family: "Georgia", "Lucida Grande", "Lucida Sans Unicode", "Trebuchet MS", Trebuchet, Arial, sans-serif;
+	font-weight: normal;
+	margin: 0;
+}
+/* Lists */
+ul
+{
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+li
+{
+	padding: 0 0 0 10px;
+	margin: 0 20px;
+}
+
+/* Links */
+a:link, a:visited
+{
+	color: #635D45;
+	text-decoration: none;
+}
+a:hover, a:active
+{
+	color: black;
+}
+#header a:link, #header a:visited
+{
+	color: #474747;
+}
+#header a:hover, #header a:active
+{
+	color: #737373;
+}
+#copyrights a:link, #copyrights a:visited
+{
+	color: #474747;
+}
+#copyrights a:hover, #copyrights a:active
+{
+	color: #737373;
+}
+
+/* Basic classes */
+.hidden
+{
+	display: none;
+}
+.centerize
+{
+	text-align: center;
+}
+.clearing
+{
+	width: 704px;
+	height: 0;
+	clear: both;
+}
+
+/*-------------------------------------------------
+  Header
+-------------------------------------------------*/
+#header
+{
+	position: relative;
+	width: 704px;
+	height: 168px;
+	/* large header image is defined below */
+	/* background: white url(images/header.jpg) no-repeat; */
+	background: white;
+	/* border-width: 2px 2px 0;
+	border-style: solid;
+	border-color: #E0E0E0; */
+	margin: auto;
+}
+#header h1
+{
+	/* small header image specific lines */
+	height: 168px;
+	width: 692px;
+	background-color: #FCD21B;
+	margin: 0 6px;
+	/* end small header image specific lines */
+	font-size: 38px;
+	text-align: center;
+	line-height: 160px;
+}
+
+/*-------------------------------------------------
+  Content wrappers
+-------------------------------------------------*/
+#wrapper
+{
+	width: 704px;
+	background-color: white;
+	border-width: 2px 2px;
+	border-style: solid;
+	border-color: #E0E0E0;
+	margin: auto;
+}
+#content
+{
+	margin: 6px 6px;
+}
+
 /* for member profile table */
 .profiletable {
-	width: 400px;
+	width: 600px;
 	/*background-color: #eeeeee;*/
 	border: 1px solid black;
 }
@@ -12,7 +168,7 @@
 	color: #333399;
 }
 .profilecol2 {
-	width:290px;
+	width:390px;
 	background-color:#ffffff;
 	border:1px solid black;
 }

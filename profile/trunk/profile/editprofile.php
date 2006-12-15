@@ -14,6 +14,7 @@ include('../../../config.php');
 <link rel="stylesheet" type="text/css" href="editprofile.css" />
 </head>
 <body>
+<div id="wrapper">
 <div id="header"><a name="top"></a>
 <h1><a href="<?php echo $CONF['IndexURL']?>" accesskey="1"><?php echo $CONF['SiteName']?></a></h1>
 </div>
@@ -72,5 +73,5 @@ if ($manager->pluginInstalled('NP_Profile')) {
     echo "<br />\n";
     $plugin->doSkinVar('member', 'password','','','');
 }
-echo "</div></body></html>\n";
+echo "</div></div></body></html>\n";
 ?>
