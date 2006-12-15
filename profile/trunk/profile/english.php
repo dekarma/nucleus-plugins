@@ -29,7 +29,9 @@ define('_PROFILE_HEIGHT',		   'height');
 define('_PROFILE_FILESIZE',		   'File Size');
 define('_PROFILE_FILETYPES',		   'File Types');
 define('_PROFILE_OPTIONS',		   'options');
+define('_PROFILE_DEFAULT',		   'default');
 define('_PROFILE_VALIDATE',		   'validate');
+define('_PROFILE_PROFILE',		   'profile');
 
 //Field Labels
 define('_PROFILE_LABEL_PASSWORD',		   'Password');
@@ -137,6 +139,7 @@ define('_PROFILE_ADMIN_HELP_HEIGHT',		'Integer. Max height of images for upload.
 define('_PROFILE_ADMIN_HELP_FILESIZE',		'Integer. Max file size in bytes of images for upload. Blank uses default for type. Only valid for file type.');
 define('_PROFILE_ADMIN_HELP_FILETYPES',		'Allowed file types for upload. Default types are jpg;jpeg;gif;png (use ; to separate multiple types), but any extention can be permitted. Blank uses default for type. Only valid for file type.');
 define('_PROFILE_ADMIN_HELP_OPTIONS',		'String. Special type-specific options. For dropdown, list, and radio types, use format \'display1|value1;display2|value2\' where display is what user sees and value is what gets stored. Can be the same. e.g. \'yes|1;no|0\' displays yes and no to user, but stores 1 or 0 respectively. \'yes|yes;no|no\' displays and stores the values yes or no. For other field types see help document.');
+define('_PROFILE_ADMIN_HELP_DEFAULT',		'String. Default value for fields giving choices. Valid only for list, dropdown, and radio fields. The storage value should be given. e.g. for an options field of \'yes|1;no|0\', use 1 to set default to yes and 0 to set default to 0');
 define('_PROFILE_ADMIN_HELP_VALIDATE',		'');
 define('_PROFILE_ADMIN_HELP_PERFORM',		'Choose an action to perform: Add a new field, modify an existing field, or delete a field.');
 define('_PROFILE_ADMIN_TYPES_SUCCESS_UPD',		'Type successfully updated.');

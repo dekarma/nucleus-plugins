@@ -122,7 +122,7 @@ class NP_Profile extends NucleusPlugin {
 		}
 	}
 
-	function getTableList() { return array(sql_table('plugin_profile'), sql_table('plugin_profile_fields'), sql_table('plugin_profile_types')); }
+	function getTableList() { return array(sql_table('plugin_profile'), sql_table('plugin_profile_fields'), sql_table('plugin_profile_types'), sql_table('plugin_profile_config')); }
 	function getEventList() { return array('QuickMenu','PostDeleteMember'); }
 
 	function install() {
@@ -164,6 +164,7 @@ class NP_Profile extends NucleusPlugin {
 					  `foptions` text,
 					  `fvalidate` varchar(255),
 					  `forder` int(11) NOT NULL default '0',
+                      `fdefault` varchar(255),
 					  PRIMARY KEY (`fname`)) ENGINE=MyISAM");
 
 		sql_query("CREATE TABLE IF NOT EXISTS ". sql_table('plugin_profile_types').
@@ -178,6 +179,11 @@ class NP_Profile extends NucleusPlugin {
 					  `foptions` text,
 					  `fvalidate` varchar(255),
 					  PRIMARY KEY (`type`)) ENGINE=MyISAM");
+
+        sql_query("CREATE TABLE IF NOT EXISTS ". sql_table('plugin_profile_config').
+					" ( `csetting` varchar(255),
+					  `cvalue` text,
+					  PRIMARY KEY (`csetting`)) ENGINE=MyISAM");
 
 // This is to update tables for users of v 2.00.02b, from the beta tables to the released tables:
 		$hasord = false;
@@ -213,6 +219,12 @@ class NP_Profile extends NucleusPlugin {
 	  		sql_query("UPDATE ".sql_table('plugin_profile')." SET torder = '0'");
 		}
 
+// This is to update tables from v 2.02 to v 2.1:
+        $pres = sql_query("SHOW COLUMNS FROM ".sql_table('plugin_profile_fields')." LIKE 'fdefault'");
+        if (!mysql_num_rows($pres)) {
+            sql_query("ALTER TABLE ".sql_table('plugin_profile_fields')." ADD fdefault varchar(255) AFTER forder");
+        }
+
 // Fill the tables with default values if needed
 
 // fill the plugin_profile_fields table
@@ -231,7 +243,8 @@ class NP_Profile extends NucleusPlugin {
 				  'ffiletype'=>'',
 				  'foptions'=>'',
 				  'fvalidate'=>'',
-				  'forder'=>0),
+				  'forder'=>0,
+                  'fdefault'=>''),
 			array('fname'=>'notes',
 				  'flabel'=>_PROFILE_LABEL_NOTES,
 				  'ftype'=>'textarea',
@@ -246,7 +259,8 @@ class NP_Profile extends NucleusPlugin {
 				  'ffiletype'=>'',
 				  'foptions'=>'',
 				  'fvalidate'=>'',
-				  'forder'=>0),
+				  'forder'=>0,
+                  'fdefault'=>''),
 			array('fname'=>'url',
 				  'flabel'=>_PROFILE_LABEL_URL,
 				  'ftype'=>'url',
@@ -261,7 +275,8 @@ class NP_Profile extends NucleusPlugin {
 				  'ffiletype'=>'',
 				  'foptions'=>'',
 				  'fvalidate'=>'',
-				  'forder'=>0),
+				  'forder'=>0,
+                  'fdefault'=>''),
 			array('fname'=>'realname',
 				  'flabel'=>_PROFILE_LABEL_REALNAME,
 				  'ftype'=>'text',
@@ -276,7 +291,8 @@ class NP_Profile extends NucleusPlugin {
 				  'ffiletype'=>'',
 				  'foptions'=>'',
 				  'fvalidate'=>'',
-				  'forder'=>0),
+				  'forder'=>0,
+                  'fdefault'=>''),
 			array('fname'=>'nick',
 				  'flabel'=>_PROFILE_LABEL_NICK,
 				  'ftype'=>'text',
@@ -291,7 +307,8 @@ class NP_Profile extends NucleusPlugin {
 				  'ffiletype'=>'',
 				  'foptions'=>'',
 				  'fvalidate'=>'',
-				  'forder'=>0),
+				  'forder'=>0,
+                  'fdefault'=>''),
 			array('fname'=>'mail',
 				  'flabel'=>_PROFILE_LABEL_MAIL,
 				  'ftype'=>'mail',
@@ -306,7 +323,8 @@ class NP_Profile extends NucleusPlugin {
 				  'ffiletype'=>'',
 				  'foptions'=>'',
 				  'fvalidate'=>'',
-				  'forder'=>0),
+				  'forder'=>0,
+                  'fdefault'=>''),
 			array('fname'=>'msn',
 				  'flabel'=>_PROFILE_LABEL_MSN,
 				  'ftype'=>'text',
@@ -321,7 +339,8 @@ class NP_Profile extends NucleusPlugin {
 				  'ffiletype'=>'',
 				  'foptions'=>'',
 				  'fvalidate'=>'',
-				  'forder'=>0),
+				  'forder'=>0,
+                  'fdefault'=>''),
 			array('fname'=>'sex',
 				  'flabel'=>_PROFILE_LABEL_SEX,
 				  'ftype'=>'radio',
@@ -336,7 +355,8 @@ class NP_Profile extends NucleusPlugin {
 				  'ffiletype'=>'',
 				  'foptions'=>_PROFILE_MALE.'|m;'._PROFILE_FEMALE.'|f',
 				  'fvalidate'=>'',
-				  'forder'=>0),
+				  'forder'=>0,
+                  'fdefault'=>''),
 			array('fname'=>'birthdate',
 				  'flabel'=>_PROFILE_LABEL_BIRTHDATE,
 				  'ftype'=>'date',
@@ -351,7 +371,8 @@ class NP_Profile extends NucleusPlugin {
 				  'ffiletype'=>'',
 				  'foptions'=>'',
 				  'fvalidate'=>'',
-				  'forder'=>0),
+				  'forder'=>0,
+                  'fdefault'=>''),
 			array('fname'=>'avatar',
 				  'flabel'=>_PROFILE_LABEL_AVATAR,
 				  'ftype'=>'file',
@@ -366,7 +387,8 @@ class NP_Profile extends NucleusPlugin {
 				  'ffiletype'=>'jpg;gif;png;jpeg',
 				  'foptions'=>'',
 				  'fvalidate'=>'',
-				  'forder'=>0),
+				  'forder'=>0,
+                  'fdefault'=>''),
 			array('fname'=>'location',
 				  'flabel'=>_PROFILE_LABEL_LOCATION,
 				  'ftype'=>'text',
@@ -381,7 +403,8 @@ class NP_Profile extends NucleusPlugin {
 				  'ffiletype'=>'',
 				  'foptions'=>'',
 				  'fvalidate'=>'',
-				  'forder'=>0),
+				  'forder'=>0,
+                  'fdefault'=>''),
 			array('fname'=>'hobbies',
 				  'flabel'=>_PROFILE_LABEL_HOBBIES,
 				  'ftype'=>'text',
@@ -396,7 +419,8 @@ class NP_Profile extends NucleusPlugin {
 				  'ffiletype'=>'',
 				  'foptions'=>'',
 				  'fvalidate'=>'',
-				  'forder'=>0),
+				  'forder'=>0,
+                  'fdefault'=>''),
 			array('fname'=>'secret',
 				  'flabel'=>_PROFILE_LABEL_SECRET,
 				  'ftype'=>'password',
@@ -411,7 +435,8 @@ class NP_Profile extends NucleusPlugin {
 				  'ffiletype'=>'',
 				  'foptions'=>'',
 				  'fvalidate'=>'',
-				  'forder'=>0),
+				  'forder'=>0,
+                  'fdefault'=>''),
 			array('fname'=>'icq',
 				  'flabel'=>_PROFILE_LABEL_ICQ,
 				  'ftype'=>'number',
@@ -426,7 +451,8 @@ class NP_Profile extends NucleusPlugin {
 				  'ffiletype'=>'',
 				  'foptions'=>'',
 				  'fvalidate'=>'',
-				  'forder'=>0),
+				  'forder'=>0,
+                  'fdefault'=>''),
 			array('fname'=>'favoritesite',
 				  'flabel'=>_PROFILE_LABEL_FAVORITESITE,
 				  'ftype'=>'url',
@@ -441,7 +467,8 @@ class NP_Profile extends NucleusPlugin {
 				  'ffiletype'=>'',
 				  'foptions'=>'',
 				  'fvalidate'=>'',
-				  'forder'=>0),
+				  'forder'=>0,
+                  'fdefault'=>''),
 			array('fname'=>'bio',
 				  'flabel'=>_PROFILE_LABEL_BIO,
 				  'ftype'=>'textarea',
@@ -456,7 +483,8 @@ class NP_Profile extends NucleusPlugin {
 				  'ffiletype'=>'',
 				  'foptions'=>'',
 				  'fvalidate'=>'',
-				  'forder'=>0),
+				  'forder'=>0,
+                  'fdefault'=>''),
 			array('fname'=>'resume',
 				  'flabel'=>_PROFILE_LABEL_RESUME,
 				  'ftype'=>'url',
@@ -471,7 +499,8 @@ class NP_Profile extends NucleusPlugin {
 				  'ffiletype'=>'',
 				  'foptions'=>'',
 				  'fvalidate'=>'',
-				  'forder'=>0),
+				  'forder'=>0,
+                  'fdefault'=>''),
 		);
 		foreach ($fields as $value) {
 			if (mysql_num_rows(sql_query("SELECT * FROM ".sql_table('plugin_profile_fields')." WHERE fname='".$value['fname']."'")) == 0) {
@@ -490,7 +519,8 @@ class NP_Profile extends NucleusPlugin {
 					.$value['ffiletype']."','"
 					.$value['foptions']."','"
 					.$value['fvalidate']."','"
-					.$value['forder']."')");
+                    .$value['forder']."','"
+					.$value['fdefault']."')");
 			}
 		}
 // fill in the plugin_profile_types table
@@ -522,6 +552,22 @@ class NP_Profile extends NucleusPlugin {
 					.$value['fvalidate']."')");
 			}
 		}
+// fill in plugin_profile_config table
+        $editprofilevalue = "";
+        $lines = file($DIR_PLUGINS.'profile/editprofile.cfg.sample');
+        foreach ($lines as $line) {
+            $editprofilevalue .= $line;
+        }
+        $configs = array(
+			array('csetting'=>'editprofile','cvalue'=>$editprofilevalue)
+		);
+        foreach ($configs as $value) {
+			if (mysql_num_rows(sql_query("SELECT * FROM ".sql_table('plugin_profile_config')." WHERE csetting='".$value['csetting']."'")) == 0) {
+				sql_query("INSERT INTO ". sql_table('plugin_profile_config')
+					." VALUES ('".$value['csetting']."','"
+					.$value['cvalue']."')");
+			}
+		}
 	}
 
 	function unInstall() {
@@ -533,6 +579,7 @@ class NP_Profile extends NucleusPlugin {
 		if ($this->getOption('del_uninstall_fields') == 'yes')	{
 			sql_query('DROP TABLE IF EXISTS '.sql_table('plugin_profile_fields'));
 			sql_query('DROP TABLE IF EXISTS '.sql_table('plugin_profile_types'));
+            sql_query('DROP TABLE IF EXISTS '.sql_table('plugin_profile_config'));
 		}
 	}
 
@@ -675,6 +722,11 @@ class NP_Profile extends NucleusPlugin {
 							echo '<input type="hidden" name="memberid" value="' . $member->id . '" />' . "\n";
 							echo '<input type="submit" name="submit" value="'._PROFILE_SUBMIT.'" />' . "\n";
 							echo "</form>\n";
+						}
+						break;
+                    case 'submitbutton':
+						if ($skinType == 'member' && $member->id == $pmid && $isEdit) {
+							echo '<input type="submit" name="submit" value="'._PROFILE_SUBMIT.'" />' . "\n";
 						}
 						break;
 					case 'status':
@@ -958,6 +1010,10 @@ class NP_Profile extends NucleusPlugin {
 							break;
 						case 'dropdown':
 							$value = $this->getValue($pmid,$param1);
+                            if ($value == '') {
+                                $defvalue = trim($this->getFieldAttribute($param1,'fdefault'));
+                                $value = $defvalue;
+                            }
 							$size = $this->getFieldAttribute($param1,'fsize');
 							$rawoptions = explode(";", $this->getFieldAttribute($param1,'foptions'));
 							if ($skinType == 'member' && $member->id == $pmid && $param2 != 'show' && $isEdit) {
@@ -991,6 +1047,10 @@ class NP_Profile extends NucleusPlugin {
 							break;
 						case 'radio':
 							$value = $this->getValue($pmid,$param1);
+                            if ($value == '') {
+                                $defvalue = trim($this->getFieldAttribute($param1,'fdefault'));
+                                $value = $defvalue;
+                            }
 							$rawoptions = explode(";", $this->getFieldAttribute($param1,'foptions'));
 							if ($skinType == 'member' && $member->id == $pmid && $param2 != 'show' && $isEdit) {
 								foreach ($rawoptions as $ropt) {
@@ -1016,6 +1076,10 @@ class NP_Profile extends NucleusPlugin {
 							break;
 						case 'list':
 							$value = $this->getValue($pmid,$param1);
+                            if ($value == '') {
+                                $defvalue = trim($this->getFieldAttribute($param1,'fdefault'));
+                                $value = $defvalue;
+                            }
 							$valuearr = explode(";", $value);
 							$rawoptions = explode(";", $this->getFieldAttribute($param1,'foptions'));
 							$numopts = count($rawoptions);
@@ -1199,7 +1263,9 @@ class NP_Profile extends NucleusPlugin {
 								'ffilesize'=>intPostVar('ffilesize'),
 								'ffiletype'=>str_replace(',',';',postVar('ffiletype')),
 								'foptions'=>postVar('foptions'),
-								'fvalidate'=>postVar('fvalidate')
+								'fvalidate'=>postVar('fvalidate'),
+                                'forder'=>postVar('forder'),
+                                'fdefault'=>postVar('fdefault')
 								);
 			if (strtolower($ofname) == strtolower($fname)) {
 				$this->updateFieldDef($fname, $valuearray);
@@ -1236,7 +1302,9 @@ class NP_Profile extends NucleusPlugin {
 								'ffilesize'=>intPostVar('ffilesize'),
 								'ffiletype'=>str_replace(',',';',postVar('ffiletype')),
 								'foptions'=>postVar('foptions'),
-								'fvalidate'=>postVar('fvalidate')
+								'fvalidate'=>postVar('fvalidate'),
+                                'forder'=>postVar('forder'),
+                                'fdefault'=>postVar('fdefault')
 								);
 			if ($this->fieldExists($fname)) {
 				doError("$fname - "._PROFILE_ACTION_DUPLICATE_FIELD);
@@ -1832,6 +1900,16 @@ class NP_Profile extends NucleusPlugin {
 			while ($valobj = mysql_fetch_object($result)) {
 				$value .= $valobj->value;
 			}
+		}
+		return $value;
+	}
+
+    function getConfigValue($field) {
+		$result = sql_query("SELECT cvalue FROM ".sql_table('plugin_profile_config')." WHERE csetting='".addslashes($field)."'");
+		$value = '';
+		if (mysql_num_rows($result) > 0) {
+			$valobj = mysql_fetch_object($result)
+			$value = $valobj->cvalue;
 		}
 		return $value;
 	}

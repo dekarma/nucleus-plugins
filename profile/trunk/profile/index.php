@@ -268,6 +268,8 @@ border-bottom: 1px solid #778;
 		echo "<td>"._PROFILE_ADMIN_HELP_FILETYPES."</td></tr>\n";
 		echo '<tr><td class="e">'.ucfirst(_PROFILE_OPTIONS).'</td><td class="v"><input size="40" name="foptions" value="'.$row['foptions'].'" />'."</td>";
 		echo "<td>"._PROFILE_ADMIN_HELP_OPTIONS."</td></tr>\n";
+        echo '<tr><td class="e">'.ucfirst(_PROFILE_DEFAULT).'</td><td class="v"><input size="40" name="fdefault" value="'.$row['fdefault'].'" />'."</td>";
+		echo "<td>"._PROFILE_ADMIN_HELP_DEFAULT."</td></tr>\n";
 		//echo '<tr><td class="e">'.ucfirst(_PROFILE_VALIDATE.'</td><td class="v"><input name="fvalidate" value="'.$row['fvalidate'].'" />'."</td><td></td></tr>\n";
 		echo '<tr><td class="e">'._PROFILE_ADMIN_FIELDS_ACTION_PERFORM.'</td><td class="v"><select name="type" size="1" >'."\n";
 		echo '<option value="updatefield"'.($acttype == 'updatefield' ? 'selected="selected"' : '').'>'._PROFILE_ADMIN_FIELDS_ACTION_UPD.'</option>' . "\n";
