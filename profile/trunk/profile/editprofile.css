@@ -32,10 +32,12 @@ h2
 {
     font-family: "Georgia", "Lucida Grande", "Lucida Sans Unicode", "Trebuchet MS", Trebuchet, Arial, sans-serif;
 	font-weight: heavy;
-	font-size: 14px;
-	height: 22px;
+	font-size: 18px;
+	height: 24px;
 	vertical-align: bottom;
 	margin: 0;
+	margin-top: 6px;
+	margin-bottom: 6px;
 }
 h3
 {
@@ -45,6 +47,7 @@ h3
 	height: 20px;
 	vertical-align: bottom;
 	margin: 0;
+	margin-top: 6px;
 }
 h4,h5,h6
 {
@@ -176,4 +179,45 @@ a:hover, a:active
 	background-color:#ddddee;
 	border: 1px outset #dddddd;
 	padding: 1px;
+}
+.navlist
+{
+padding: 3px 0;
+margin-left: 0;
+margin-bottom: 6px;
+border-bottom: 1px solid #778;
+font: bold 12px Verdana, sans-serif;
+}
+
+.navlist li
+{
+list-style: none;
+margin: 0;
+display: inline;
+}
+
+.navlist li a
+{
+padding: 3px 0.5em;
+margin-left: 3px;
+border: 1px solid #778;
+border-bottom: none;
+background: #DDE;
+text-decoration: none;
+}
+
+.navlist li a:link { color: #448; }
+.navlist li a:visited { color: #667; }
+
+.navlist li a:hover
+{
+color: #000;
+background: #AAE;
+border-color: #227;
+}
+
+.navlist li a.current
+{
+background: white;
+border-bottom: 1px solid white;
 }

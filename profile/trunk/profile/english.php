@@ -32,6 +32,7 @@ define('_PROFILE_OPTIONS',		   'options');
 define('_PROFILE_DEFAULT',		   'default');
 define('_PROFILE_VALIDATE',		   'validate');
 define('_PROFILE_PROFILE',		   'profile');
+define('_PROFILE_CLOSE',		   'close');
 
 //Field Labels
 define('_PROFILE_LABEL_PASSWORD',		   'Password');
@@ -111,10 +112,12 @@ define('_PROFILE_ACTION_UNKNOWN',           'Bad action type');
 define('_PROFILE_ADMIN_OPTIONS',		   'Edit NP_Profile Options');
 define('_PROFILE_ADMIN_FIELD_DEF',		   'Field Definitions');
 define('_PROFILE_ADMIN_FIELD_TYPE',		   'Field Types');
+define('_PROFILE_ADMIN_CONFIG',		   'Form Configuration');
 define('_PROFILE_ADMIN_EXAMPLE',		   'Example Code');
 define('_PROFILE_ADMIN_FIELDS_HEAD',		'Custom Field Definitions');
 define('_PROFILE_ADMIN_TYPES_HEAD',		'Field Types');
 define('_PROFILE_ADMIN_FIELDS_DELETE_HEAD',		'Delete Field');
+define('_PROFILE_ADMIN_CONFIG_HEAD',		'Form Configuration');
 define('_PROFILE_ADMIN_EXAMPLE_HEAD',		'Example Code');
 define('_PROFILE_ADMIN_FIELDS_EDIT_HEAD',		'Edit Custom Field Definitions');
 define('_PROFILE_ADMIN_TYPES_EDIT_HEAD',		'Edit Type Default Settings');
@@ -126,6 +129,7 @@ define('_PROFILE_ADMIN_FIELDS_ACTION_PERFORM',		'Action to Perform');
 define('_PROFILE_ADMIN_FIELDS_ACTION_ADD',		'Add Field');
 define('_PROFILE_ADMIN_FIELDS_ACTION_UPD',		'Update Field');
 define('_PROFILE_ADMIN_FIELDS_ACTION_DEL',		'Delete Field');
+define('_PROFILE_ADMIN_CONFIG_SUCCESS_UPD',		'Config successfully updated.');
 define('_PROFILE_ADMIN_HELP_NAME',		'Only a-z and 0-9 allowed. Only advanced users should change an existing field\'s name.');
 define('_PROFILE_ADMIN_HELP_LABEL',		'Can be a descriptive title for the field, for use as a label.');
 define('_PROFILE_ADMIN_HELP_TYPE',		'The field type. See help file for more details.');

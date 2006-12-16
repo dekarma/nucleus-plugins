@@ -554,10 +554,49 @@ class NP_Profile extends NucleusPlugin {
 		}
 // fill in plugin_profile_config table
         $editprofilevalue = "";
+		/*
         $lines = file($DIR_PLUGINS.'profile/editprofile.cfg.sample');
         foreach ($lines as $line) {
             $editprofilevalue .= $line;
         }
+		*/
+		$editprofilevalue = "# This configures the format of the editprofile page. See help.html for formatting options.
+# First set tabs and labels. (tab0 must always be for NP_Profile) only tabs 0-9 allowed
+[t]
+[t0]Profile
+#[t1]Extensions
+# Now give format of tab 0 (NP_Profile settings)
+[/t]
+[0]
+[h3]Personal
+nick
+realname
+sex
+birthdate
+location
+avatar
+bio
+[h3]Privacy
+privacylevel
+[h3]Contact
+mail
+icq
+msn
+url
+[h3]Interests
+favoritesite
+hobbies
+resume
+secret
+notes
+[/0]
+# Now give format of tab2 (use for adding forms for NP_Profile extension plugins.
+# The extension plugin must have a method called editProfileForm() which outputs a complete form for modifying its settings.
+#[1]
+# Here we would put extensions plugin forms
+#NP_PluginA
+#NP_PluginB
+#[/1]";
         $configs = array(
 			array('csetting'=>'editprofile','cvalue'=>$editprofilevalue)
 		);
@@ -648,7 +687,7 @@ class NP_Profile extends NucleusPlugin {
 		}
 
 		if (in_array($skinType, array('member','archive','archivelist','item','index','template','comment'))) {
-			if (in_array($param1, array('startform','endform','status','editlink')) || $this->getFieldAttribute($param1,'enabled')) {
+			if (in_array($param1, array('startform','endform','status','editlink','submitbutton')) || $this->getFieldAttribute($param1,'enabled')) {
 				$pmid = $memberid;
 				if (intval($pmid) < 1) {
 					if (!is_numeric($param4)) {
@@ -1327,6 +1366,14 @@ class NP_Profile extends NucleusPlugin {
 			}
 			header('Location: ' . $destURL);
 			break;
+		case 'updateconfig':
+			if (!$member->isAdmin()) doError(_PROFILE_ACTION_DENY);
+			$destURL = $CONF['PluginURL'] . "profile/index.php?showlist=config&safe=true&status=2";
+			$epvalue = postVar('editprofile');
+			$this->updateConfig($epvalue);
+
+			header('Location: ' . $destURL);
+			break;
 		case 'updatetype':
 			if (!$member->isAdmin()) doError(_PROFILE_ACTION_DENY);
 			$otype = postVar('odtype');
@@ -1740,13 +1787,23 @@ class NP_Profile extends NucleusPlugin {
 			} // end if postvar('memberid') == $member->id
 
 			$destURL = serverVar('HTTP_REFERER');
-			$destURL = str_replace(array("?status=1","&status=1","?edit=1","&edit=1"),'',$destURL);
-
+			$pgparts = explode('?',$destURL);
+			$paramarr = explode('&',$pgparts[1]);
+			$newparams = '';
+			foreach ($paramarr as $p) {
+				if (strpos($p,"status=") === false && strpos($p,"edit=") === false) {
+					$newparams .= "$p&";
+				}
+			}
+			$newparams .= "status=1";
+			//$destURL = str_replace(array("?status=1","&status=1","?edit=1","&edit=1"),'',$destURL);
+/*
 			if (strpos($destURL,'?') === false)
 				$destURL = $destURL.'?status=1';
 			else
 				$destURL = $destURL.'&status=1';
-
+*/
+			$destURL = $pgparts[0].'?'.$newparams;
 			header("Location:" . $destURL);
 			break;
 		default:
@@ -1868,6 +1925,12 @@ class NP_Profile extends NucleusPlugin {
 			}
 		}
 	}
+	//update form config
+	function updateConfig($value) {
+		$value = addslashes($value);
+		sql_query("DELETE FROM ".sql_table('plugin_profile_config')." WHERE csetting='editprofile'");
+		sql_query("INSERT INTO ".sql_table('plugin_profile_config')." VALUES('editprofile','$value')");
+	}
 
 	function fieldExists($fieldname = '') {
 		if ($fieldname == '') {
@@ -1908,7 +1971,7 @@ class NP_Profile extends NucleusPlugin {
 		$result = sql_query("SELECT cvalue FROM ".sql_table('plugin_profile_config')." WHERE csetting='".addslashes($field)."'");
 		$value = '';
 		if (mysql_num_rows($result) > 0) {
-			$valobj = mysql_fetch_object($result)
+			$valobj = mysql_fetch_object($result);
 			$value = $valobj->cvalue;
 		}
 		return $value;
@@ -1921,7 +1984,7 @@ class NP_Profile extends NucleusPlugin {
 		$res = mysql_fetch_assoc($resa);
 		$result = $res[$attribute];
 		$field_type = $res['ftype'];
-		if (in_array($result, array('','0')) && !in_array($attribute, array('fname','flabel','ftype','required','enabled'))) {
+		if (in_array($result, array('','0')) && !in_array($attribute, array('fname','flabel','ftype','required','enabled','fdefault'))) {
 			$query = "SELECT ".$attribute." FROM ".sql_table('plugin_profile_types')." WHERE type='".$field_type."'";
 			$res = sql_query($query);
 			$result = mysql_result($res,0);

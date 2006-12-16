@@ -73,10 +73,11 @@ if ($manager->pluginInstalled('NP_Profile')) {
                 $currTab = $currTab + 1;
             }
             else {
-                $tlines[$currTab, $k] = $cline;
+                $tlines[$currTab][$k] = $cline;
                 $k++;
             }
         }
+		$j++;
         if ($currTab >= $maxtab) break;
     }
 
@@ -90,12 +91,18 @@ if ($manager->pluginInstalled('NP_Profile')) {
     foreach ($tabs as $key=>$value) {
         echo ' <li><a class="'.($key == $tab ? 'current' : '').'" href="'.$thispage.'?edit=1&amp;tab='.$key.'">'.$value.'</a></li> '."\n";
     }
+	echo ' <li><a class="'.($key == $tab ? 'current' : '').'" href="'.$CONF['IndexURL'].'?memberid='.$memberid.'">'.ucfirst(_PROFILE_CLOSE).'</a></li> '."\n";
 	echo " </ul></div>\n";
 /**************************************
  *       tab 0                        *
  **************************************/
     if ($tab <= 0 || $tab >= $maxtab) {
-        $plugin->doSkinVar('member', 'editlink','','','');
+		if (intRequestVar('edit') == 0) {
+			$plugin->doSkinVar('member', 'editlink','','','');
+		}
+		else {
+
+		}
         echo "&nbsp;&nbsp;&nbsp;&nbsp;<span style=\"color:red\">";
         $plugin->doSkinVar('member', 'status','','','');
         echo "</span><br /><br />\n";
@@ -105,10 +112,12 @@ if ($manager->pluginInstalled('NP_Profile')) {
         $tableopen = 0;
         foreach ($tlines[0] as $field) {
             $field = trim($field);
-            if (strtolower(substr($field,0,2)) == '<h') {
+            if (strtolower(substr($field,0,2)) == '[h') {
                 if ($tableopen) echo "</table>\n";
                 $tableopen = 0;
-                echo "$field\n";
+				$htype = strtolower(substr($field,1,2));
+				$field = str_replace(array('[',']'), array('<','>'), $field);
+                echo "$field</$htype>\n";
             }
             else {
                 $field = strtolower($field);

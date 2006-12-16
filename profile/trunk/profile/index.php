@@ -37,7 +37,7 @@ PARTICULAR PURPOSE. See the GNU General Public License for more details.
 	$admin = $member->isAdmin();
 	$thisquerystring = serverVar('QUERY_STRING');
 	$showlist = strtolower(trim(requestVar('showlist')));
-	if (!in_array($showlist, array('fields','editfield','types','edittype','example','deleteconfirm'))) $showlist = 'fields';
+	if (!in_array($showlist, array('fields','editfield','types','edittype','example','deleteconfirm','config'))) $showlist = 'fields';
 	$status = intval(requestVar('status'));
 
 	$newhead = '
@@ -142,6 +142,7 @@ border-bottom: 1px solid #778;
 	echo '<ul class="navlist">'."\n";
 	echo ' <li><a class="'.($showlist == 'fields' ? 'current' : '').'" href="'.$thispage.'?showlist=fields&amp;safe=true">'._PROFILE_ADMIN_FIELD_DEF.'</a></li> '."\n";
 	echo ' <li><a class="'.($showlist == 'types' ? 'current' : '').'" href="'.$thispage.'?showlist=types&amp;safe=true">'._PROFILE_ADMIN_FIELD_TYPE.'</a></li>'."\n";
+	echo ' <li><a class="'.($showlist == 'config' ? 'current' : '').'" href="'.$thispage.'?showlist=config&amp;safe=true">'._PROFILE_ADMIN_CONFIG.'</a></li>'."\n";
 	echo ' <li><a class="'.($showlist == 'example' ? 'current' : '').'" href="'.$thispage.'?showlist=example&amp;safe=true">'._PROFILE_ADMIN_EXAMPLE.'</a></li>'."\n";
 	echo " </ul></div>\n";
 
@@ -425,6 +426,40 @@ border-bottom: 1px solid #778;
 		}
 		echo $toplink;
 	} // end edit types
+
+/**************************************
+ *	 CONFIG  					      *
+ **************************************/
+	if ($showlist == "config")
+	{
+		$acttype = 'updateconfig';
+		echo '<div class="center">'."\n";
+		echo "<h2>"._PROFILE_ADMIN_CONFIG_HEAD."</h2>\n";
+		if ($status){
+			switch ($status) {
+			/*case 1:
+				echo " <span style=\"color:blue\">Type successfully added.</span>\n";
+				break;*/
+			case 2:
+				echo "<span style=\"color:blue\">"._PROFILE_ADMIN_CONFIG_SUCCESS_UPD."</span>\n";
+				break;
+			/*case 3:
+				echo " <span style=\"color:blue\">Type successfully deleted.</span>\n";
+				break;*/
+			default:
+			}
+		}
+		echo '<form method="post" action="'.$action_url.'">'."\n";
+		echo '<input type="hidden" name="action" value="plugin" />'."\n";
+		echo '<input type="hidden" name="name" value="Profile" />'."\n";
+		echo '<input type="hidden" name="type" value="'.$acttype.'" />'."\n";
+		echo '<table border="0" cellpadding="3" width="600">'."\n";
+		echo '<tr><td class="e">editprofile</td><td class="v"><textarea name="editprofile" cols="30" rows="20">' . $profplug->getConfigValue('editprofile') . '</textarea>' . "</td></tr>\n";
+		echo '<tr><td class="e"></td><td class="v"><input type="submit" value="'._PROFILE_SUBMIT.'" />'."</td></tr>\n";
+		echo "</table>\n";
+		echo "</form>\n";
+		echo "</div>\n";
+	}
 
 /**************************************
  *	 Example					      *
