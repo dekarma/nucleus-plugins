@@ -687,7 +687,7 @@ notes
 		}
 
 		if (in_array($skinType, array('member','archive','archivelist','item','index','template','comment'))) {
-			if (in_array($param1, array('startform','endform','status','editlink','submitbutton')) || $this->getFieldAttribute($param1,'enabled')) {
+			if (in_array($param1, array('startform','endform','status','editlink','submitbutton','editprofile')) || $this->getFieldAttribute($param1,'enabled')) {
 				$pmid = $memberid;
 				if (intval($pmid) < 1) {
 					if (!is_numeric($param4)) {
@@ -821,6 +821,18 @@ notes
 								if ($qstring{0} == '?') $eparam = '&edit=1';
 								else $eparam = '?edit=1';
 								$editlink = "http://".serverVar('SERVER_NAME').$sstring.$qstring.$eparam;
+								echo '<a class="profileeditlink" href="'.$editlink.'">'._PROFILE_SV_EDITLINK_EDIT.'</a>';
+							}
+						}
+						break;
+					case 'editprofile':
+						if ($skinType == 'member' && $member->id == $pmid) {
+							if ($isEdit) {
+								//$editlink = $CONF['PluginURL']."profile/editprofile.php?edit=1";
+								//echo '<a class="profileeditlink" href="'.$editlink.'">'._PROFILE_SV_EDITLINK_FORM.'</a>';
+							}
+							else {
+								$editlink = $CONF['PluginURL']."profile/editprofile.php?edit=1";
 								echo '<a class="profileeditlink" href="'.$editlink.'">'._PROFILE_SV_EDITLINK_EDIT.'</a>';
 							}
 						}
