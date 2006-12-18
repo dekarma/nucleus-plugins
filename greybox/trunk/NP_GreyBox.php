@@ -34,7 +34,7 @@ class NP_GreyBox extends NucleusPlugin {
 	function getName() {return 'GreyBox';}
 	function getAuthor()  {return 'Frank Truscott, based on work by Seventoes';}
 	function getURL(){return 'http://www.iai.com/';}
-	function getVersion() {return '1.0';}
+	function getVersion() {return '1.11';}
 	function getDescription() {
 		return 'Simple plugin to enable GreyBox on Nucleus Blogs';
 	}
@@ -81,6 +81,18 @@ class NP_GreyBox extends NucleusPlugin {
 
 	function parse($matches) {
         $media_dir = $this->getOption('imagePath');
+        $media_url = $this->getOption('imageURL');
+        if (!ini_get("allow_url_fopen")) {
+            $thumb_path = $media_dir;
+        }
+        elseif (strpos(strtolower(php_uname('s')),'windows') !== false) {
+            if (!function_exists('version_compare') || version_compare(PHP_VERSION, "4.3.0", "<")) {
+                $thumb_path = $media_dir;
+            }
+            else $thumb_path = $media_url;
+        }
+        else $thumb_path = $media_url;
+
 		$sections = explode("|", $matches[1]);
 
 		if (substr($sections[0],0,1) == "/") $sections[0] = substr($sections[0],1);
@@ -158,7 +170,7 @@ class NP_GreyBox extends NucleusPlugin {
             else {
                 $r .= '<a href="'.$this->getOption('imageURL').$image.'" rel="'.$reltext.'" title="'.$caption.'">';
                 if ($this->getOption('thumbnails') == 'yes' && strtolower(substr($kind,0,4)) != 'page') {
-                    $r .= '<img src="'.$this->getAdminURL().'thumbnail.php?path='.$this->getOption('imageURL').'&image='.$image.'&size='.$this->getOption('maxSize').'" border="0">';
+                    $r .= '<img src="'.$this->getAdminURL().'thumbnail.php?path='.$thumb_path.'&image='.$image.'&size='.$this->getOption('maxSize').'" border="0">';
                 } else {
                     $r .= $caption;
                 }

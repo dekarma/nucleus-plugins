@@ -33,6 +33,10 @@
    /*
     * History:
     *
+    * v 1.11 - make so thumbnails work when allow_url_open is false
+    *
+    * v1.1 - made so can set root dir for lightbox files
+    *
     * v1.01 - 12/1/2006 minor bug fix
     *         - fix for imagepath being a URL. Can now be included in image set.
     * v1.0 - 11/30/2006 Initial release
@@ -84,6 +88,18 @@ class NP_LightBox2 extends NucleusPlugin {
 
 	function parse($matches) {
         $media_dir = $this->getOption('imagePath');
+        $media_url = $this->getOption('imageURL');
+        if (!ini_get("allow_url_fopen")) {
+            $thumb_path = $media_dir;
+        }
+        elseif (strpos(strtolower(php_uname('s')),'windows') !== false) {
+            if (!function_exists('version_compare') || version_compare(PHP_VERSION, "4.3.0", "<")) {
+                $thumb_path = $media_dir;
+            }
+            else $thumb_path = $media_url;
+        }
+        else $thumb_path = $media_url;
+
 		$sections = explode("|", $matches[1]);
 		if (substr($sections[0],0,1) == "/") $sections[0] = substr($sections[0],1);
 		if (substr($sections[0],-1) == "/") $sections[0] = substr($sections[0],0,strlen($sections[0]) -1);
@@ -123,7 +139,7 @@ class NP_LightBox2 extends NucleusPlugin {
             else {
                 $r .= "<a href=\"".$this->getOption('imageURL')."$image\" rel=\"$reltext\" title=\"$caption\">";
                 if ($this->getOption('thumbnails') == 'yes') {
-                    $r .= "<img src=\"".$this->getAdminURL()."thumbnail.php?path=".$this->getOption('imageURL')."&image=".$image."&size=".$this->getOption('maxSize')."\" border=\"0\">";
+                    $r .= "<img src=\"".$this->getAdminURL()."thumbnail.php?path=".$thumb_path."&image=".$image."&size=".$this->getOption('maxSize')."\" border=\"0\">";
                 } else {
                     $r .= $caption;
                 }
