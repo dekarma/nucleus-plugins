@@ -59,6 +59,20 @@ if (isset($plugin)) {
         $lines[$i] = '[/1]';
     }
     echo "<h2>".$member->getDisplayName()."</h2>\n";
+
+    if (intRequestVar('edit') == 0) {
+		//$plugin->doSkinVar('member', 'editlink','','','');
+		echo "<div class=\"returnlink\">\n";
+		echo "<a href=\"$returnURL\" title=\""._PROFILE_SV_EDITLINK_FORM."\">"._PROFILE_SV_EDITLINK_FORM."</a>\n";
+		echo "</div>\n";
+	}
+	else {
+
+	}
+    echo "&nbsp;&nbsp;&nbsp;&nbsp;<span style=\"color:red\">";
+    $plugin->doSkinVar('member', 'status','','','');
+    echo "</span><br /><br />\n";
+
     $j = 0;
     $tabs = array();
     while ($cline = $lines[$j]) {
@@ -111,26 +125,15 @@ if (isset($plugin)) {
 	echo ' <li><a class="'.($key == $tab ? 'current' : '').'" href="'.$returnURL.'">'.ucfirst(_PROFILE_CLOSE).'</a></li> '."\n";
 	echo " </ul></div>\n";
 /**************************************
- *       tab 0                        *
+ *       tabs                        *
  **************************************/
-    if ($tab <= 0 || $tab >= $maxtab) {
-		if (intRequestVar('edit') == 0) {
-			//$plugin->doSkinVar('member', 'editlink','','','');
-			echo "<div class=\"returnlink\">\n";
-			echo "<a href=\"$returnURL\" title=\""._PROFILE_SV_EDITLINK_FORM."\">"._PROFILE_SV_EDITLINK_FORM."</a>\n";
-			echo "</div>\n";
-		}
-		else {
-
-		}
-        echo "&nbsp;&nbsp;&nbsp;&nbsp;<span style=\"color:red\">";
-        $plugin->doSkinVar('member', 'status','','','');
-        echo "</span><br /><br />\n";
+    if ($tab <= 0 || $tab >= $maxtab) $tab = 0;
 
         $plugin->doSkinVar('member', 'startform','','','');
         $plugin->doSkinVar('member', 'submitbutton','','','');
         $tableopen = 0;
-        foreach ($tlines[0] as $field) {
+        $formopen = 0;
+        foreach ($tlines[$tab] as $field) {
             $field = trim($field);
             if (strtolower(substr($field,0,2)) == '[h') {
                 if ($tableopen) echo "</table>\n";
@@ -139,12 +142,59 @@ if (isset($plugin)) {
 				$field = str_replace(array('[',']'), array('<','>'), $field);
                 echo "$field</$htype>\n";
             }
+            elseif ($field == 'password') {
+                if ($tableopen) {
+                    echo "</table>\n";
+                    $tableopen = 0;
+                }
+                if ($formopen) {
+                    $plugin->doSkinVar('member', 'endform','','','');
+                    $formopen = 0;
+                }
+                $plugin->doSkinVar('member', 'password','','','');
+            }
+            elseif ($field == 'startform') {
+                if ($tableopen) {
+                    echo "</table>\n";
+                    $tableopen = 0;
+                }
+                if ($formopen) {
+                    $plugin->doSkinVar('member', 'endform','','','');
+                    $formopen = 0;
+                }
+                $plugin->doSkinVar('member', 'startform','','','');
+            }
+            elseif ($field == 'endform') {
+                if ($tableopen) {
+                    echo "</table>\n";
+                    $tableopen = 0;
+                }
+                if ($formopen) {
+                    $plugin->doSkinVar('member', 'endform','','','');
+                    $formopen = 0;
+                }
+            }
+            elseif ($field == 'submitbutton') {
+                if ($tableopen) {
+                    echo "</table>\n";
+                    $tableopen = 0;
+                }
+                if ($formopen) {
+                    $plugin->doSkinVar('member', 'submitbutton','','','');
+                }
+            }
             else {
                 $field = strtolower($field);
                 if ($field != 'password') {
                     if ($plugin->fieldExists($field)) {
-                        if (!$tableopen) echo "<table class=\"profiletable\">\n";
-                        $tableopen = 1;
+                        if (!$formopen) {
+                            $plugin->doSkinVar('member', 'startform','','','');
+                            $formopen = 1;
+                        }
+                        if (!$tableopen) {
+                            echo "<table class=\"profiletable\">\n";
+                            $tableopen = 1;
+                        }
                         echo "<tr>\n<td class=\"profilecol1\">";
                         $plugin->doSkinVar('member', $field,'label','','');
                         echo "</td><td class=\"profilecol2\">";
@@ -155,13 +205,13 @@ if (isset($plugin)) {
             }
         }
         if ($tableopen) echo "</table>\n";
-        $plugin->doSkinVar('member', 'endform','','','');
+        if ($formopen) $plugin->doSkinVar('member', 'endform','','','');
         echo "<br />\n";
-        $plugin->doSkinVar('member', 'password','','','');
-    }
+
 /**************************************
- *       tabs 1-9                     *
+ *       extensions                   *
  **************************************/
+ /* maybe idea of how to deal with profile extension plugin fields. wait for demand
     if ($tab > 0 && $tab < $maxtab) {
         foreach ($tlines[$tab] as $field) {
             if ($manager->pluginInstalled($field)) {
@@ -172,6 +222,7 @@ if (isset($plugin)) {
             }
         }
     }
+*/
 }
 echo "</div></div></body></html>\n";
 ?>

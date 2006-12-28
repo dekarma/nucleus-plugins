@@ -29,7 +29,6 @@ define('_PROFILE_HEIGHT',		   'height');
 define('_PROFILE_FILESIZE',		   'File Size');
 define('_PROFILE_FILETYPES',		   'File Types');
 define('_PROFILE_OPTIONS',		   'options');
-define('_PROFILE_DEFAULT',		   'default');
 define('_PROFILE_VALIDATE',		   'validate');
 define('_PROFILE_PROFILE',		   'profile');
 define('_PROFILE_CLOSE',		   'close');
@@ -143,7 +142,6 @@ define('_PROFILE_ADMIN_HELP_HEIGHT',		'Integer. Max height of images for upload.
 define('_PROFILE_ADMIN_HELP_FILESIZE',		'Integer. Max file size in bytes of images for upload. Blank uses default for type. Only valid for file type.');
 define('_PROFILE_ADMIN_HELP_FILETYPES',		'Allowed file types for upload. Default types are jpg;jpeg;gif;png (use ; to separate multiple types), but any extention can be permitted. Blank uses default for type. Only valid for file type.');
 define('_PROFILE_ADMIN_HELP_OPTIONS',		'String. Special type-specific options. For dropdown, list, and radio types, use format \'display1|value1;display2|value2\' where display is what user sees and value is what gets stored. Can be the same. e.g. \'yes|1;no|0\' displays yes and no to user, but stores 1 or 0 respectively. \'yes|yes;no|no\' displays and stores the values yes or no. For other field types see help document.');
-define('_PROFILE_ADMIN_HELP_DEFAULT',		'String. Default value for fields giving choices. Valid only for list, dropdown, and radio fields. The storage value should be given. e.g. for an options field of \'yes|1;no|0\', use 1 to set default to yes and 0 to set default to 0');
 define('_PROFILE_ADMIN_HELP_VALIDATE',		'');
 define('_PROFILE_ADMIN_HELP_PERFORM',		'Choose an action to perform: Add a new field, modify an existing field, or delete a field.');
 define('_PROFILE_ADMIN_TYPES_SUCCESS_UPD',		'Type successfully updated.');
@@ -166,5 +164,13 @@ define('_PROFILE_ADMIN_DELETE_RETURN',		'Return to Field Definitions.');
 define('_PROFILE_OPTIONS_CSS2URL',				'Full URL to the css file for Edit Profile page');
 define('_PROFILE_ADMIN_CONFIG_INTRO',		'Here you can format the edit profile page (the page linked by the &lt;%Profile(editprofile)%&gt; skinvar)
 		The details of the formatting are given in the help file.');
+define('_PROFILE_LABEL_PRIVACYLEVEL',		   'Profile Privacy Level');
+define('_PROFILE_PRIVACYLEVEL_0',		   'All Users');
+define('_PROFILE_PRIVACYLEVEL_1',		   'Members Only');
+define('_PROFILE_PRIVACYLEVEL_2',		   'Friends Only');
+define('_PROFILE_DEFAULT',		   'default');
+define('_PROFILE_PUBLIC',		   'public');
+define('_PROFILE_ADMIN_HELP_DEFAULT',		'String. Default value for fields giving choices. Valid only for list, dropdown, and radio fields. The storage value should be given. e.g. for an options field of \'yes|1;no|0\', use 1 to set default to yes and 0 to set default to 0');
+define('_PROFILE_ADMIN_HELP_PUBLIC',		'Should member data for this field be viewable by all site visitors, regardless of the privacylevel setting? Fields where this is set to yes, will display for guests even if the member has set his profile to Members Only. Fields like nick, avatar, url should be set to yes.');
 
 ?>
