@@ -29,6 +29,7 @@ else $cssURL = '';
 
 <!-- page stylesheet (site colors and layout definitions) -->
 <link rel="stylesheet" type="text/css" href="<?php echo $cssURL ?>" />
+<title><?php echo $blog->getName()?> &raquo; Member &raquo; Edit Profile</title>
 </head>
 <body>
 <div id="wrapper">
@@ -58,17 +59,17 @@ if (isset($plugin)) {
         }
         $lines[$i] = '[/1]';
     }
-    echo "<h2>".$member->getDisplayName()."</h2>\n";
+    echo "<h2>".$member->getDisplayName().$plugin->doSkinVar('member','avatar','show','image','')."</h2>\n";
+
+	echo "<div class=\"returnlink\">\n";
+	echo "<a href=\"$returnURL\" title=\""._PROFILE_SV_EDITLINK_FORM."\">"._PROFILE_SV_EDITLINK_FORM."</a>\n";
+	echo "</div>\n";
 
     if (intRequestVar('edit') == 0) {
-		//$plugin->doSkinVar('member', 'editlink','','','');
-		echo "<div class=\"returnlink\">\n";
-		echo "<a href=\"$returnURL\" title=\""._PROFILE_SV_EDITLINK_FORM."\">"._PROFILE_SV_EDITLINK_FORM."</a>\n";
-		echo "</div>\n";
-	}
-	else {
+		$plugin->doSkinVar('member', 'editprofile','','','');
 
 	}
+
     echo "&nbsp;&nbsp;&nbsp;&nbsp;<span style=\"color:red\">";
     $plugin->doSkinVar('member', 'status','','','');
     echo "</span><br /><br />\n";
@@ -129,8 +130,6 @@ if (isset($plugin)) {
  **************************************/
     if ($tab <= 0 || $tab >= $maxtab) $tab = 0;
 
-        $plugin->doSkinVar('member', 'startform','','','');
-        $plugin->doSkinVar('member', 'submitbutton','','','');
         $tableopen = 0;
         $formopen = 0;
         foreach ($tlines[$tab] as $field) {
