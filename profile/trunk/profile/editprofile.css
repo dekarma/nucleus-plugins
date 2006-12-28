@@ -132,12 +132,15 @@ a:hover, a:active
 	/* small header image specific lines */
 	height: 168px;
 	width: 692px;
-	background-color: #FCD21B;
+	background-color: #eaeaea;
 	margin: 0 6px;
 	/* end small header image specific lines */
 	font-size: 38px;
 	text-align: center;
 	line-height: 160px;
+}
+.headertitle {
+	/*display: none;*/
 }
 
 /*-------------------------------------------------

@@ -162,4 +162,9 @@ define('_PROFILE_ADMIN_DELETE_BODY2',		'It is recommended that you consider disa
 define('_PROFILE_ADMIN_DELETE_CONFIRM',		'Do you really want to delete this field?');
 define('_PROFILE_ADMIN_DELETE_RETURN',		'Return to Field Definitions.');
 
+// new in 2.1
+define('_PROFILE_OPTIONS_CSS2URL',				'Full URL to the css file for Edit Profile page');
+define('_PROFILE_ADMIN_CONFIG_INTRO',		'Here you can format the edit profile page (the page linked by the &lt;%Profile(editprofile)%&gt; skinvar)
+		The details of the formatting are given in the help file.');
+
 ?>

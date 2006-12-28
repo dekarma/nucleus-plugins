@@ -77,8 +77,9 @@ History:
     * fix bug in how short textarea values are handled in editting (was losing last two characters of field).
   v2.05 - 5th release of version 2 adds the following to the 2.04 version
 	* adds support for comment template variable
-  v2.06 -- 6th release of version 2 adds the following to the 2.06 version
+  v2.1 -- 6th release of version 2 adds the following to the 2.05 version
 	* adds knowledge of NP_Friends with privacylevel concept.
+	* adds an editprofile page for editing profiles off the member details skin part.
 
 To do:
 * Offer some validation options for fields, i.e. isEmail, isURL, isList
@@ -103,7 +104,7 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://www.iai.com/';	}
 
-	function getVersion() {	return '2.05.01'; }
+	function getVersion() {	return '2.1.b1'; }
 
 	function getDescription() {
 		return 'Gives each member a customisable profile';
@@ -138,6 +139,7 @@ class NP_Profile extends NucleusPlugin {
 		$this->createOption('email_public', _PROFILE_OPT_EMAIL_PUBLIC, 'select','1',_PROFILE_OPT_SELECT_ALL.'|2|'._PROFILE_OPT_SELECT_MEMBERS.'|1|'._PROFILE_OPT_SELECT_NOBODY.'|0');
 		$this->createOption('pwd_min_length', _PROFILE_OPT_PWD_MIN_LENGTH, 'text','0');
 		$this->createOption('pwd_complexity', _PROFILE_OPT_PWD_COMPLEXITY, 'select','0',_PROFILE_OPT_SELECT_OFF_COMP.'|0|'._PROFILE_OPT_SELECT_ONE_COMP.'|1|'._PROFILE_OPT_SELECT_TWO_COMP.'|2|'._PROFILE_OPT_SELECT_THREE_COMP.'|3|'._PROFILE_OPT_SELECT_FOUR_COMP.'|4');
+		$this->createOption('CSS2URL',_PROFILE_OPTIONS_CSS2URL,'text',$this->getAdminURL()."editprofile.css");
 
 // create needed tables
 		sql_query("CREATE TABLE IF NOT EXISTS ". sql_table('plugin_profile').
@@ -826,13 +828,15 @@ notes
 						}
 						break;
 					case 'editprofile':
+						global $blog;
+						$blogid = $blog->getID();
 						if ($skinType == 'member' && $member->id == $pmid) {
 							if ($isEdit) {
 								//$editlink = $CONF['PluginURL']."profile/editprofile.php?edit=1";
 								//echo '<a class="profileeditlink" href="'.$editlink.'">'._PROFILE_SV_EDITLINK_FORM.'</a>';
 							}
 							else {
-								$editlink = $CONF['PluginURL']."profile/editprofile.php?edit=1";
+								$editlink = $CONF['PluginURL']."profile/editprofile.php?edit=1&blogid=$blogid";
 								echo '<a class="profileeditlink" href="'.$editlink.'">'._PROFILE_SV_EDITLINK_EDIT.'</a>';
 							}
 						}

@@ -433,7 +433,7 @@ border-bottom: 1px solid #778;
 	if ($showlist == "config")
 	{
 		$acttype = 'updateconfig';
-		echo '<div class="center">'."\n";
+		echo '<div>'."\n";
 		echo "<h2>"._PROFILE_ADMIN_CONFIG_HEAD."</h2>\n";
 		if ($status){
 			switch ($status) {
@@ -441,7 +441,7 @@ border-bottom: 1px solid #778;
 				echo " <span style=\"color:blue\">Type successfully added.</span>\n";
 				break;*/
 			case 2:
-				echo "<span style=\"color:blue\">"._PROFILE_ADMIN_CONFIG_SUCCESS_UPD."</span>\n";
+				echo "<span style=\"color:blue\">"._PROFILE_ADMIN_CONFIG_SUCCESS_UPD."</span><br />\n";
 				break;
 			/*case 3:
 				echo " <span style=\"color:blue\">Type successfully deleted.</span>\n";
@@ -449,6 +449,7 @@ border-bottom: 1px solid #778;
 			default:
 			}
 		}
+		echo _PROFILE_ADMIN_CONFIG_INTRO."<p />\n";
 		echo '<form method="post" action="'.$action_url.'">'."\n";
 		echo '<input type="hidden" name="action" value="plugin" />'."\n";
 		echo '<input type="hidden" name="name" value="Profile" />'."\n";

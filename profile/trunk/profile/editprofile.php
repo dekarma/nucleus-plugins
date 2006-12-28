@@ -3,6 +3,23 @@
 
 include('../../../config.php');
 
+$blogid = intRequestVar('blogid');
+if (!$blogid) $blogid = $CONF['DefaultBlog'];
+
+$b =& $manager->getBlog($blogid);
+$blog = $b;	// references can't be placed in global variables?
+if (!$blog->isValid) {
+	$blogid = $CONF['DefaultBlog'];
+	$b =& $manager->getBlog($blogid);
+	$blog = $b;	// references can't be placed in global variables?
+}
+
+if ($manager->pluginInstalled('NP_Profile')) {
+    $plugin =& $manager->getPlugin('NP_Profile');
+	$cssURL = $plugin->getOption('CSS2URL');
+}
+else $cssURL = '';
+
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -11,21 +28,21 @@ include('../../../config.php');
 <head>
 
 <!-- page stylesheet (site colors and layout definitions) -->
-<link rel="stylesheet" type="text/css" href="editprofile.css" />
+<link rel="stylesheet" type="text/css" href="<?php echo $cssURL ?>" />
 </head>
 <body>
 <div id="wrapper">
 <div id="header"><a name="top"></a>
-<h1><a href="<?php echo $CONF['IndexURL']?>" accesskey="1"><?php echo $CONF['SiteName']?></a></h1>
+<h1><a class="headertitle" href="<?php echo $blog->getURL()?>" accesskey="1"><?php echo $blog->getName()?></a></h1>
 </div>
 <div id="content">
 <?php
-if ($manager->pluginInstalled('NP_Profile')) {
-    $plugin =& $manager->getPlugin('NP_Profile');
+if (isset($plugin)) {
     $memberid = $member->getID();
     $memberinfo = MEMBER::createFromId($memberid);
+	$returnURL = $blog->getURL()."?memberid=$memberid";
 
-    $thispage = $CONF['PluginURL'] . "profile/editprofile.php";
+    $thispage = $CONF['PluginURL'] . "profile/editprofile.php?blogid=$blogid";
     $cvalue = $plugin->getConfigValue('editprofile');
 
     if (trim($cvalue) != '') {
@@ -89,16 +106,19 @@ if ($manager->pluginInstalled('NP_Profile')) {
     echo "<div>\n";
 	echo '<ul class="navlist">'."\n";
     foreach ($tabs as $key=>$value) {
-        echo ' <li><a class="'.($key == $tab ? 'current' : '').'" href="'.$thispage.'?edit=1&amp;tab='.$key.'">'.$value.'</a></li> '."\n";
+        echo ' <li><a class="'.($key == $tab ? 'current' : '').'" href="'.$thispage.'&amp;edit=1&amp;tab='.$key.'">'.$value.'</a></li> '."\n";
     }
-	echo ' <li><a class="'.($key == $tab ? 'current' : '').'" href="'.$CONF['IndexURL'].'?memberid='.$memberid.'">'.ucfirst(_PROFILE_CLOSE).'</a></li> '."\n";
+	echo ' <li><a class="'.($key == $tab ? 'current' : '').'" href="'.$returnURL.'">'.ucfirst(_PROFILE_CLOSE).'</a></li> '."\n";
 	echo " </ul></div>\n";
 /**************************************
  *       tab 0                        *
  **************************************/
     if ($tab <= 0 || $tab >= $maxtab) {
 		if (intRequestVar('edit') == 0) {
-			$plugin->doSkinVar('member', 'editlink','','','');
+			//$plugin->doSkinVar('member', 'editlink','','','');
+			echo "<div class=\"returnlink\">\n";
+			echo "<a href=\"$returnURL\" title=\""._PROFILE_SV_EDITLINK_FORM."\">"._PROFILE_SV_EDITLINK_FORM."</a>\n";
+			echo "</div>\n";
 		}
 		else {
 
