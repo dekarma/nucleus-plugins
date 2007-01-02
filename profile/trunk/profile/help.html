@@ -25,6 +25,7 @@
 <p>Version 2 has changed much from version 1, including additional database tables and plugin options. This requires that version 1 be uninstalled before version 2 can be installed. Please follow this procedure to upgrade to version 2 from version 1.</p>
 <p>Upgrading from version 2.01 to 2.02+ also requires you follow this procedure, but step 2 can be skipped.</p>
 <p>Upgrading from version 2.02+ to 2.03+ does not require any special procedure. Simply copy the new files over the old files.</p>
+<p>Uppgrading from version 2.0x to 2.1 requires you follow the this procedure, but step 2 can be skipped.</p>
 <ol>
 <li>Backup your database.</li>
 <li>Make a copy of your existing nucleus/plugins/NP_Profile.php file to a safe place. You will need this if you wish to revert later and to help you migrate your custom field settings to the version 2 database storage.</li>
@@ -60,6 +61,7 @@
 <li><code>To whom should we show email addresses?</code> : User to whom we should show email addresses. All Users, Members Only, or Nobody. (Members Only)</li>
 <li><code>Minimum Length in characters of a user password.</code> : Check new user passwords for a minimum length. Integer. 0 disables length check. (0)</li>
 <li><code>Password Complexity Check.</code> : Check new user passwords for complexity. Complexity is determined by number of character types present. Types are a-z, A-Z, 0-9, punctuation. Off disables complexity check check. (Off)</li>
+<li><code>Full URL to the css file for Edit Profile page</code> : The url of the css file used to style the editprofile page. New to 2.1.</li>
 </ul>
 
 <h3><a name="skinvars">SkinVars</a></h3>
@@ -72,8 +74,8 @@
 where
 <ul>
 <li><i>fieldname</i> is the name of the field to display. By default, the valid values are h<b>nick, realname, mail,
-notes, url</b>, msn, sex, birthdate, avatar, location, hobbies, secret, icq, favoritesite, bio, resume.
-The ones in bold are Nucleus member fields and represent data kept by the Nucleus Core. More details about these special Nucleus fields will be given later. It can also be one of a number of special values such as startform, endform, password, or status, as described later.</li>
+notes, url</b>, msn, sex, birthdate, avatar, location, hobbies, secret, icq, favoritesite, bio, resume, privacylevel.
+The ones in bold are Nucleus member fields and represent data kept by the Nucleus Core. More details about these special Nucleus fields will be given later. It can also be one of a number of special values such as startform, endform, password, editlink, editprofile, or status, as described later.</li>
 <li><i>special</i> is one of label or show as described below (can be left blank, the default behavior):
    <ul>
    <li>label - Valid for all fields. Shows the label for the named field..</li>
@@ -103,12 +105,13 @@ On an item page or in a template (see TemplateVar below) will show the real name
 <li><b>&lt;%Profile(startform)%&gt;</b> will add the html needed to start an input form for members, but only if a member is viewing his own member page. Otherwise, it displays nothing. Must be used on Member Details skin part if members will be allowed to edit their own profiles.</li>
 <li><b>&lt;%Profile(endform)%&gt;</b> will add the html needed to end an input form for members, but only if a member is viewing his own member page. Otherwise, it displays nothing. Must be used on Member Details skin part if members will be allowed to edit their own profiles.</li>
 <li><b>&lt;%Profile(editlink)%&gt;</b> will add the html needed to display a link to the profile edit form, but only if a member is viewing his own member page. Otherwise, it displays nothing. Should be used on Member Details skin part if members will be allowed to edit their own profiles.</li>
+<li><b>&lt;%Profile(editprofile)%&gt;</b> will add the html needed to display a link to the profile edit page, but only if a member is viewing his own member page. Otherwise, it displays nothing. Should be used on Member Details skin part if members will be allowed to edit their own profiles.</li>
 </ul>
 <p>For some ideas see the <a href="#tips">Tips and Tricks</a> section below.
 
 <h3><a name="templatevars">TemplateVars</a></h3>
 
-<p>The skinvars described above can be used in the Item Body part of any template. However, the special types of password, startform, endform, editlink, and status, are not available.</p>
+<p>The skinvars described above can be used in the Item Body part of any template. However, the special types of password, startform, endform, editlink, editprofile, and status, are not available.</p>
 
 <h3><a name="fieldnames">Field Names</a></h3>
 
@@ -119,9 +122,11 @@ On an item page or in a template (see TemplateVar below) will show the real name
 <ul>
 <li><b>startform</b> is used on the Member Details skin part before any other calls to the &lt;%Profile%&gt; skinvar. It sets up the start of the member input form.</li>
 <li><b>endform</b> is used on the Member Details skin part after all calls to the &lt;%Profile(fieldname)%&gt; skinvar. It sets up the end of the member input form, including the submit button.</li>
+<li><b>submitbutton</b> is used on the Member Details skin part between the startform and endform skinvars. It adds an additional submit button to the form. Useful for long forms. New to 2.1.</li>
 <li><b>password</b> is used on the Member Details skin part before, generally outside of the &lt;%Profile(startform)%&gt;...&lt;%Profile(endform)%&gt; block. It sets up the entire of the change password form.</li>
 <li><b>status</b> can be used to display the status of a update submit on the member input form.</li>
 <li><b>editlink</b> is used used on the Member Details skin part to create a link to the profile edit form. Link only visible to members when viewing own profile.</li>
+<li><b>editprofile</b> is used used on the Member Details skin part to create a link to the profile edit page. This page is separate from the Members Detail page and can be formatted and styled independent of the format of the members details page. Link only visible to members when viewing own profile.</li>
 </ul>
 
 <h4>Nucleus</h4>
@@ -137,6 +142,7 @@ On an item page or in a template (see TemplateVar below) will show the real name
 <h4>Custom</h4>
 <p>These fieldname values are fields maintained by the NP_Profile plugin. The fields listed here are included as default with the plugin, but the site administrator can add more and modify these as desired.</p>
 <ul>
+<li><b>privacylevel</b> is the desired privacy level of the members data. radio. (All Users, Members Only, Freinds Only (requires NP_Friends)). New to 2.1.</li>
 <li><b>msn</b> is the msn username of the member. text.</li>
 <li><b>sex</b> is the gender of the member. radio. (male or female).</li>
 <li><b>birthdate</b> is the birth date of the member. date.</li>
@@ -180,6 +186,7 @@ On an item page or in a template (see TemplateVar below) will show the real name
 <ul>
 <li><b>[Field Definitions]</b> : This displays the table of defined fields. New fields can be added from this page and existing fields can be edited or deleted.</li>
 <li><b>[Field Types]</b> : This displays the table of defined field types. Default settings for existing field types can be edited from this page.</li>
+<li><b>[Form Configuration]</b> : This displays a table of form configuration parameters. The main field is a field to format the editprofile page. New to 2.1.</li>
 <li><b>[Example Code]</b> : This displays a page containing example code for the default skin's Member Details part as a suggestion for usage.</li>
 </ul>
 
@@ -238,6 +245,8 @@ default setting set for that that field type in the type settings form.</p>
         <li>Again, this should not be used if you can't trust your members. Some formating tags, like b, i, and u, pose little risk, but any tags that add or present data (such as a, img, embed, etc...) can be mis-used by those with evil intentions. Do not add any tags here without being aware of the security risk it might impose.</li>
         </ul>
     </ul>
+<li><b>Default</b> : String. Default value for fields giving choices. Valid only for list, dropdown, and radio fields. The storage value should be given. e.g. for an options field of \'yes|1;no|0\', use 1 to set default to yes and 0 to set default to 0. New to 2.1.</li>
+<li><b>Public</b> : Should member data for this field be viewable by all site visitors, regardless of the privacylevel setting? Fields where this is set to yes, will display for guests even if the member has set his profile to Members Only. Fields like nick, avatar, url should be set to yes. New to 2.1.</li>
 <li><b>Action to Perform</b> : Choose an action to perform: Add a new field, or Update an existing field.</li>
 </ul>
 
@@ -270,6 +279,83 @@ default setting set for that that field type in the type settings form.</p>
 <li><b>File Type</b> : Allowed file types for upload. Default types are jpg;jpeg;gif;png (use ; to separate multiple types), but any extention can be permitted. Blank uses Nucleus Allowed Types from General Settings. Only valid for file type.</li>
 <li><b>Options</b> : String. Generally should not be set here, as each field will require different options. Can be used to set a default, though if the options are not set in the field definition. See the explanation of the options in the Field Definition section above.</li>
 </ul>
+
+<h4>Edit Form Configuration Settings Form</h4>
+
+<p>This page allows the setting of miscelleneous profile configuration settings. This is new to version 2.1 and presently only has one configuration setting &emdash; editprofile.</p>
+
+<p><b>editprofile</b> controls the format of the editprofile page which is a new page for the member settings form. Previously this form had to be part of the member details page. The formatting of the page is flexible and can be divided into up to 10 tabs. If this field is left blank, the editprofile page will display a form with all enabled fields listed alphabetically. The formatting options are detailed below.</p>
+
+<b>Example of editprofile formatting</b>
+<p>This is the intial value of the editprofile field. It is displayed here as an example of the formatting. Five tabs are used to section the member data input.</p>
+# This configures the format of the editprofile page. See help.html for formatting options.<br />
+# First set tabs and labels. (tab0 must always be for NP_Profile) only tabs 0-9 allowed<br />
+[t]<br />
+[t0]Personal<br />
+[t1]Contact<br />
+[t2]Bio<br />
+[t3]Interests<br />
+[t4]Password<br />
+[/t]<br />
+# Now give format of tab 0<br />
+[0]<br />
+startform<br />
+[h3]Personal<br />
+nick<br />
+realname<br />
+sex<br />
+birthdate<br />
+location<br />
+avatar<br />
+bio<br />
+[h3]Privacy<br />
+privacylevel<br />
+endform<br />
+[/0]<br />
+[1]<br />
+startform<br />
+[h3]Contact<br />
+mail<br />
+icq<br />
+msn<br />
+url<br />
+endform<br />
+[/1]<br />
+[2]<br />
+startform<br />
+[h3]Bio<br />
+bio<br />
+resume<br />
+endform<br />
+[/2]<br />
+[3]<br />
+startform<br />
+[h3]Interests<br />
+favoritesite<br />
+hobbies<br />
+secret<br />
+notes<br />
+endform<br />
+[/3]<br />
+[4]<br />
+[h3]Password<br />
+password<br />
+[/4]<br />
+# In the future you will be able to add forms for NP_Profile extension plugins.<br />
+# The means employed to specify and retirieve the code for these forms is not yout determined.<br />
+# Under consideration are requiring the extension plugin to have a method called editProfileForm()<br />
+# which outputs a complete form for modifying its settings. Or by calling skinvars that create the form<br />
+# while assuming a skintype of member<br />
+
+<ul>
+<li><b>[t]</b> : opens the tab configuration section.</li>
+<li><b>[/t]</b> : closes the tab configuration section.</li>
+<li><b>[tX]</b> : where X is an integer between 0 and 9. Sets the label on tab number X. X should start with 0 and be consecutive.</li>
+<li><b>[X]</b> : where X is an integer between 0 and 9. opens the configuration section for tab number X.</li>
+<li><b>[/X]</b> : where X is an integer between 0 and 9. closes the configuration section for tab number X.</li>
+<li><b>[hY]</b> : where Y is an integer between 1 and 6. Inserts a heading into the form. [h1] inserts a level 1 header and [h3] inserts a third level header.</li>
+</ul>
+<p>In the configuration section for any tab number, you can insert the fieldname of any profile field, including the special field names (startform, endform, status, submitbutton). Generally, you should use startform and endform to frame the fieldnames to ensure the form is generated correctly. The submitbutton fieldname can be used to add a submit button to a place other than the end of the form. The password fieldname should be used outside of the regular startform-endform block, as it creates a separate form.</p>
 
 <h3><a name="tips">Tips and Tricks</a></h3>
 
@@ -314,8 +400,18 @@ http://forum.nucleuscms.org/viewtopic.php?t=13919</a> </p>
 <h3><a name="history">Version History</a></h3>
 
 <ul>
+<li>Version 2.1: 1-1-2007<br />
+Sixth release of version 2 adds the following to the 2.05 version
+    <ul>
+    <li> Adds privacylevel field and control over who can view member's profile.</li>
+	<li> Adds editprofile page. A member profile settings page independent of the member details page. Control over format of this page.</li>
+	<li> Knowledge of NP_Friends plugin.</li>
+	<li> Adds to special field types, submitbutton and editprofile.</li>
+	<li> Adds some field configuration settings: Default (set the default value of a choice field), Public (set whether field is viewable to all users despite privacylevel setting)
+	</ul>
+</li>
 <li>Version 2.05: 12-1-2006<br />
-Fourth release of version 2 adds the following to the 2.03 version
+Fifth release of version 2 adds the following to the 2.04 version
     <ul>
     <li> Adds support for comment template variable</li>
 	</ul>

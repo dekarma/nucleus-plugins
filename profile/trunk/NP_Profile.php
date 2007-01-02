@@ -80,6 +80,10 @@ History:
   v2.1 -- 6th release of version 2 adds the following to the 2.05 version
 	* adds knowledge of NP_Friends with privacylevel concept.
 	* adds an editprofile page for editing profiles off the member details skin part.
+	* Adds to special field types, submitbutton and editprofile.
+	* Adds some field configuration settings:
+		Default (set the default value of a choice field),
+		Public (set whether field is viewable to all users despite privacylevel setting)
 
 To do:
 * Offer some validation options for fields, i.e. isEmail, isURL, isList
@@ -104,7 +108,7 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://www.iai.com/';	}
 
-	function getVersion() {	return '2.1.b2'; }
+	function getVersion() {	return '2.1'; }
 
 	function getDescription() {
 		return 'Gives each member a customisable profile';

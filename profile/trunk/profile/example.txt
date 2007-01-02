@@ -6,7 +6,7 @@
 &lt;/div&gt;
 &lt;br /&gt;
 &lt;%if(loggedin)%&gt;
-   &lt;%Profile(editlink)%&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;span style="color:red"&gt;&lt;%Profile(status)%&gt;&lt;/span&gt;&lt;br /&gt;&lt;br /&gt;
+   &lt;%Profile(editprofile)%&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;span style="color:red"&gt;&lt;%Profile(status)%&gt;&lt;/span&gt;&lt;br /&gt;&lt;br /&gt;
 &lt;%endif%&gt;
 &lt;%Profile(startform)%&gt;
 &lt;table class="profiletable"&gt;

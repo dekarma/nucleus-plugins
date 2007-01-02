@@ -121,9 +121,9 @@ if (isset($plugin)) {
     echo "<div>\n";
 	echo '<ul class="navlist">'."\n";
     foreach ($tabs as $key=>$value) {
-        echo ' <li><a class="'.($key == $tab ? 'current' : '').'" href="'.$thispage.'&amp;edit=1&amp;tab='.$key.'">'.$value.'</a></li> '."\n";
+        echo ' <li><a class="'.($key == $tab ? 'current' : 'notcurrent').'" href="'.$thispage.'&amp;edit=1&amp;tab='.$key.'">'.$value.'</a></li> '."\n";
     }
-	echo ' <li><a class="'.($key == $tab ? 'current' : '').'" href="'.$returnURL.'">'.ucfirst(_PROFILE_CLOSE).'</a></li> '."\n";
+	echo ' <li><a class="close" href="'.$returnURL.'">'.ucfirst(_PROFILE_CLOSE).'</a></li> '."\n";
 	echo " </ul></div>\n";
 /**************************************
  *       tabs                        *
@@ -223,5 +223,9 @@ if (isset($plugin)) {
     }
 */
 }
+echo "<br />\n";
+echo "<div class=\"returnlink\">\n";
+echo "<a href=\"$returnURL\" title=\""._PROFILE_SV_EDITLINK_FORM."\">"._PROFILE_SV_EDITLINK_FORM."</a>\n";
+echo "</div>\n";
 echo "</div></div></body></html>\n";
 ?>

@@ -1,7 +1,7 @@
 /* CSS for NP_Profile editprofile page */
 body
 {
-	background-color: #505050;
+	background-color: #444466;
 	color: #494949;
 	font-family: "Lucida Grande", "Lucida Sans Unicode", "Trebuchet MS", Trebuchet, Arial, sans-serif;
 	font-size: 11px;
@@ -80,11 +80,11 @@ a:hover, a:active
 }
 #header a:link, #header a:visited
 {
-	color: #474747;
+	color: #666688;
 }
 #header a:hover, #header a:active
 {
-	color: #737373;
+	color: #668866;
 }
 #copyrights a:link, #copyrights a:visited
 {
@@ -118,7 +118,7 @@ a:hover, a:active
 {
 	position: relative;
 	width: 704px;
-	height: 168px;
+	height: 84px;
 	/* large header image is defined below */
 	/* background: white url(images/header.jpg) no-repeat; */
 	background: white;
@@ -130,16 +130,17 @@ a:hover, a:active
 #header h1
 {
 	/* small header image specific lines */
-	height: 168px;
+	height: 80px;
 	width: 692px;
-	background-color: #eaeaea;
-	margin: 0 6px;
+	background-color: #ddddee;
+	margin: 3px 6px;
 	/* end small header image specific lines */
 	font-size: 38px;
 	text-align: center;
-	line-height: 160px;
+	line-height: 76px;
 }
 .headertitle {
+/* uncomment below line to hide the blog title in header*/
 	/*display: none;*/
 }
 
