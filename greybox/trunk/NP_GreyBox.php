@@ -34,7 +34,7 @@ class NP_GreyBox extends NucleusPlugin {
 	function getName() {return 'GreyBox';}
 	function getAuthor()  {return 'Frank Truscott, based on work by Seventoes';}
 	function getURL(){return 'http://www.iai.com/';}
-	function getVersion() {return '1.12';}
+	function getVersion() {return '1.13';}
 	function getDescription() {
 		return 'Simple plugin to enable GreyBox on Nucleus Blogs';
 	}
@@ -60,7 +60,7 @@ class NP_GreyBox extends NucleusPlugin {
 
         if ($arrsize == 0 || trim($params[0]) == '') $gbdata = '';
         elseif ($arrsize == 1) $gbdata = $params[0];
-        else $gbdata = implode(', ',$params);
+        else $gbdata = implode('|',$params);
 
         if ($gbdata == '') {
             if ($this->getOption('rootDir')) $gb_root = $this->getOption('rootDir');
