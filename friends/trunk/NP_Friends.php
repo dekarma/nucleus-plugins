@@ -1,12 +1,19 @@
 <?phpclass NP_Friends extends NucleusPlugin {// classwide variables or properties (set in init() method)    var $showRealName = 0; // whether to show real name of member    var $showAvatar = 1; // whether to show avatar if NP_Profile is installed
-	var $friendlevels = array();	function getName() { return 'Friends'; }	function getAuthor()  { return 'Wesley Luyten and Frank Truscott'; }	function getURL() {   return 'http://wessite.sin.khk.be/'; }	function getVersion() {   return '1.0.b2.01'; }	function getDescription() { return 'Add Friends in your member page'; }
+	var $friendlevels = array();	function getName() { return 'Friends'; }	function getAuthor()  { return 'Wesley Luyten and Frank Truscott'; }	function getURL() {   return 'http://wessite.sin.khk.be/'; }	function getVersion() {   return '1.0.b2.02'; }	function getDescription() {
+		global $manager;
+		$warning = '';
+		if ($manager->pluginInstalled('NP_Profile')) {
+            $plugin =& $manager->getPlugin('NP_Profile');
+			if (version_compare("2.1",$plugin->getVersion())) $warning = "*** Works best with NP_Profile 2.1+ ***";        }
+		else $warning = "*** Works best with NP_Profile 2.1+ ***   ";
+		return $warning.'Add Friends in your member page';
+	}
     //function getPluginDep() { return array('NP_Profile'); }
 	function supportsFeature($feature) {		switch($feature) {			case 'SqlTablePrefix': return 1;			default: return 0;		}	}
 
 	function getTableList() { return array(sql_table('plugin_friends')); }
 	function getEventList() { return array('PostDeleteMember'); }	function install() {
-		global $manager;		$this->createOption('nrfriends',_FRIENDS_OPTIONS_NRFRIENDS,'text','6');		$this->createOption('showavatar',_FRIENDS_OPTIONS_SHOWAVATAR,'yesno','yes');
-// I'm not using sendButton because I have three buttons. I think we should internationalize the plugin and let users change it in the language file.		//$this->createOption('sendButton','Text for the "Add" button','text','Add this member to my friends!');		$this->createOption('del_uninstall_data', _FRIENDS_OPTIONS_UNINSTALL, 'yesno','no');        $this->createOption('option1',_FRIENDS_OPTIONS_OPTION1,'yesno','yes');
+		global $manager;		$this->createOption('nrfriends',_FRIENDS_OPTIONS_NRFRIENDS,'text','6');		$this->createOption('showavatar',_FRIENDS_OPTIONS_SHOWAVATAR,'yesno','yes');		$this->createOption('del_uninstall_data', _FRIENDS_OPTIONS_UNINSTALL, 'yesno','no');        $this->createOption('option1',_FRIENDS_OPTIONS_OPTION1,'yesno','yes');
 		$this->createOption('CSS2URL',_FRIENDS_OPTIONS_CSS2URL,'text',$this->getAdminURL()."allfriends.css");
 // I think we should look at making an option that acts like a template for formating the output of friend lists. This can be later on.		// let's create some mysql tables
 // Note that I haven't made use of the invitetime column anywhere, but it would be useful later to expire invitations
@@ -58,18 +65,30 @@
 		$this->_deleteMemberData($data['member']->id);
 	}	function doAction($actionType) {        global $member, $CONF, $manager;
         $you = intRequestVar("mid");        $friendid = intRequestVar("fid");
+		$bid = intRequestVar("bid");
 		$friendorder = intRequestVar("forder");
 		if ($friendorder > 2) $friendorder = 2;
+
+		if (!$bid) $bid = $CONF['DefaultBlog'];
+		$b =& $manager->getBlog($bid);
+		$fblog = $b;	// references can't be placed in global variables?
+		if (!$fblog->isValid) {
+			$bid = $CONF['DefaultBlog'];
+			$b =& $manager->getBlog($bid);
+			$fblog = $b;	// references can't be placed in global variables?
+		}
         switch ($actionType) {        case 'addfriend':
 			if (!$member->isLoggedIn()) doError(_NOTLOGGEDIN);
             if ($member->isAdmin() || $member->getID() == $you) {
 				if (!$manager->checkTicket()) doError(_ERROR_BADTICKET);
 				$key = $this->_generateKey();
                 $this->addFriend($you,$friendid,$friendorder,$key);
+				if ($this->isFriend($you,$friendid) > 0) break;
                 if ($member->getID() == $you) {                    $tomem = Member::createFromID($friendid);                    $toMail = $tomem->getEmail();
-                    $fromMail = $member->getEmail();                    $youName = $member->getDisplayName();                    $yourealname = $member->getRealName();                    $title = 'A message from '.$youName;                    $sitename = $CONF['SiteName'];                    $siteurl = $CONF['SiteURL'];                    $addurl = $CONF['ActionURL']."?action=plugin&name=Friends&type=activate&mid=$you&fid=$friendid&key=$key";                    $message = "Hi, I am $youname from the $sitename site. My real name is $yourealname.";
+                    $fromMail = $member->getEmail();                    $youName = $member->getDisplayName();                    $yourealname = $member->getRealName();                    $title = 'A message from '.$youName;                    $sitename = $fblog->getName();                    $siteurl = $fblog->getURL();                    $addurl = $CONF['ActionURL']."?action=plugin&name=Friends&type=activate&mid=$you&fid=$friendid&key=$key";                    $message = "Hi, I am $youname from the $sitename site. My real name is $yourealname.";
                     $message .= " I would like to add you to my friends list. See <a href=\"$siteurl?memberid=$you\">my profile here</a>.";
-                    $message .= " If you would like to add me to your friend list, click this link: <a href=\"$addurl\">$addurl</a>";					@mail($toMail, $title, $message, 'From: '. $fromMail);                }            }        break;        case 'deletefriend':
+                    $message .= " If you would like to add me to your friend list, click this link: <a href=\"$addurl\">$addurl</a>";
+					@mail($toMail, $title, $message, 'From: '. $fromMail);                }            }        break;        case 'deletefriend':
 			if (!$member->isLoggedIn()) doError('_NOTLOGGEDIN');
             if ($member->isAdmin() || $member->getID() == $you) {
 				if (!$manager->checkTicket()) doError(_ERROR_BADTICKET);                $this->deleteFriend($you,$friendid);            }        break;
@@ -96,7 +115,7 @@
 			}
 		break;        default:            doError(_BADACTION);        break;        }
 // send user back where he came from, If a direct request send to member's own page	$desturl = serverVar('HTTP_REFERER');
-	$desturl = str_replace(array('&confirm=1','&confirm=0'),'',$desturl);    if ($desturl == '' || $desturl == '-' || $actionType == 'activate') $desturl = $CONF['SiteURL']."?memberid=$you";	redirect($desturl);	exit;	}	function doSkinVar($skinType,$arg) {
+	$desturl = str_replace(array('&confirm=1','&confirm=0'),'',$desturl);    if ($desturl == '' || $desturl == '-' || $actionType == 'activate') $desturl = $fblog->getURL()."?memberid=$you";	redirect($desturl);	exit;	}	function doSkinVar($skinType,$arg) {
         global $member, $memberinfo, $CONF, $manager, $blog;        if ($skinType == 'member') {            $currentlevel = 0;
 // now load the NP_Profile plugin object if installed            if ($manager->pluginInstalled('NP_Profile')) {
                 $plugin =& $manager->getPlugin('NP_Profile');            }            if ($member->isLoggedIn()) {                $you = $member->getID();                $currentlevel = 1;            }            else $you = 0;            $currentid = $memberinfo->getID();            if (isset($plugin)) {                $privlevel = intval($plugin->getValue($currentid,'privacylevel'));            }            else $privlevel = 0;            if ($this->isFriend($currentid, $you) == 1) $currentlevel = 2;
@@ -109,14 +128,11 @@
 // we will probably need to come up with a way to browse through all the friends                    $numberOfMembers = $this->getOption('nrfriends');
 // now set the query to get the list. This one assumes an ordering or 1 being the best and going down from there.
 // we might want to tweak this if the friendorder becomes a rating of 1-10.
-// would need this to be set by some friend admin page the user could manage/*                    $query = '(';                    $query .= "SELECT friendid, friendorder, memberid, 1 as mysortcol FROM ".sql_table('plugin_friends')." WHERE memberid='$currentid' AND friendorder>0";                    $query .= ') UNION (';                    $query .= "SELECT friendid, friendorder, memberid, 2 as mysortcol FROM ".sql_table('plugin_friends')." WHERE memberid='$currentid' AND friendorder=0";                    $query .= ') ORDER BY mysortcol ASC, friendorder ASC, memberid ASC';                    $query .= " LIMIT 0, $numberOfMembers";
-                    $newmembers = mysql_query($query);
-*/
-					$query = "SELECT m.mname as fname, m.mrealname as frealname, f.friendid as friendid, f.friendorder as friendorder, f.memberid ";
+// would need this to be set by some friend admin page the user could manage					$query = "SELECT m.mname as fname, m.mrealname as frealname, f.friendid as friendid, f.friendorder as friendorder, f.memberid ";
 					$query .= "FROM ".sql_table('member')." as m, ".sql_table('plugin_friends')." as f ";
 					$query .= "WHERE f.memberid = '$currentid' AND m.mnumber = f.friendid AND f.invitekey='active' ";
 					$query .= "ORDER BY f.friendorder DESC, f.invitetime ASC LIMIT 0,$numberOfMembers";
-					//doError($query);
+
 					$newmembers = sql_query($query);
 					$totalfriends = mysql_num_rows($newmembers);
 					if ($this->showAvatar) {
@@ -130,8 +146,7 @@
                         if ($this->showRealName) {                            $name2show = $tomema->getRealName();                        }                        else {                            $name2show = $tomema->getDisplayName();                        }
 						$link = createMemberLink($friendid);
                         if ($this->showAvatar) {                            if (isset($plugin)) {
-                                $variable = $plugin->getValue($friendid,'avatar');
-                                if ($variable == '') $variable = $plugin->default['file']['default'];
+								$variable = $plugin->getAvatar($friendid);
                             }                            else $variable = '';                        }                        else $variable = '';                        if ($variable == ''){                            echo "<li><a href=\"".$link."\" title=\""._FRIENDS_ALL_VIEW_PROFILE." $name2show\">$name2show</a></li>\n";                        }                        else {
 							if ($j == 0) echo "<tr>\n";
 							echo "<td>";
@@ -160,12 +175,22 @@
                 if ($this->isFriend($you, $currentid) == 1) $friend = 1;
 				elseif ($this->isFriend($you, $currentid) == -1) $friend = -1;                else $friend = 0;
 // only display something to logged in members, who aren't viewing their own page                if ($member->isLoggedIn() && $you != $currentid) {
-// if viewer is not a friend, show text and button to to invite                    if ($friend == 0) {                        echo _FRIENDS_INVITE_PRE_NAME." ".$memberinfo->getDisplayName()." "._FRIENDS_INVITE_POST_NAME."\n";                        echo "<form method=\"post\" action=\"".$CONF['ActionURL']."\" >\n";                        echo "<input type=\"hidden\" name=\"action\" value=\"plugin\" />\n";                        echo "<input type=\"hidden\" name=\"name\" value=\"Friends\" />\n";                        echo "<input type=\"hidden\" name=\"type\" value=\"addfriend\" />\n";                        echo "<input type=\"hidden\" name=\"fid\" value=\"$currentid\" />\n";                        echo "<input type=\"hidden\" name=\"mid\" value=\"$you\" />\n";
+// if viewer is not a friend, show text and button to to invite
+					if ($this->isFriend($currentid,$you) == -1) {
+						$ikey = mysql_result(sql_query("SELECT invitekey FROM ".sql_table('plugin_friends')." WHERE memberid=$currentid AND friendid=$you"),0,'invitekey');
+						echo _FRIENDS_ACTIVATE_PRE_NAME." ".$memberinfo->getDisplayName()." "._FRIENDS_ACTIVATE_POST_NAME."\n";                        echo "<form method=\"post\" action=\"".$CONF['ActionURL']."\" >\n";                        echo "<input type=\"hidden\" name=\"action\" value=\"plugin\" />\n";                        echo "<input type=\"hidden\" name=\"name\" value=\"Friends\" />\n";                        echo "<input type=\"hidden\" name=\"type\" value=\"activate\" />\n";                        echo "<input type=\"hidden\" name=\"mid\" value=\"$currentid\" />\n";                        echo "<input type=\"hidden\" name=\"fid\" value=\"$you\" />\n";
+						echo "<input type=\"hidden\" name=\"key\" value=\"$ikey\" />\n";
+						echo "<input type=\"hidden\" name=\"bid\" value=\"$blogid\" />\n";
+						$manager->addTicketHidden();                        echo "<input class=\"formbutton\" type=\"submit\" value=\"".ucfirst(_FRIENDS_ACCEPT)."\" />\n";                        echo "</form>\n";
+					}                    elseif ($friend == 0) {                        echo _FRIENDS_INVITE_PRE_NAME." ".$memberinfo->getDisplayName()." "._FRIENDS_INVITE_POST_NAME."\n";                        echo "<form method=\"post\" action=\"".$CONF['ActionURL']."\" >\n";                        echo "<input type=\"hidden\" name=\"action\" value=\"plugin\" />\n";                        echo "<input type=\"hidden\" name=\"name\" value=\"Friends\" />\n";                        echo "<input type=\"hidden\" name=\"type\" value=\"addfriend\" />\n";                        echo "<input type=\"hidden\" name=\"fid\" value=\"$currentid\" />\n";                        echo "<input type=\"hidden\" name=\"mid\" value=\"$you\" />\n";
+						echo "<input type=\"hidden\" name=\"bid\" value=\"$blogid\" />\n";
 						$manager->addTicketHidden();                        echo "<input class=\"formbutton\" type=\"submit\" value=\"".ucfirst(_FRIENDS_INVITE)."\" />\n";                        echo "</form>\n";                    }
 // else if the viewer has already invited the viewed member to be a friend, show text indicating that and a button to revoke the invitation
 					elseif ($friend == -1) {                        echo _FRIENDS_INVITED_PRE_NAME." ".$memberinfo->getDisplayName()." "._FRIENDS_INVITED_POST_NAME."\n";                        echo "<form method=\"post\" action=\"".$CONF['ActionURL']."\" >\n";                        echo "<input type=\"hidden\" name=\"action\" value=\"plugin\" />\n";                        echo "<input type=\"hidden\" name=\"name\" value=\"Friends\" />\n";                        echo "<input type=\"hidden\" name=\"type\" value=\"deletefriend\" />\n";                        echo "<input type=\"hidden\" name=\"fid\" value=\"$currentid\" />\n";                        echo "<input type=\"hidden\" name=\"mid\" value=\"$you\" />\n";
+						echo "<input type=\"hidden\" name=\"bid\" value=\"$blogid\" />\n";
 						$manager->addTicketHidden();                        echo "<input class=\"formbutton\" type=\"submit\" value=\"".ucfirst(_FRIENDS_REVOKE)."\" />\n";                        echo "</form>\n";                    }                    else {
 // else if viewer is a friend, then show text indicating that and a button to end the friendship                        echo _FRIENDS_ISFRIEND_PRE_NAME." ".$memberinfo->getDisplayName()." "._FRIENDS_ISFRIEND_POST_NAME."\n";                        echo "<form method=\"post\" action=\"".$CONF['ActionURL']."\" >\n";                        echo "<input type=\"hidden\" name=\"action\" value=\"plugin\" />\n";                        echo "<input type=\"hidden\" name=\"name\" value=\"Friends\" />\n";                        echo "<input type=\"hidden\" name=\"type\" value=\"deletefriend\" />\n";                        echo "<input type=\"hidden\" name=\"fid\" value=\"$currentid\" />\n";                        echo "<input type=\"hidden\" name=\"mid\" value=\"$you\" />\n";
+						echo "<input type=\"hidden\" name=\"bid\" value=\"$blogid\" />\n";
 						$manager->addTicketHidden();                        echo "<input class=\"formbutton\" type=\"submit\" value=\"".ucfirst(_FRIENDS_DELETE)."\" />\n";                        echo "</form>\n";                    }                }            break;            default:
 // if no valid arg parameter is used, just echo nothing                echo '';            break;            }// switch($arg)        } // end skinType == 'member'	} // doSkinVar    /* helper functions */
 	function _generateKey() {
@@ -181,7 +206,11 @@
 		sql_query($query);
 	}
     function addFriend($mid = 0, $fid = 0, $forder = 0, $key = '') {        global $member;        $mid = intval($mid);        $fid = intval($fid);        $forder = intval($forder);        if ($member->isAdmin() || $member->getID() == $mid) {            if ($mid > 0 && $fid > 0) {
-				if ($this->isFriend($mid,$fid) == 0) {					sql_query("INSERT INTO " . sql_table('plugin_friends') . " (memberid, friendid, invitekey, friendorder, invitetime) VALUES ('$mid','$fid','".addslashes($key)."','$forder','".date('Y-m-d H:i:s',time())."')");				}
+				if ($this->isFriend($fid,$mid) == -1){
+					sql_query("INSERT INTO " . sql_table('plugin_friends') . " (memberid, friendid, invitekey, friendorder, invitetime) VALUES ('$mid','$fid','active','0','".date('Y-m-d H:i:s',time())."')");
+					sql_query("UPDATE " . sql_table('plugin_friends') . " SET invitekey='active' WHERE memberid='$fid' AND friendid='$mid' AND invitekey!='active'");
+				}
+				elseif ($this->isFriend($mid,$fid) == 0) {					sql_query("INSERT INTO " . sql_table('plugin_friends') . " (memberid, friendid, invitekey, friendorder, invitetime) VALUES ('$mid','$fid','".addslashes($key)."','$forder','".date('Y-m-d H:i:s',time())."')");				}
 			}        }    }
 
 	function updateFriend($mid = 0, $fid = 0, $forder = 0) {        global $member;        $mid = intval($mid);        $fid = intval($fid);        $forder = intval($forder);

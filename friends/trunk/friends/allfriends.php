@@ -91,8 +91,9 @@ if (isset($plugin)) {
 			if ($j == 1) echo "<tr>\n";
 			echo "<td class=\"friendcell\">\n";
 			if ($plugin->showAvatar) {                if (isset($profplug)) {
-                    $variable = $profplug->getValue($row['fid'],'avatar');
-                    if ($variable == '') $variable = $profplug->default['file']['default'];
+                    //$variable = $profplug->getValue($row['fid'],'avatar');
+                    //if ($variable == '') $variable = $profplug->default['file']['default'];
+					$variable = $profplug->getAvatar($row['fid']);
                 }                else $variable = '';
 				echo "<div class=\"avatar\">\n";
                 if (substr($variable,0,7) == 'http://') {
@@ -207,8 +208,9 @@ if (isset($plugin)) {
 			if ($j == 1) echo "<tr>\n";
 			echo "<td class=\"friendcell\">\n";
 			if ($plugin->showAvatar) {                if (isset($profplug)) {
-                    $variable = $profplug->getValue($row['fid'],'avatar');
-                    if ($variable == '') $variable = $profplug->default['file']['default'];
+                    //$variable = $profplug->getValue($row['fid'],'avatar');
+                    //if ($variable == '') $variable = $profplug->default['file']['default'];
+					$variable = $profplug->getAvatar($row['fid']);
                 }                else $variable = '';
 				echo "<div class=\"avatar\">\n";
                 if (substr($variable,0,7) == 'http://') {

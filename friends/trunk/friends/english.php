@@ -14,6 +14,7 @@ define('_FRIENDS_INVITE',		   'invite');
 define('_FRIENDS_REVOKE',		   'revoke');
 define('_FRIENDS_CANCEL',		   'cancel');
 define('_FRIENDS_ACTIVATE',		   'activate');
+define('_FRIENDS_ACCEPT',		   'accept');
 
 // friend levels
 define('_FRIENDS_LEVEL_0',		'Friend');
@@ -52,6 +53,8 @@ define('_FRIENDS_INVITED_PRE_NAME',		'You have invited');
 define('_FRIENDS_INVITED_POST_NAME',		'to be your friend. Click button to revoke the invitation:');
 define('_FRIENDS_ISFRIEND_PRE_NAME',		'');
 define('_FRIENDS_ISFRIEND_POST_NAME',		'is your friend. Click button to remove from your friend list:');
+define('_FRIENDS_ACTIVATE_PRE_NAME',		'Accept invitation from');
+define('_FRIENDS_ACTIVATE_POST_NAME',		'to be friends?');
 define('_FRIENDS_VIEW_ALL',		'View all Friends');
 
 ?>
