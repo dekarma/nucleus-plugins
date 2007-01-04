@@ -84,6 +84,7 @@ History:
 	* Adds some field configuration settings:
 		Default (set the default value of a choice field),
 		Public (set whether field is viewable to all users despite privacylevel setting)
+	* Adds getAvatar() method to make it easier for other plugins to retrieve the avatar
 
 To do:
 * Offer some validation options for fields, i.e. isEmail, isURL, isList
@@ -2050,6 +2051,12 @@ password
 			}
 		}
 		return $value;
+	}
+
+	function getAvatar($memberid) {
+		$variable = $this->getValue($memberid,'avatar');
+        if ($variable == '') $variable = $this->default['file']['default'];
+		return $CONF['MediaURL'].$variable;
 	}
 
     function getConfigValue($field) {
