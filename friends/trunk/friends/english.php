@@ -15,6 +15,7 @@ define('_FRIENDS_REVOKE',		   'revoke');
 define('_FRIENDS_CANCEL',		   'cancel');
 define('_FRIENDS_ACTIVATE',		   'activate');
 define('_FRIENDS_ACCEPT',		   'accept');
+define('_FRIENDS_ONLINE',			'online');
 
 // friend levels
 define('_FRIENDS_LEVEL_0',		'Friend');

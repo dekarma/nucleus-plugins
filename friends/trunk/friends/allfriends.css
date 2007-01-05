@@ -145,6 +145,16 @@ a:hover, a:active
 	/*display: none;*/
 }
 
+.online {
+	height: 5px;
+	width: 90px;
+	background-color: yellow;
+}
+.online h4 {
+	font-size: 8pt;
+	display: none;
+}
+
 /*-------------------------------------------------
   Content wrappers
 -------------------------------------------------*/

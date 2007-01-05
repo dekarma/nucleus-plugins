@@ -117,8 +117,9 @@
 // send user back where he came from, If a direct request send to member's own page	$desturl = serverVar('HTTP_REFERER');
 	$desturl = str_replace(array('&confirm=1','&confirm=0'),'',$desturl);    if ($desturl == '' || $desturl == '-' || $actionType == 'activate') $desturl = $fblog->getURL()."?memberid=$you";	redirect($desturl);	exit;	}	function doSkinVar($skinType,$arg) {
         global $member, $memberinfo, $CONF, $manager, $blog;        if ($skinType == 'member') {            $currentlevel = 0;
-// now load the NP_Profile plugin object if installed            if ($manager->pluginInstalled('NP_Profile')) {
-                $plugin =& $manager->getPlugin('NP_Profile');            }            if ($member->isLoggedIn()) {                $you = $member->getID();                $currentlevel = 1;            }            else $you = 0;            $currentid = $memberinfo->getID();            if (isset($plugin)) {                $privlevel = intval($plugin->getValue($currentid,'privacylevel'));            }            else $privlevel = 0;            if ($this->isFriend($currentid, $you) == 1) $currentlevel = 2;
+// now load the NP_Profile plugin object if installed            //if ($manager->pluginInstalled('NP_Profile')) {
+                //$plugin =& $manager->getPlugin('NP_Profile');            //}            if ($member->isLoggedIn()) {                $you = $member->getID();                $currentlevel = 1;            }            else $you = 0;            $currentid = $memberinfo->getID();            //if (isset($plugin)) {                //$privlevel = intval($plugin->getValue($currentid,'privacylevel'));            //}            //else $privlevel = 0;
+			$privlevel = $this->getPrivacyLevel($currentid);            if ($this->isFriend($currentid, $you) == 1) $currentlevel = 2;
 
 			$blogid = $blog->getID();
             switch($arg) {
@@ -145,9 +146,10 @@
                         $tomema = MEMBER::createFromId($friendid);
                         if ($this->showRealName) {                            $name2show = $tomema->getRealName();                        }                        else {                            $name2show = $tomema->getDisplayName();                        }
 						$link = createMemberLink($friendid);
-                        if ($this->showAvatar) {                            if (isset($plugin)) {
-								$variable = $plugin->getAvatar($friendid);
-                            }                            else $variable = '';                        }                        else $variable = '';                        if ($variable == ''){                            echo "<li><a href=\"".$link."\" title=\""._FRIENDS_ALL_VIEW_PROFILE." $name2show\">$name2show</a></li>\n";                        }                        else {
+                        if ($this->showAvatar) {                            //if (isset($plugin)) {
+								//$variable = $plugin->getAvatar($friendid);
+                            //}                            //else $variable = '';
+							$variable = $this->getAvatar($friendid);                        }                        else $variable = '';                        if ($variable == ''){                            echo "<li><a href=\"".$link."\" title=\""._FRIENDS_ALL_VIEW_PROFILE." $name2show\">$name2show</a></li>\n";                        }                        else {
 							if ($j == 0) echo "<tr>\n";
 							echo "<td>";
                             if (substr($variable,0,7) == 'http://') {
@@ -294,5 +296,44 @@
 	function lf_style() {
 		echo '<link rel="stylesheet" type="text/css" href="nucleus/styles/bookmarklet.css" />';
 		echo '<link rel="stylesheet" type="text/css" href="nucleus/styles/addedit.css" />';
+	}
+
+	function getAvatar($fid) {
+		global $manager, $CONF;
+		$fid = intval($fid);
+		if ($manager->pluginInstalled('NP_Profile')) {
+			$plugin =& $manager->getPlugin('NP_Profile');		}
+		if (isset($plugin)) {
+			if (version_compare("2.1",$plugin->getVersion())) {
+				$variable = $plugin->getValue($fid,'avatar');
+                if ($variable == '') $variable = $plugin->default['file']['default'];
+				return $CONF['MediaURL'].$variable;
+			}
+			else {
+				return $plugin->getAvatar($fid);
+			}
+		}
+		else return '';
+	}
+
+	function getPrivacyLevel($cid) {
+		global $manager;
+		if ($manager->pluginInstalled('NP_Profile')) {
+			$plugin =& $manager->getPlugin('NP_Profile');		}
+		if (isset($plugin)) {            $privlevel = intval($plugin->getValue($cid,'privacylevel'));		}
+		else $privlevel = 0;
+		return $privlevel;
+	}
+
+	function isOnline($fid) {
+		global $manager;
+		if ($manager->pluginInstalled('NP_Online')) {
+			$plugin =& $manager->getPlugin('NP_Online');		}
+		if (isset($plugin)) {
+			$fid = intval($fid);
+			$query = "SELECT DISTINCT member FROM ".sql_table('plug_online')." WHERE member=$fid";
+			return intval(mysql_num_rows(sql_query($query)));
+		}
+		else return 0;
 	}
 }// class NP_Friends?>

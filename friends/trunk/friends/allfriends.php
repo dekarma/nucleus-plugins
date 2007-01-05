@@ -29,12 +29,13 @@ $returnURL = $blog->getURL()."?memberid=$memberid";
 $friendURL = $blog->getURL()."?memberid=";
 
 $currentlevel = 0;
-// now load the NP_Profile plugin object if installedif ($manager->pluginInstalled('NP_Profile')) {
-    $profplug =& $manager->getPlugin('NP_Profile');}if ($member->isLoggedIn()) {
+// now load the NP_Profile plugin object if installed//if ($manager->pluginInstalled('NP_Profile')) {
+    //$profplug =& $manager->getPlugin('NP_Profile');//}if ($member->isLoggedIn()) {
 	$mid = $member->getID();	$currentlevel = 1;}else $mid = 0;
 
 if ($mid == $memberid) $edit = 1;
-else $edit = 0;if (isset($profplug)) {    $privlevel = intval($profplug->getValue($memberid,'privacylevel'));}else $privlevel = 0;if ($plugin->isFriend($memberid, $mid) == 1) $currentlevel = 2;
+else $edit = 0;//if (isset($profplug)) {//    $privlevel = intval($profplug->getValue($memberid,'privacylevel'));//}//else $privlevel = 0;
+$privlevel = $plugin->getPrivacyLevel($memberid);if ($plugin->isFriend($memberid, $mid) == 1) $currentlevel = 2;
 
 if ($currentlevel < $privlevel) {
 	echo _FRIENDS_ALL_PRIVATE;
@@ -90,11 +91,13 @@ if (isset($plugin)) {
 			if ($plugin->showRealName) {               $name2show = $tomema->getRealName();            }            else {                $name2show = $tomema->getDisplayName();            }
 			if ($j == 1) echo "<tr>\n";
 			echo "<td class=\"friendcell\">\n";
-			if ($plugin->showAvatar) {                if (isset($profplug)) {
+			if ($plugin->showAvatar) {                //if (isset($profplug)) {
                     //$variable = $profplug->getValue($row['fid'],'avatar');
                     //if ($variable == '') $variable = $profplug->default['file']['default'];
-					$variable = $profplug->getAvatar($row['fid']);
-                }                else $variable = '';
+					//$variable = $profplug->getAvatar($row['fid']);
+                //}                //else $variable = '';
+				if ($plugin->isOnline($row['fid'])) echo "<div class=\"online\"><h4>".ucfirst(_FRIENDS_ONLINE)."</h4></div>\n";
+				$variable = $plugin->getAvatar($row['fid']);
 				echo "<div class=\"avatar\">\n";
                 if (substr($variable,0,7) == 'http://') {
                     echo "<a href=\"$friendURL".$row['fid']."\" title=\""._FRIENDS_ALL_VIEW_PROFILE." $name2show\"><img src=\"$variable\" height=\"80px\" width=\"80px\" alt=\"$name2show\"></a>";
@@ -207,11 +210,13 @@ if (isset($plugin)) {
 			if ($plugin->showRealName) {               $name2show = $tomema->getRealName();            }            else {                $name2show = $tomema->getDisplayName();            }
 			if ($j == 1) echo "<tr>\n";
 			echo "<td class=\"friendcell\">\n";
-			if ($plugin->showAvatar) {                if (isset($profplug)) {
+			if ($plugin->showAvatar) {                //if (isset($profplug)) {
                     //$variable = $profplug->getValue($row['fid'],'avatar');
                     //if ($variable == '') $variable = $profplug->default['file']['default'];
-					$variable = $profplug->getAvatar($row['fid']);
-                }                else $variable = '';
+					//$variable = $profplug->getAvatar($row['fid']);
+                //}                //else $variable = '';
+				if ($plugin->isOnline($row['fid'])) echo "<div class=\"online\"><h4>".ucfirst(_FRIENDS_ONLINE)."</h4></div>\n";
+				$variable = $plugin->getAvatar($row['fid']);
 				echo "<div class=\"avatar\">\n";
                 if (substr($variable,0,7) == 'http://') {
                     echo "<a href=\"$friendURL".$row['fid']."\" title=\""._FRIENDS_ALL_VIEW_PROFILE." $name2show\"><img src=\"$variable\" height=\"80px\" width=\"80px\" alt=\"$name2show\"></a>";
