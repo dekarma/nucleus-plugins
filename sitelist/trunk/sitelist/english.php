@@ -102,4 +102,7 @@ define('_SITELIST_VSET_SLEEP',		   'Sleeping for');
 define('_SITELIST_ERR_001',		   'The specified protocol is not allowed. - 001 - Bad Protocol');
 define('_SITELIST_ERR_002',		   'A blocked domain or file extension is in specified URL - 002 - Bad Extension');
 
+//new to 1.3.4
+define('_SITELIST_ERR_003',		   'No URL Specified. Cannot complete action.');
+
 ?>

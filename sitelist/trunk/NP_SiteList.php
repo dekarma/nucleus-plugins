@@ -11,7 +11,8 @@
 
 /*
 	Version history:
-	- 1.3.3.01:
+	- 1.3.4:
+        * handle situation where no url is submitted (just http://, or even null)
 		* fixes bug in Admin page where non-admin could see delete all link for suspended sites.
 		Could not run action, so not major bug.
 		* redo conditional in install() for restoring options. Some users had problems with it.
@@ -143,7 +144,7 @@ class NP_SiteList extends NucleusPlugin {
 	function getName() {	return 'Site List'; 	}
 	function getAuthor()  { return 'Wouter Demuynck, Frank Truscott'; 	}
 	function getURL() { return 'http://nucleuscms.org/'; }
-	function getVersion() {	return '1.3.3'; }
+	function getVersion() {	return '1.3.3.02'; }
 	function getDescription() {
 		$nucleusmin = "320";
 		if (getNucleusVersion() < $nucleusmin)
@@ -388,9 +389,9 @@ class NP_SiteList extends NucleusPlugin {
 		$destURL = serverVar('HTTP_REFERER');
 		$destURL = str_replace(array("?thanks=1","&thanks=1","&list=1"),array("","","&list=0"),$destURL);
 		$offset = requestVar('offset');
-			if ($offset == NULL || $offset <= 0) $offset = 1;
+		if ($offset == NULL || $offset <= 0) $offset = 1;
 		$nshow = requestVar('nshow');
-			if ($nshow == NULL || $nshow <= 0) $nshow = 999999;
+		if ($nshow == NULL || $nshow <= 0) $nshow = 999999;
 		$url = trim(requestVar('url'));
 		$desc = trim(requestVar('desc'));
 		$alt = trim(requestVar('alt'));
@@ -398,18 +399,20 @@ class NP_SiteList extends NucleusPlugin {
 		$odesc = trim(requestVar('odesc'));
 		$oalt = trim(requestVar('oalt'));
 		$nsuspraw = requestVar('nsusp');
-			if (!is_numeric($nsuspraw)) $nsusp = 0;
-			else $nsusp = intval($nsuspraw);
+		if (!is_numeric($nsuspraw)) $nsusp = 0;
+		else $nsusp = intval($nsuspraw);
 
 // determine action and perform it
 		switch($type) {
 			case 'checked':
+                if ($url == '' || $url == 'http://') doError(_SITELIST_ERR_003);
 				if (!$member->isAdmin())
 					return _SITELIST_ACTION_DENY;
 				$this->setChecked($url);
 				//$destURL = 'sites.php';
 				break;
 			case 'addurl':
+                if ($url == '' || $url == 'http://') doError(_SITELIST_ERR_003);
 				if (!$member->isAdmin()) {
 					if (!$this->checkTicket()) return _SITELIST_ACTION_DENY;
 				}
@@ -429,6 +432,7 @@ class NP_SiteList extends NucleusPlugin {
 				}
 				break;
 			case 'modurl':
+                if ($url == '' || $url == 'http://') doError(_SITELIST_ERR_003);
 				if (!$member->isAdmin())
 					return _SITELIST_ACTION_DENY;
 				if (!$this->modURL($url, $desc, $ourl, $odesc, $alt, $oalt)) break;
@@ -445,18 +449,21 @@ class NP_SiteList extends NucleusPlugin {
 				//$destURL = 'sites.php';
 				break;
 			case 'exempturl':
+                if ($url == '' || $url == 'http://') doError(_SITELIST_ERR_003);
 				if (!$member->isAdmin())
 					return _SITELIST_ACTION_DENY;
 				$this->setExempt($url);
 				//$destURL = 'sites.php';
 				break;
 			case 'suspendurl':
+                if ($url == '' || $url == 'http://') doError(_SITELIST_ERR_003);
 				if (!$member->isAdmin())
 					return _SITELIST_ACTION_DENY;
 				$this->setSuspended($url,$nsusp);
 				//$destURL = 'sites.php';
 				break;
 			case 'verifyurl':
+                if ($url == '' || $url == 'http://') doError(_SITELIST_ERR_003);
 				if (!$member->isAdmin())
 					return _SITELIST_ACTION_DENY;
 				$this->verifyURL($url,$nsusp);
