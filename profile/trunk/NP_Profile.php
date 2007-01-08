@@ -85,6 +85,7 @@ History:
 		Default (set the default value of a choice field),
 		Public (set whether field is viewable to all users despite privacylevel setting)
 	* Adds getAvatar() method to make it easier for other plugins to retrieve the avatar
+    * Adds ability to get the current logged in member's profile data using %ME% for fourth parameter of skinvar
 
 To do:
 * Offer some validation options for fields, i.e. isEmail, isURL, isList
@@ -759,9 +760,19 @@ password
 		if (in_array($skinType, array('member','archive','archivelist','item','index','template','comment'))) {
 			if (in_array($param1, array('startform','endform','status','editlink','submitbutton','editprofile')) || $this->getFieldAttribute($param1,'enabled')) {
 				$pmid = $memberid;
+
+                if (strtoupper($param4) == '%ME%') {
+                    if ($member->getID() > 0) {
+                        $pmid = $member->getID();
+                    }
+                    else {
+                        return;
+                    }
+                }
+
 				if (intval($pmid) < 1) {
 					if (!is_numeric($param4)) {
-						$param4 = $this->_getMemberIdFromName($param4);
+                        $param4 = $this->_getMemberIdFromName($param4);
 					}
 					if (intval($param4) > 0) {
 						$pmid = intval($param4);

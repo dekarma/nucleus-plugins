@@ -89,7 +89,8 @@ The ones in bold are Nucleus member fields and represent data kept by the Nucleu
    </ul>
 <li><i>memberid</i> is the member id (number), or member name (login name) of the member who's profile field you wish to display.
 This is needed when NP_Profile cannot determine which member's info to display, such as on an index skin,
-or when you want a specific member's profile field displayed.</li>
+or when you want a specific member's profile field displayed.<br />
+As of version 2.1, this can also be the special value of %ME% which will display the data for the logged-on member to himself. This might be used to display the member's own avatar in a sidebar or header when he is logged-on.</li>
 </ul>
 
 <p>Some usage examples are given here:</p>
@@ -101,6 +102,7 @@ On an item page or in a template (see TemplateVar below) will show the real name
 <li><b>&lt;%Profile(avatar)%&gt;</b> will display the input field for an avatar file.</li>
 <li><b>&lt;%Profile(avatar,show,image)%&gt;</b> will, on a member page, display the avatar, as an image, of the member whose page is being viewed. On an item page or in a template (see TemplateVar below) will show the avatar, as an image, of the item's author. On other skin types, it will display nothing.</li>
 <li><b>&lt;%Profile(avatar,show,image,jsmith)%&gt;</b> will display the avatar, as an image, of member jsmith on all pages.</li>
+<li><b>&lt;%Profile(avatar,show,image,%ME%)%&gt;</b> will display the avatar, as an image, of the logged-on member on all pages.</li>
 <li><b>&lt;%Profile(password)%&gt;</b> will show a change password form only if a member is viewing his own member page. Otherwise, it displays nothing.</li>
 <li><b>&lt;%Profile(startform)%&gt;</b> will add the html needed to start an input form for members, but only if a member is viewing his own member page. Otherwise, it displays nothing. Must be used on Member Details skin part if members will be allowed to edit their own profiles.</li>
 <li><b>&lt;%Profile(endform)%&gt;</b> will add the html needed to end an input form for members, but only if a member is viewing his own member page. Otherwise, it displays nothing. Must be used on Member Details skin part if members will be allowed to edit their own profiles.</li>
@@ -407,7 +409,9 @@ Sixth release of version 2 adds the following to the 2.05 version
 	<li> Adds editprofile page. A member profile settings page independent of the member details page. Control over format of this page.</li>
 	<li> Knowledge of NP_Friends plugin.</li>
 	<li> Adds to special field types, submitbutton and editprofile.</li>
-	<li> Adds some field configuration settings: Default (set the default value of a choice field), Public (set whether field is viewable to all users despite privacylevel setting)
+    <li> Adds getAvatar() method to make it easier for other plugins to retrieve the avatar.</li>
+	<li> Adds some field configuration settings: Default (set the default value of a choice field), Public (set whether field is viewable to all users despite privacylevel setting)</li>
+	<li> Adds ability to get the current logged in member's profile data using %ME% for fourth parameter of skinvar</li>
 	</ul>
 </li>
 <li>Version 2.05: 12-1-2006<br />
