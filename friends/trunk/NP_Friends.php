@@ -331,7 +331,12 @@
 			$plugin =& $manager->getPlugin('NP_Online');		}
 		if (isset($plugin)) {
 			$fid = intval($fid);
-			$query = "SELECT DISTINCT member FROM ".sql_table('plug_online')." WHERE member=$fid";
+			$to = intval($plugin->getOption('timeout'));
+			if ($to == 0) $to = 360;
+			$timestamp = time();
+			$timeout = $timestamp - $to;
+			$today = mktime(0, 0, 0, date("n", $timestamp), date("j", $timestamp),  date("Y", $timestamp));
+			$query = "SELECT DISTINCT member FROM ".sql_table('plug_online')." WHERE member=$fid AND timestamp>$timeout";
 			return intval(mysql_num_rows(sql_query($query)));
 		}
 		else return 0;

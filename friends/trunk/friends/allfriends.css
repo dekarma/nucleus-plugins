@@ -146,13 +146,15 @@ a:hover, a:active
 }
 
 .online {
-	height: 5px;
+	height: 15px;
 	width: 90px;
-	background-color: yellow;
+	background-color: green;
+	margin: 0 5px 0 5px;
 }
 .online h4 {
 	font-size: 8pt;
-	display: none;
+	color: white;
+	/*display: none;*/
 }
 
 /*-------------------------------------------------
@@ -176,7 +178,19 @@ a:hover, a:active
 .friendcell {
 	width: 100px;
 	text-align: center;
+	/*border: 1px solid green;*/
 }
+.friendcell input {
+	font-size: 8pt;
+	color: #000000;
+	width: 75px;
+}
+.friendcell select {
+	font-size: 8pt;
+	color: #000000;
+	width: 90px;
+}
+
 .prevnext {
 	width: 100px;
 	text-align: center;
@@ -194,7 +208,7 @@ a:hover, a:active
 }
 
 .friendcell img {
-	border: 5px solid #767676;
+	border: 5px solid green;
 }
 
 table {
