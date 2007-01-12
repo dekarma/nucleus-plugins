@@ -2,7 +2,7 @@
 
    /* ==========================================================================================
     * MultiRBL for Nucleus CMS
-    * Copyright 2005, Niels Leenheer
+    * Copyright 2005-2007, Niels Leenheer
     * ==========================================================================================
     * This program is free software and open source software; you can redistribute
     * it and/or modify it under the terms of the GNU General Public License as
@@ -62,9 +62,16 @@ class NP_MultiRBL extends NucleusPlugin {
 			$spam = false;
 			
 			$urls = array();
-			$urls = array_merge($urls, $this->_extractDomain($data['spamcheck']['email']));
-			$urls = array_merge($urls, $this->_extractDomain($data['spamcheck']['url']));
-			$urls = array_merge($urls, $this->_extractDomain($data['spamcheck']['body']));
+			
+			if (isset($data['spamcheck']['email']))
+				$urls = array_merge($urls, $this->_extractDomain($data['spamcheck']['email']));
+
+			if (isset($data['spamcheck']['url']))
+				$urls = array_merge($urls, $this->_extractDomain($data['spamcheck']['url']));
+
+			if (isset($data['spamcheck']['body']))
+				$urls = array_merge($urls, $this->_extractDomain($data['spamcheck']['body']));
+	
 			$urls = array_unique($urls);
 			
 			while (list(,$url) = each ($urls)) {
@@ -113,8 +120,6 @@ class NP_MultiRBL extends NucleusPlugin {
 			$spam = false;
 			
 			$urls = $this->_extractDomain($data['spamcheck']['url']);
-			
-			$this->_log(var_export($urls, true));
 			
 			while (list(,$url) = each ($urls)) {
 				$spam = $spam || $this->_checkDomain($url);
