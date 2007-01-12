@@ -5,7 +5,7 @@ class NP_SitemapExporter extends NucleusPlugin {
    /* ==========================================================================================
 	* SitemapExporter for Nucleus
 	*
-	* Copyright 2005 by Niels Leenheer
+	* Copyright 2005-2007 by Niels Leenheer
 	* ==========================================================================================
 	* This program is free software and open source software; you can redistribute
 	* it and/or modify it under the terms of the GNU General Public License as
@@ -38,7 +38,7 @@ class NP_SitemapExporter extends NucleusPlugin {
 	}
 
 	function getVersion() {
-		return '0.3';
+		return '0.4';
 	}
 
 	function getDescription() {
@@ -142,7 +142,7 @@ class NP_SitemapExporter extends NucleusPlugin {
 						
 						$sitemap[] = array(
 							'loc' => $this->_prepareLink($blog['bnumber'], createItemLink($item['inumber'])),
-							'lastmode' => gmdate('Y-m-d\TH:i:s', $item['timestamp']) . $tz,
+							'lastmod' => gmdate('Y-m-d\TH:i:s', $item['timestamp']) . $tz,
 							'priority' => '1.0',
 							'changefreq' => $fq
 						);
@@ -156,7 +156,9 @@ class NP_SitemapExporter extends NucleusPlugin {
 			{
 				header ("Content-type: application/xml");
 				echo "<?xml version='1.0' encoding='UTF-8'?>\n\n";
-				echo "<urlset xmlns='http://www.google.com/schemas/sitemap/0.84'>\n";
+				echo "<urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9' ";
+				echo "xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' ";
+				echo "xsi:schemaLocation='http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd'>\n";
 				
 				while (list(,$url) = each($sitemap))
 				{
@@ -193,6 +195,9 @@ class NP_SitemapExporter extends NucleusPlugin {
 		else
 		{
 			$b = & $manager->getBlog($blogid);
+			
+			if (substr($url, 0, 11) == '/action.php')
+				$url = substr($url, 11);
 			
 			if ($CONF['URLMode'] == 'pathinfo')
 				return $b->getURL() . substr($url, 1);
