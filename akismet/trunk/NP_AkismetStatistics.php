@@ -2,7 +2,7 @@
 
    /* ==========================================================================================
     * AkismetStatistics for Nucleus CMS
-    * Copyright 2005, Niels Leenheer
+    * Copyright 2005-2007, Niels Leenheer
     * ==========================================================================================
     * This program is free software and open source software; you can redistribute
     * it and/or modify it under the terms of the GNU General Public License as

@@ -2,7 +2,7 @@
 
    /* ==========================================================================================
     * Akismet for Nucleus CMS
-    * Copyright 2005, Niels Leenheer and Matt Mullenweg
+    * Copyright 2005-2007, Niels Leenheer and Matt Mullenweg
     * ==========================================================================================
     * This program is free software and open source software; you can redistribute
     * it and/or modify it under the terms of the GNU General Public License as
@@ -25,7 +25,7 @@ class NP_Akismet extends NucleusPlugin {
 	function getName() 			{ return 'Akismet'; }
 	function getAuthor()  	  	{ return 'Niels Leenheer'; }
 	function getURL()  			{ return 'http://www.rakaz.nl'; }
-	function getVersion() 	  	{ return '0.6'; }
+	function getVersion() 	  	{ return '0.7'; }
 	function getDescription() 	{ return 'Check for spam with Akismet.com';	}
 	
 	function supportsFeature($what) {
@@ -63,23 +63,23 @@ class NP_Akismet extends NucleusPlugin {
 		{
 			if ($data['spamcheck']['type'] == 'comment') 
 				$comment = array (
-					'comment_post_ID' => $data['spamcheck']['id'], 
+					'blog' => $CONF['IndexURL'],
+					'permalink' => $this->_prepareLink($CONF['IndexURL'], createItemLink($data['spamcheck']['id'])),
+					'comment_type' => $data['spamcheck']['type'],
 					'comment_author' => $data['spamcheck']['author'], 
 					'comment_author_email' => $data['spamcheck']['email'], 
 					'comment_author_url' => $data['spamcheck']['url'], 
-					'comment_content' => $data['spamcheck']['body'],
-					'comment_type' => '',
-					'blog' => $CONF['IndexURL']
+					'comment_content' => $data['spamcheck']['body']
 				);
 			
 			if ($data['spamcheck']['type'] == 'trackback') 
 				$comment = array (
-					'comment_post_ID' => $data['spamcheck']['id'], 
+					'blog' => $CONF['IndexURL'],
+					'permalink' => $this->_prepareLink($CONF['IndexURL'], createItemLink($data['spamcheck']['id'])),
+					'comment_type' => $data['spamcheck']['type'],
 					'comment_author' => $data['spamcheck']['blogname'], 
 					'comment_author_url' => $data['spamcheck']['url'], 
-					'comment_content' => $data['spamcheck']['title'] . ' ' . $data['spamcheck']['excerpt'],
-					'comment_type' => '',
-					'blog' => $CONF['IndexURL']
+					'comment_content' => $data['spamcheck']['title'] . ' ' . $data['spamcheck']['excerpt']
 				);
 			
 			if (isset($data['spamcheck']['live']) && $data['spamcheck']['live'] == true)
@@ -216,6 +216,13 @@ class NP_Akismet extends NucleusPlugin {
 		}
 		
 		return $response;
+	}
+
+	function _prepareLink($base, $url) {
+		if (substr($url, 0, 7) == 'http://')
+			return $url;
+		else
+			return $base . $url;
 	}
 }
 
