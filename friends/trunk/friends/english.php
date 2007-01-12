@@ -42,6 +42,8 @@ define('_FRIENDS_OPTIONS_SHOWAVATAR',				'Do you want to show an avatar below th
 define('_FRIENDS_OPTIONS_UNINSTALL',				'Delete the data table when uninstalled?');
 define('_FRIENDS_OPTIONS_OPTION1',				'Show short member names instead of real member names?');
 define('_FRIENDS_OPTIONS_CSS2URL',				'Full URL to the css file for All Friends display page');
+define('_FRIENDS_OPTIONS_ACTMAIL_SUBJECT',      'Template for the subject of invitation email');
+define('_FRIENDS_OPTIONS_ACTMAIL_BODY',      'Template for the body of invitation email');
 
 // errors
 define('_FRIENDS_ERROR_INVALID_KEY',		'Invalid Key or No Such Request');

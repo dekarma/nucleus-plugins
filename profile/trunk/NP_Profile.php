@@ -32,6 +32,8 @@ profile\examplecss.txt (the example CSS code displayed in the plugin admin area)
 profile\help.html (the plugin help page)
 profile\help.jpg (icon used for link to help page from plugin admin area)
 profile\index.php (the plugin admin area code)
+profile\editprofile.css (a css file to set style of edit profile page, editprofile.php) new 2.1
+profile\editprofile.php (a page to edit member data, has formatting options) new 2.1
 
 Usage:
 * Define/customize fields in plugin admin area
