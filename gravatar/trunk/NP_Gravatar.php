@@ -3,9 +3,9 @@
 class NP_Gravatar extends NucleusPlugin {
 
    /* ==========================================================================================
-	* Nucleus Gravatar Plugin 0.7
+	* Nucleus Gravatar Plugin 0.8
 	*
-	* Copyright 2004 by Niels Leenheer
+	* Copyright 2004-2007 by Niels Leenheer
 	* ==========================================================================================
 	* This program is free software and open source software; you can redistribute
 	* it and/or modify it under the terms of the GNU General Public License as
@@ -23,7 +23,8 @@ class NP_Gravatar extends NucleusPlugin {
 	* http://www.gnu.org/licenses/gpl.html
 	* ==========================================================================================
 	*
-        * 0.7   - Added support for Nucleus 3.3
+    * 0.8   - Added gravatar class to the image
+    * 0.7   - Added support for Nucleus 3.3
 	* 0.6   - Added the ability to specify a different size as a parameter of 
 	*         comment template variable
 	* 0.5   - Added option to change the gravatar URL from the plugin options
@@ -117,7 +118,7 @@ class NP_Gravatar extends NucleusPlugin {
 			if ($this->gravatarDefault != '')
 			{
 				$output .= "<img src='".$this->gravatarDefault;
-				$output .= "' width='".$size."' height='".$size."' alt='".$comment['user']."' />";
+				$output .= "' width='".$size."' height='".$size."' alt='".$comment['user']."' class='gravatar' />";
 			}
 		}
 		else
@@ -133,7 +134,7 @@ class NP_Gravatar extends NucleusPlugin {
 			if ($this->gravatarBorder != '')
 				$output .= "&amp;border=".$this->gravatarBorder;
 	
-			$output .= "' width='".$size."' height='".$size."' alt='".htmlentities($comment['user'])."' />";
+			$output .= "' width='".$size."' height='".$size."' alt='".htmlentities($comment['user'])."' class='gravatar' />";
 		}
 		
 		echo $output;
