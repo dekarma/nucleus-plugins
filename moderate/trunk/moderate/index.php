@@ -2,7 +2,7 @@
 
    /* ==========================================================================================
     * Moderate for Nucleus CMS
-    * Copyright 2005, Niels Leenheer
+    * Copyright 2005-2007, Niels Leenheer
     * ==========================================================================================
     * This program is free software and open source software; you can redistribute
     * it and/or modify it under the terms of the GNU General Public License as
@@ -69,7 +69,59 @@
 		exit;
 	}
 	
-	$oPluginAdmin->start();
+	$oPluginAdmin->start("<style type='text/css'>
+	<![CDATA[
+
+	ul {
+	}
+
+	ul.moderate {
+		margin: 0; padding: 0;	
+		border-bottom: 1px solid #888;
+	}
+	ul.moderate li {
+		margin: 0; padding: 0.5em 0;
+		border-top: 1px solid #888;
+		list-style-type: none;
+		position: relative;
+	}
+	ul.moderate li.more {
+		border-top: 1px solid #ddd;
+	}
+	ul.moderate li p, ul li h4 {
+		margin: 0 0 0 24px;
+		font-size: 1em;
+	}
+	ul.moderate li p {
+		font-size: 0.85em;
+	}
+	ul.moderate li.spam h4 {
+		color: #888;
+	}
+	ul.moderate li.spam p {
+		color: #aaa;
+	}
+	ul.moderate li input {
+		position: absolute;
+		top; 0; left: -2px;
+	}
+	
+	ul.buttons {
+		position: absolute;
+		top: 0px;
+		right: 0px;
+	}
+	ul.buttons li {
+		float: right;
+		padding: 0 0 0 10px;
+	}
+	
+	]]>
+</style>
+
+<link rel='alternate' type='application/rss+xml' title='" . _MODERATE_QUEUE . "' href='" . $CONF['ActionURL'] . "?action=plugin&amp;name=Moderate&amp;sw=" . $oPluginAdmin->plugin->getOption('SecretWord') . "' />
+");
+
 	$action = requestVar('action');
 	
 	switch($action) {

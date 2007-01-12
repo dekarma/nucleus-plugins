@@ -17,6 +17,7 @@
     define ('_MODERATE_SETUP_1MONTH', '1 month');
     define ('_MODERATE_SETUP_NEVER', 'Never');
     define ('_MODERATE_SETUP_DROPTABLE', 'Clear the database when uninstalling');
+	define ('_MODERATE_SETUP_SECRETWORD', 'Secret word');
     
     define ('_MODERATE_MODERATE', 'Moderate');
     define ('_MODERATE_SPAM', 'Spam');
@@ -26,6 +27,9 @@
     define ('_MODERATE_QUEUE', 'Moderation Queue');
     define ('_MODERATE_BOTH', 'Both');
     define ('_MODERATE_COMMENTS', 'Comments');
+	define ('_MODERATE_WROTE', 'wrote:');
+	define ('_MODERATE_DETAILS', 'Details');
+	define ('_MODERATE_THANKYOU', 'Thank you');
     
     define ('_MODERATE_MANUALLY_MARKED', 'Manually marked as Spam');
 	define ('_MODERATE_QUEUED', 'Your comment has been queued for moderation. A moderator will need to manually approve your comment.');

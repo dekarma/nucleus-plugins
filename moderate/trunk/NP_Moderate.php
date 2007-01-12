@@ -2,7 +2,7 @@
 
    /* ==========================================================================================
     * Moderate for Nucleus CMS
-    * Copyright 2005, Niels Leenheer
+    * Copyright 2005-2007, Niels Leenheer
     * ==========================================================================================
     * This program is free software and open source software; you can redistribute
     * it and/or modify it under the terms of the GNU General Public License as
@@ -62,6 +62,7 @@ class NP_Moderate extends NucleusPlugin {
 	    $this->createOption('Moderate', _MODERATE_SETUP_MODERATE, 'select', 'all', _MODERATE_SETUP_ALL_ITEMS.'|all|'._MODERATE_SETUP_OLDER_7DAYS.'|7|'._MODERATE_SETUP_OLDER_14DAYS.'|14|'._MODERATE_SETUP_OLDER_1MONTH.'|30|'._MODERATE_SETUP_NO_ITEMS.'|none');
 		$this->createOption('SpamAutoApprove', _MODERATE_SETUP_SPAMAUTOAPPROVE, 'yesno', 'no');
 		$this->createOption('DeleteSpam', _MODERATE_SETUP_DELETESPAM, 'select', '14', _MODERATE_SETUP_7DAYS.'|7|'._MODERATE_SETUP_14DAYS.'|14|'._MODERATE_SETUP_1MONTH.'|30|'._MODERATE_SETUP_NEVER.'|never');
+		$this->createOption('SecretWord', _MODERATE_SETUP_SECRETWORD, 'text', $this->secretWord());
 		$this->createOption('DropTable', _MODERATE_SETUP_DROPTABLE, 'yesno', 'no');
 		
 		@sql_query('
@@ -94,6 +95,11 @@ class NP_Moderate extends NucleusPlugin {
 			sql_query('DROP TABLE ' . sql_table('plug_moderate_queue'));
 		}
 	}	
+
+	function secretWord() {
+		mt_srand(hexdec(substr(md5(microtime()), -8)) & 0x7fffffff);
+		return substr(md5(mt_rand()), 0, 16);
+	}
 
 	
 	/* Initialize variables */
@@ -143,7 +149,7 @@ class NP_Moderate extends NucleusPlugin {
 			{
 				while (list(,$comment) = each($matches)) 
 				{
-					$replacement = '<a href=\'plugins/moderate/index.php?itemid=' . $comment[1] . '\'>'._MODERATE_MODERATE.'</a><br \/>';
+					$replacement = '<a href=\'plugins/moderate/index.php?itemid=' . $comment[1] . '\'>'._MODERATE_MODERATE.'</a><br />';
 					$source = str_replace($comment[0], $replacement . $comment[0], $source);
 				}
 			}			
@@ -312,6 +318,114 @@ class NP_Moderate extends NucleusPlugin {
 		');	
 	}
 	
+	function doAction($type)
+	{
+		global $CONF;
+		
+		if (requestVar('sw') != $this->getOption('SecretWord'))
+			exit;
+		
+		switch ($type) {
+			
+			case 'spam':
+				$qnumber = requestVar('qnumber');
+				$this->_markQueue($qnumber);
+				
+				sendContentType('text/html', 'admin-moderate', _CHARSET);	
+				include ($this->getDirectory() . '/templates/approved.html');
+				break;
+			
+			case 'approve':
+				$qnumber = requestVar('qnumber');
+				$this->_approveQueue($qnumber);
+				
+				sendContentType('text/html', 'admin-moderate', _CHARSET);	
+				include ($this->getDirectory() . '/templates/approved.html');
+				break;
+			
+			case 'details':
+				$qnumber = requestVar('qnumber');
+			
+				$res = sql_query('
+					SELECT 
+						*
+					FROM
+						' . sql_table('plug_moderate_queue') . ' 
+					WHERE
+						qnumber = ' . intval($qnumber) . '
+				');
+				
+				if ($comment = mysql_fetch_array($res)) 
+				{
+					$comment['ctime'] = strtotime($comment['ctime']);
+					$sw = $this->getOption('SecretWord');
+					
+					$member = new MEMBER();
+					$member->readFromID($comment['cmember']);
+					
+					sendContentType('text/html', 'admin-moderate', _CHARSET);	
+					include ($this->getDirectory() . '/templates/approve.html');
+				}
+				
+				break;
+			
+			default:
+				$res = sql_query('
+					SELECT 
+						*
+					FROM
+						' . sql_table('plug_moderate_queue') . ' 
+					WHERE
+						qstatus = 1
+					ORDER BY
+						ctime DESC
+					LIMIT
+						20
+				');				
+				
+				header('Content-Type: text/xml; charset=UTF-8');
+				echo "<","?xml version='1.0' encoding='UTF-8'?",">\n";
+
+				echo "<rss version='2.0'>";
+				echo "<channel>";
+				echo "<title>" . htmlspecialchars(_MODERATE_QUEUE) . "</title>";
+				echo "<description></description>";
+				echo "<link>" . $CONF['ActionURL'] . "?action=plugin&amp;name=Moderate&amp;sw=" . $this->getOption('SecretWord') . "</link>";
+				
+				while ($row = mysql_fetch_array($res)) {
+				
+					echo "<item>";
+					echo "<title>";
+					echo htmlspecialchars(shorten(strip_tags($row['cuser']), 20, '...')) . ' ' . htmlspecialchars(_MODERATE_WROTE) . ' ';
+					echo htmlspecialchars(shorten(strip_tags($row['cbody']), 80, '...'));
+					echo "</title>";
+					echo "<link>" . $CONF['ActionURL'] . '?action=plugin&amp;name=Moderate&amp;type=details&amp;qnumber='.$row['qnumber'] . "&amp;sw=" . $this->getOption('SecretWord') . "</link>";
+					echo "</item>";
+					echo "<description><![CDATA[";
+					echo "<p>";
+					echo '<b>' . htmlspecialchars(strip_tags($row['cuser'])) . ' ' . htmlspecialchars(_MODERATE_WROTE) . '</b> ';
+					echo htmlspecialchars($row['cbody']);
+					echo "</p>";
+					echo "<p>";
+					echo _COMMENTFORM_EMAIL . ' ' . htmlspecialchars($row['cemail']) . "<br />";
+					echo _COMMENTFORM_MAIL . ' ' . htmlspecialchars($row['cmail']);
+					echo "</p>";
+					echo "<p>";
+					echo "<a href='" . $CONF['ActionURL'] . '?action=plugin&amp;name=Moderate&amp;type=details&amp;qnumber='.$row['qnumber'] . "&amp;sw=" . $this->getOption('SecretWord') . "'>" . _MODERATE_DETAILS . "</a> ";
+					echo "<a href='" . $CONF['ActionURL'] . '?action=plugin&amp;name=Moderate&amp;type=spam&amp;qnumber='.$row['qnumber'] . "&amp;sw=" . $this->getOption('SecretWord') . "'>" . _MODERATE_SPAM . "</a> ";
+					echo "<a href='" . $CONF['ActionURL'] . '?action=plugin&amp;name=Moderate&amp;type=approve&amp;qnumber='.$row['qnumber'] . "&amp;sw=" . $this->getOption('SecretWord') . "'>" . _MODERATE_APPROVE . "</a> ";
+					echo "</p>";
+					echo "]]></description>";
+				}
+				
+				echo "</channel>";
+				echo "</rss>";
+				break;
+		} 
+		
+		exit;
+	} 
+		
 	function _defaultStatus($itemid) {
 		
 		switch($this->getOption('Moderate'))
