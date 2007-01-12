@@ -61,6 +61,7 @@ class NP_LightBox2 extends NucleusPlugin {
 		}
 	}
 
+    function supportsFeature($feature) {		switch($feature) {			case 'SqlTablePrefix': return 1;			default: return 0;		}	}
 
 	function install() {
 		global $CONF, $DIR_MEDIA;

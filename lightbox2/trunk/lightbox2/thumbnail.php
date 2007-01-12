@@ -1,6 +1,8 @@
 <?php
-define('MAX_WIDTH', (int)$_GET['size']);
-define('MAX_HEIGHT', (int)$_GET['size']);
+$msize = intval($_REQUEST['size']);
+if (!$msize) $msize = 100;
+define('MAX_WIDTH', $msize);
+define('MAX_HEIGHT', $msize);
 
 
 # Get image location

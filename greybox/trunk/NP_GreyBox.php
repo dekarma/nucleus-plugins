@@ -40,6 +40,7 @@ class NP_GreyBox extends NucleusPlugin {
 	}
 	function getEventList() { return array('PreItem'); }
 
+    function supportsFeature($feature) {		switch($feature) {			case 'SqlTablePrefix': return 1;			default: return 0;		}	}
 
 	function install() {
 		global $CONF, $DIR_MEDIA;
