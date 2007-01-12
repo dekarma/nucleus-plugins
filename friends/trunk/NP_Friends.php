@@ -135,7 +135,7 @@
 					$query .= "ORDER BY f.friendorder DESC, f.invitetime ASC LIMIT 0,$numberOfMembers";
 
 					$newmembers = sql_query($query);
-					$totalfriends = mysql_num_rows($newmembers);
+					$totalfriends = intval(mysql_num_rows(sql_query("SELECT memberid FROM ".sql_table('plugin_friends')." WHERE memberid='$currentid' AND invitekey='active'")));
 					if ($this->showAvatar) {
 						echo "<table>\n";
 						$j = 0;
