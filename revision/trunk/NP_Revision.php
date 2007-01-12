@@ -118,7 +118,7 @@
 			}
 		}
 		
-		function eval_CurrentDate($itemid) {
+		function eval_CurrentDate($itemid, $date) {
 			global $blog;
 
 			if ($this->currentbase != '' && $this->currentsub != '') 
@@ -144,7 +144,7 @@
 			}
 			
 			if ($row = mysql_fetch_array($res)) {
-				return htmlspecialchars(strftime($this->getOption('dateFormat'), $row['time'] + ($blog->getTimeOffset() * 3600)), ENT_QUOTES);
+				return htmlspecialchars(strftime($date, $row['time'] + ($blog->getTimeOffset() * 3600)), ENT_QUOTES);
 			}
 		}
 
@@ -162,7 +162,7 @@
 			}
 		}
 		
-		function eval_LastDate ($itemid) {
+		function eval_LastDate ($itemid, $date) {
 			global $blog;
 
 			$last = $this->lastRevision($itemid);
@@ -178,7 +178,7 @@
 			}
 			
 			if ($row = mysql_fetch_array($res)) {
-				return htmlspecialchars(strftime($this->getOption('dateFormat'), $row['time'] + ($blog->getTimeOffset() * 3600)), ENT_QUOTES);
+				return htmlspecialchars(strftime($date, $row['time'] + ($blog->getTimeOffset() * 3600)), ENT_QUOTES);
 			}
 		}
 		
@@ -195,14 +195,35 @@
 			}
 		}
 
-		function doSkinVar($skinType, $what = '', $itemid = '') {
+		function doSkinVar() {
 			global $CONF;
+		
+			$parameters = func_get_args();
+			$skinType = array_shift($parameters);
+			
+			if (count($parameters))
+				$what = array_shift($parameters);
+			else
+				$what = '';
+
+			if (count($parameters))
+				$itemid = array_shift($parameters);
+			else
+				$itemid = 0;
+
 		
 			if ($what == 'current') 
 				echo $this->eval_Current($itemid);
 			
 			if ($what == 'currentdate') 
-				echo $this->eval_CurrentDate($itemid);
+			{
+				if (count($parameters))
+					$date = array_shift($parameters);
+				else
+					$date = $this->getOption('dateFormat');
+					
+				echo $this->eval_CurrentDate($itemid, $date);
+			}
 
 			if ($what == 'currenturl')
 				echo $this->eval_Permalink($itemid, $this->eval_Current($itemid));
@@ -214,7 +235,14 @@
 				echo $this->eval_Last($itemid);
 			
 			if ($what == 'lastdate') 
-				echo $this->eval_LastDate($itemid);
+			{
+				if (count($parameters))
+					$date = array_shift($parameters);
+				else
+					$date = $this->getOption('dateFormat');
+					
+				echo $this->eval_LastDate($itemid, $date);
+			}				
 				
 			if ($what == 'lasturl')
 				echo $this->eval_Permalink($itemid, $this->eval_Last($itemid));
@@ -224,7 +252,20 @@
 		}
 		
 		function doTemplateVar(&$item, $what = '') {
-			$this->doSkinVar('template', $what, $item->itemid);
+			$parameters = func_get_args();
+			$item = array_shift($parameters);
+			
+			if (count($parameters))
+				$what = array_shift($parameters);
+			else
+				$what = '';
+			
+			if (count($parameters))
+				$parameters = array_merge(array('template', $what, $item->itemid), $parameters);
+			else
+				$parameters = array('template', $what, $item->itemid);
+			
+			call_user_func_array(array(&$this, 'doSkinVar'), $parameters);
 		}
 		
 		function doAction($type)
