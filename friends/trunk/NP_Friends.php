@@ -34,7 +34,7 @@ History:
 
 */
 class NP_Friends extends NucleusPlugin {// classwide variables or properties (set in init() method)    var $showRealName = 0; // whether to show real name of member    var $showAvatar = 1; // whether to show avatar if NP_Profile is installed
-	var $friendlevels = array(); // store the verbage for the three friend levels	function getName() { return 'Friends'; }	function getAuthor()  { return 'Wesley Luyten and Frank Truscott'; }	function getURL() {   return 'http://wessite.sin.khk.be/'; }	function getVersion() {   return '1.0.b2.02'; }	function getDescription() {
+	var $friendlevels = array(); // store the verbage for the three friend levels	function getName() { return 'Friends'; }	function getAuthor()  { return 'Wesley Luyten and Frank Truscott'; }	function getURL() {   return 'http://wessite.sin.khk.be/'; }	function getVersion() {   return '1.0'; }	function getDescription() {
 		global $manager;
 		$warning = '';
 		if ($manager->pluginInstalled('NP_Profile')) {
@@ -116,7 +116,7 @@ History:
 				if ($this->isFriend($you,$friendid) > 0) break;
                 if ($member->getID() == $you) {                    $tomem = Member::createFromID($friendid);                    $tomail = $tomem->getEmail();
                     $frommail = $member->getEmail();
-                    $toname = $member->getDisplayName();                    $youname = $member->getDisplayName();                    $yourealname = $member->getRealName();                    $sitename = $fblog->getName();                    $siteurl = $fblog->getURL();
+                    $toname = $tomem->getDisplayName();                    $youname = $member->getDisplayName();                    $yourealname = $member->getRealName();                    $sitename = $fblog->getName();                    $siteurl = $fblog->getURL();
                     $youurl = $siteurl."?memberid=$you";                    $addurl = $CONF['ActionURL']."?action=plugin&name=Friends&type=activate&mid=$you&fid=$friendid&key=$key";
                     $tagarray = array('<%fromname%>','<%fromrealname%>','<%fromurl%>','<%sitename%>','<%siteurl%>','<%activateurl%>','<%toname%>');
                     $valuearray = array($youname,$yourealname,$youurl,$sitename,$siteurl,$addurl,$toname);
