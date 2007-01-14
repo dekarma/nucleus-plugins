@@ -38,7 +38,7 @@ class NP_SitemapExporter extends NucleusPlugin {
 	}
 
 	function getVersion() {
-		return '0.4';
+		return '0.5';
 	}
 
 	function getDescription() {
