@@ -61,7 +61,7 @@ class NP_SitemapExporter extends NucleusPlugin {
 	function doAction($type)
 	{
 		global $CONF, $manager;
-
+		
 		if ($type == 'google' || $type == 'yahoo')
 		{
 			$sitemap = array();
@@ -194,15 +194,40 @@ class NP_SitemapExporter extends NucleusPlugin {
 		}
 		else
 		{
-			$b = & $manager->getBlog($blogid);
-			
 			if (substr($url, 0, 11) == '/action.php')
 				$url = substr($url, 11);
 			
-			if ($CONF['URLMode'] == 'pathinfo')
-				return $b->getURL() . substr($url, 1);
-			else
-				return $b->getURL() . ($CONF['Self'] == '' ? 'index.php' : $CONF['Self']) . $url;
+			$b = & $manager->getBlog($blogid);
+			$burl = $b->getURL();
+			
+			if ($burl == '') {
+				$burl = $CONF['IndexURL'];
+			}
+		
+			if ($CONF['URLMode'] == 'pathinfo') {
+				$burl = preg_replace('/\/[a-z0-9]\.php$/i', '', $burl);
+				$burl = preg_replace('/\/$/i', '', $burl);
+				
+				if (substr($url, 0, 1) == '/')
+					return $burl . $url;
+				else
+					return $burl . '/' . $url;
+			}
+			else {
+				$burl = preg_replace('/\/$/i', '', $burl);
+
+				if (preg_match('/\/([^\/]+\.php)$/i', $burl, $matches)) {
+					$base = $matches[1];
+					$burl = preg_replace('/\/[^\/]+\.php$/i', '', $burl);
+				} else {
+					$base = 'index.php';
+				}
+				
+				$url = preg_replace('/^index\.php/i', '', $url);
+				$url = preg_replace('/^action\.php/i', '', $url);
+				
+				return $burl . '/' . $base . $url;
+			}
 		}
 	}
 	
