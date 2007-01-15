@@ -24,8 +24,8 @@
 class NP_MultiRBL extends NucleusPlugin {
 	function getName() 			{ return 'MultiRBL'; }
 	function getAuthor()  	  	{ return 'Niels Leenheer'; }
-	function getURL()  			{ return 'http://www.rakaz.nl'; }
-	function getVersion() 	  	{ return '0.4'; }
+	function getURL()  			{ return 'http://rakaz.nl'; }
+	function getVersion() 	  	{ return '1.0'; }
 	function getDescription() 	{ return 'Check for spam with multiple RBLs';	}
 	
 	function supportsFeature($what) {
@@ -181,6 +181,8 @@ class NP_MultiRBL extends NucleusPlugin {
 			$matches = array_unique ($matches);
 			return $matches;
 		}
+		
+		return array();
 	}
         
     function _shortenDomain ($string) {
