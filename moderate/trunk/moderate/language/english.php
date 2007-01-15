@@ -10,6 +10,7 @@
     define ('_MODERATE_SETUP_OLDER_14DAYS', 'Items older than 14 days');
     define ('_MODERATE_SETUP_OLDER_1MONTH', 'Items older than 1 month');
     define ('_MODERATE_SETUP_NO_ITEMS', 'No items');
+    define ('_MODERATE_SETUP_USERAUTOAPPROVE', 'Approve comments from members');
     define ('_MODERATE_SETUP_SPAMAUTOAPPROVE', 'Approve comments that pass the spam check');
     define ('_MODERATE_SETUP_DELETESPAM', 'Delete comments marked as spam after');
     define ('_MODERATE_SETUP_7DAYS', '7 days');

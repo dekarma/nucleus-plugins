@@ -24,10 +24,10 @@
 class NP_Moderate extends NucleusPlugin {
 	function getName() 				{ return 'Moderate'; }
 	function getAuthor()  		  	{ return 'Niels Leenheer'; }
-	function getURL()  				{ return 'http://www.rakaz.nl'; }
-	function getVersion() 	  		{ return '0.8'; }
+	function getURL()  				{ return 'http://rakaz.nl'; }
+	function getVersion() 	  		{ return '1.0'; }
 	function getDescription() 		{ return _MODERATE_DESCRIPTION; }
-	function getMinNucleusVersion() { return 330; }
+	function getMinNucleusVersion() { return 320; }
 
 	function supportsFeature($what) {
 		switch($what) {
@@ -40,7 +40,7 @@ class NP_Moderate extends NucleusPlugin {
 	}
 	
 	function getEventList() {
-		return array('PreAddComment', 'PostAddComment', 'PostDeleteComment', 'AdminPrePageHead');
+		return array('PostAuthentication', 'PreAddComment', 'PostAddComment', 'PostDeleteComment', 'AdminPrePageHead');
 	}
 
 	function getTableList() {
@@ -56,11 +56,16 @@ class NP_Moderate extends NucleusPlugin {
 			include_once($this->getDirectory() . 'language/' . $language . '.php');
 		else
 			include_once($this->getDirectory() . 'language/english.php');
+		
+		// Override the default anti-spam plugin...
+        if (getNucleusVersion() < 330) 
+			$manager->notify('SpamOverride', array());
 	}
 	
 	function install() {
 	    $this->createOption('Moderate', _MODERATE_SETUP_MODERATE, 'select', 'all', _MODERATE_SETUP_ALL_ITEMS.'|all|'._MODERATE_SETUP_OLDER_7DAYS.'|7|'._MODERATE_SETUP_OLDER_14DAYS.'|14|'._MODERATE_SETUP_OLDER_1MONTH.'|30|'._MODERATE_SETUP_NO_ITEMS.'|none');
 		$this->createOption('SpamAutoApprove', _MODERATE_SETUP_SPAMAUTOAPPROVE, 'yesno', 'no');
+		$this->createOption('UserAutoApprove', _MODERATE_SETUP_USERAUTOAPPROVE, 'yesno', 'yes');
 		$this->createOption('DeleteSpam', _MODERATE_SETUP_DELETESPAM, 'select', '14', _MODERATE_SETUP_7DAYS.'|7|'._MODERATE_SETUP_14DAYS.'|14|'._MODERATE_SETUP_1MONTH.'|30|'._MODERATE_SETUP_NEVER.'|never');
 		$this->createOption('SecretWord', _MODERATE_SETUP_SECRETWORD, 'text', $this->secretWord());
 		$this->createOption('DropTable', _MODERATE_SETUP_DROPTABLE, 'yesno', 'no');
@@ -108,6 +113,12 @@ class NP_Moderate extends NucleusPlugin {
 
 
 	/* Handle events */
+	
+	function event_PostAuthentication(&$data) {
+		// We do not use this event, but it is here to make sure
+        // this plugin is initialized before NP_AntiSpam, so we
+        // can properly disable it.
+	}
 	
 	function event_AdminPrePageHead(&$data) {
 		$action = requestVar('action');
@@ -192,6 +203,11 @@ class NP_Moderate extends NucleusPlugin {
 	function event_PreAddComment(&$data) {
 		global $manager, $member, $errormessage;
 		
+		// Do no moderate for logged in users
+		if ($member->isLoggedIn() && $this->getOption('UserAutoApprove') == 'yes') {
+			return;
+		}
+		
 		if ($this->blocked == false)
 		{
 			/* Clean up Queue */
@@ -201,7 +217,12 @@ class NP_Moderate extends NucleusPlugin {
 			$comment['itemid'] = intPostVar('itemid');
 			$comment['user'] = postVar('user');
 			$comment['userid'] = postVar('userid');
-			$comment['email'] = postVar('email');
+			
+			if (getNucleusVersion() >= 330)
+				$comment['email'] = postVar('email');
+			else
+				$comment['email'] = '';
+			
 			$comment['body'] = postVar('body');
 			
 			$blogid = getBlogIDFromItemID($post['itemid']);
@@ -224,6 +245,47 @@ class NP_Moderate extends NucleusPlugin {
 			$status = $this->_defaultStatus($data['comment']['itemid']);
 			$plugin = '';
 			$message = '';
+			
+
+			/* If we are running in older versions of Nucleus we need to
+			   perform our own spam check */
+			if (getNucleusVersion() < 330) {
+				$spamcheck = array (
+					'type'  	=> 'comment',
+					'body'		=> $comment['body'],
+					'id'        	=> $comment['itemid'],
+					'live'   	=> true,
+					'return'	=> true
+				);
+				
+				if ($member->isLoggedIn()) 
+				{
+					if ($member->email != '') {
+						$spamcheck['author'] = $member->displayname;
+						$spamcheck['email'] = $member->email;
+					}
+				}
+				else
+				{
+					$spamcheck['author'] = $comment['user'];
+					
+					if (getNucleusVersion() >= 330)
+					{
+						$spamcheck['email'] = $comment['email'];
+						$spamcheck['url'] = $comment['userid'];
+					}
+					else
+					{
+						if (!(strpos($comment['userlinkraw'], '@') === false))
+							$spamcheck['email'] = $comment['userid'];
+						else
+							$spamcheck['url'] = $comment['userid'];
+					}
+				}
+					
+				$manager->notify('SpamCheck', array ('spamcheck' => & $spamcheck));
+			}
+			
 			
 			/* Process the SpamCheck information */
 			if (isset($data['spamcheck']))
@@ -510,8 +572,19 @@ class NP_Moderate extends NucleusPlugin {
 			else
 			{
 				$spammark['author'] = $row['cuser'];
-				$spammark['email'] = $row['cemail'];
-				$spammark['url'] = $row['cmail'];
+					
+				if (getNucleusVersion() >= 330)
+				{
+					$spammark['email'] = $row['cemail'];
+					$spammark['url'] = $row['cmail'];
+				}
+				else
+				{
+					if (!(strpos($row['cmail'], '@') === false))
+						$spammark['email'] = $row['cmail'];
+					else
+						$spammark['url'] = $row['cmail'];
+				}
 			}
 			
 			$manager->notify('SpamMark', array ('spammark' => & $spammark));
@@ -678,25 +751,49 @@ class NP_Moderate extends NucleusPlugin {
 			/* Block our own event listeners from picking this up */
 			$this->blocked = true;
 			
-			/* Emulate PreAddComment event */
-			$manager->notify('PreAddComment', array('comment' => &$comment, 'spamcheck' => &$spamcheck));
+			if (getNucleusVersion() >= 330) 
+			{
+				/* Emulate PreAddComment event */
+				$manager->notify('PreAddComment', array('comment' => &$comment, 'spamcheck' => &$spamcheck));
 			
-			/* Insert into database */
-			sql_query('
-				INSERT INTO 
-					' . sql_table('comment') . ' 
-				SET
-					cuser = "' . addslashes($comment['user']) . '",
-					cmail = "' . addslashes($comment['userid']) . '",
-					cemail = "' . addslashes($comment['email']) . '",
-					cmember = "' . intval($comment['memberid']) . '",
-					cbody = "' . addslashes($comment['body']) . '",
-					citem = "' . intval($comment['itemid']) . '",
-					ctime = "' . date('Y-m-d H:i:s', $comment['timestamp']) . '",
-					chost = "' . addslashes($comment['host']) . '",
-					cip = "' . addslashes($comment['ip']) . '",
-					cblog = "' . addslashes($row['cblog']) . '"
-			');
+				/* Insert into database */
+				sql_query('
+					INSERT INTO 
+						' . sql_table('comment') . ' 
+					SET
+						cuser = "' . addslashes($comment['user']) . '",
+						cmail = "' . addslashes($comment['userid']) . '",
+						cemail = "' . addslashes($comment['email']) . '",
+						cmember = "' . intval($comment['memberid']) . '",
+						cbody = "' . addslashes($comment['body']) . '",
+						citem = "' . intval($comment['itemid']) . '",
+						ctime = "' . date('Y-m-d H:i:s', $comment['timestamp']) . '",
+						chost = "' . addslashes($comment['host']) . '",
+						cip = "' . addslashes($comment['ip']) . '",
+						cblog = "' . addslashes($row['cblog']) . '"
+				');
+			} 
+			else 
+			{
+				/* Emulate PreAddComment event */
+				$manager->notify('PreAddComment', array('comment' => &$comment));
+		
+				/* Insert into database */
+				sql_query('
+					INSERT INTO 
+						' . sql_table('comment') . ' 
+					SET
+						cuser = "' . addslashes($comment['user']) . '",
+						cmail = "' . addslashes($comment['userid']) . '",
+						cmember = "' . intval($comment['memberid']) . '",
+						cbody = "' . addslashes($comment['body']) . '",
+						citem = "' . intval($comment['itemid']) . '",
+						ctime = "' . date('Y-m-d H:i:s', $comment['timestamp']) . '",
+						chost = "' . addslashes($comment['host']) . '",
+						cip = "' . addslashes($comment['ip']) . '",
+						cblog = "' . addslashes($row['cblog']) . '"
+				');	
+			}
 			
 			$cnumber = mysql_insert_id();
 			
@@ -712,8 +809,16 @@ class NP_Moderate extends NucleusPlugin {
 					qnumber = "' . intval($qnumber) . '"
 			');
 			
-			/* Emulate PostAddComment event */
-			$manager->notify('PostAddComment',array('comment' => &$comment, 'commentid' => &$cnumber, 'spamcheck' => &$spamcheck));
+			if (getNucleusVersion() >= 330) 
+			{
+				/* Emulate PostAddComment event */
+				$manager->notify('PostAddComment',array('comment' => &$comment, 'commentid' => &$cnumber, 'spamcheck' => &$spamcheck));
+			} 
+			else
+			{
+				/* Emulate PostAddComment event */
+				$manager->notify('PostAddComment',array('comment' => &$comment, 'commentid' => &$cnumber));
+			}
 			
 			/* Turn off event block */
 			$this->blocked = false;

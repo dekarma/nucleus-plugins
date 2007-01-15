@@ -208,6 +208,7 @@
 						
 			if ($comment = mysql_fetch_array($res))
 			{
+				$itemtitle = quickQuery('SELECT ititle as result FROM ' . sql_table('item') . ' WHERE inumber=' . intval($comment['citem']));
 				$comment['ctime'] = strtotime($comment['ctime']);
 				
 				echo '<h2>' . _EDITC_TITLE . '</h2>';
@@ -218,14 +219,16 @@
 				$manager->addTicketHidden();
 				
 				echo '<input type="hidden" name="qnumber" value="' . $qnumber . '" />';
-				echo '<input type="hidden" name="blogid" value="' . $blogid . '" />';
-				echo '<input type="hidden" name="itemid" value="' . $itemid . '" />';
+				echo '<input type="hidden" name="blogid" value="' . $comment['cblog'] . '" />';
+				echo '<input type="hidden" name="itemid" value="' . $comment['citem'] . '" />';
 				
 				echo '<table><tr><th colspan="2">' . _EDITC_TITLE . '</th></tr>';
+				echo '<tr><td>' . _EBLOG_NAME . '</td><td>' . htmlspecialchars(getBlogNameFromID($comment['cblog']), ENT_QUOTES) . '</td></tr>';
+				echo '<tr><td>' . _ADD_TITLE . '</td><td>' . htmlspecialchars($itemtitle, ENT_QUOTES) . '</td></tr>';
 				echo '<tr><td>' . _EDITC_WHEN . '</td><td>' . date("Y-m-d@H:i", $comment['ctime']) . '</td></tr>';
 				
 				if ($comment['chost'] != $comment['cip'])
-					echo '<tr><td>' . _EDITC_HOST . '</td><td>' . htmlspecialchars($comment['chost'], ENT_QUOTES) . ' (' . htmlspecialchars($comment['cip'], ENT_QUOTES) . ')</td></tr>';
+					echo '<tr><td>' . _EDITC_HOST . '</td><td>' . htmlspecialchars($comment['chost'], ENT_QUOTES) . '</td></tr>';
 				else
 					echo '<tr><td>' . _EDITC_HOST . '</td><td>' . htmlspecialchars($comment['chost'], ENT_QUOTES) . '</td></tr>';
 				
@@ -271,17 +274,17 @@
 				echo '<h2>' . _MODERATE_QUEUE . '</h2>';
 			}
 			
-			if (requestVar('status'))
+			if (requestVar('status') != null)
 				$status = intRequestVar('status');
 			else
-				$status = 0;
+				$status = 1;
 			
-			if (requestVar('start'))
+			if (requestVar('start') != null)
 				$start = intRequestVar('start');
 			else
 				$start = 0; 	
 			
-			if (requestVar('amount'))
+			if (requestVar('amount') != null)
 				$amount = intRequestVar('amount');
 			else
 				$amount = 50;	
@@ -374,7 +377,7 @@
 			
 			$buffer = str_replace(
 				'<input type="submit" value="' . _BATCH_EXEC . '" />',
-				'<input type="hidden" name="blogid" value="' . $blogid . '" /><input type="hidden" name="itemid" value="' . $itemid . '" /><input type="submit" value="' . _BATCH_EXEC . '" />',
+				'<input type="hidden" name="status" value="' . $status . '" /><input type="hidden" name="blogid" value="' . $blogid . '" /><input type="hidden" name="itemid" value="' . $itemid . '" /><input type="submit" value="' . _BATCH_EXEC . '" />',
 				$buffer
 			);
 			
