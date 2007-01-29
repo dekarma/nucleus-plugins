@@ -88,6 +88,8 @@ History:
 		Public (set whether field is viewable to all users despite privacylevel setting)
 	* Adds getAvatar() method to make it easier for other plugins to retrieve the avatar
     * Adds ability to get the current logged in member's profile data using %ME% for fourth parameter of skinvar
+  v2.11 -- 7th release of version 2 adds the following to 2.1 version
+    * fix bug in getAvatar for default image retrieval
 
 To do:
 * Offer some validation options for fields, i.e. isEmail, isURL, isList
@@ -112,7 +114,7 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://www.iai.com/';	}
 
-	function getVersion() {	return '2.1'; }
+	function getVersion() {	return '2.11'; }
 
 	function getDescription() {
 		return 'Gives each member a customisable profile';
@@ -2068,8 +2070,13 @@ password
 
 	function getAvatar($memberid) {
 		$variable = $this->getValue($memberid,'avatar');
-        if ($variable == '') $variable = $this->default['file']['default'];
-		return $CONF['MediaURL'].$variable;
+        if ($variable == '') {
+            $variable = $this->default['file']['default'];
+        }
+        else {
+            $variable = $CONF['MediaURL'].$variable;
+        }
+        return $variable;
 	}
 
     function getConfigValue($field) {
