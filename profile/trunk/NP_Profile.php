@@ -90,6 +90,7 @@ History:
     * Adds ability to get the current logged in member's profile data using %ME% for fourth parameter of skinvar
   v2.11 -- 7th release of version 2 adds the following to 2.1 version
     * fix bug in getAvatar for default image retrieval
+    * change CREATE TABLE queries to use TYPE=MyISAM instead of ENGINE=MyISAM for compatibility with mysql < 4.1
 
 To do:
 * Offer some validation options for fields, i.e. isEmail, isURL, isList
@@ -158,10 +159,10 @@ class NP_Profile extends NucleusPlugin {
 					  `value` varchar(255),
 					  `torder` tinyint(2) NOT NULL default '0',
 					  KEY `member` (`memberid`),
-					  KEY `field` (`field`)) ENGINE=MyISAM");
+					  KEY `field` (`field`)) TYPE=MyISAM");
 
 		sql_query("CREATE TABLE IF NOT EXISTS ". sql_table('plugin_profile_fields').
-					" ( `fname` varchar(255),
+					" ( `fname` varchar(255) NOT NULL,
 					  `flabel` varchar(255),
 					  `ftype` ENUM('date','dropdown','file','list','mail','number','password','radio','text','textarea','url'),
 					  `required` tinyint(2) NOT NULL default '0',
@@ -178,10 +179,10 @@ class NP_Profile extends NucleusPlugin {
 					  `forder` int(11) NOT NULL default '0',
                       `fdefault` varchar(255),
                       `fpublic` tinyint(2) NOT NULL default '0',
-					  PRIMARY KEY (`fname`)) ENGINE=MyISAM");
+					  PRIMARY KEY (`fname`)) TYPE=MyISAM");
 
 		sql_query("CREATE TABLE IF NOT EXISTS ". sql_table('plugin_profile_types').
-					" ( `type` ENUM('date','dropdown','file','list','mail','number','password','radio','text','textarea','url'),
+					" ( `type` ENUM('date','dropdown','file','list','mail','number','password','radio','text','textarea','url') NOT NULL,
 					  `flength` int(11) NOT NULL default '0',
 					  `fsize` int(11) NOT NULL default '0',
 					  `fformat` varchar(255),
@@ -191,12 +192,12 @@ class NP_Profile extends NucleusPlugin {
 					  `ffiletype` varchar(255),
 					  `foptions` text,
 					  `fvalidate` varchar(255),
-					  PRIMARY KEY (`type`)) ENGINE=MyISAM");
+					  PRIMARY KEY (`type`)) TYPE=MyISAM");
 
         sql_query("CREATE TABLE IF NOT EXISTS ". sql_table('plugin_profile_config').
-					" ( `csetting` varchar(255),
+					" ( `csetting` varchar(255) NOT NULL,
 					  `cvalue` text,
-					  PRIMARY KEY (`csetting`)) ENGINE=MyISAM");
+					  PRIMARY KEY (`csetting`)) TYPE=MyISAM");
 
 // This is to update tables for users of v 2.00.02b, from the beta tables to the released tables:
 		$hasord = false;
@@ -1031,7 +1032,17 @@ password
 								echo '<input name="' . $param1 . '" type="text" maxlength="' . $maxlength . '" size="' . $size . '" value="' . $value . '"/>' . "\n";
 							}
 							else {
-								echo $value;
+                                if ($param3 == 'raw') {
+                                }
+                                else {
+                                    $format = $this->getFieldAttribute($param1,'fformat');
+                                    if (trim($format) !== '') {
+                                        $label = $this->getFieldAttribute($param1,'flabel');
+                                        $fvalue = str_replace(array('%DATA%','%LABEL%'), array($value,$label), $format);
+                                        $value = $fvalue;
+                                    }
+                                }
+                                echo $value;
 							}
 							break;
 						case 'number':

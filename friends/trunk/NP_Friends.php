@@ -32,10 +32,10 @@ friends\reply-16x16.gif (icon used for return link from allfriends to the member
 History:
   v1.0 - Initial release
   v1.01 - Bug fix. uri error when friend does not have avatar
-
+  v1.02 - Bug fix. Make compatible with mysql < 4.1
 */
 class NP_Friends extends NucleusPlugin {// classwide variables or properties (set in init() method)    var $showRealName = 0; // whether to show real name of member    var $showAvatar = 1; // whether to show avatar if NP_Profile is installed
-	var $friendlevels = array(); // store the verbage for the three friend levels	function getName() { return 'Friends'; }	function getAuthor()  { return 'Wesley Luyten and Frank Truscott'; }	function getURL() {   return 'http://wessite.sin.khk.be/'; }	function getVersion() {   return '1.01'; }	function getDescription() {
+	var $friendlevels = array(); // store the verbage for the three friend levels	function getName() { return 'Friends'; }	function getAuthor()  { return 'Wesley Luyten and Frank Truscott'; }	function getURL() {   return 'http://wessite.sin.khk.be/'; }	function getVersion() {   return '1.02'; }	function getDescription() {
 		global $manager;
 		$warning = '';
 		if ($manager->pluginInstalled('NP_Profile')) {
@@ -53,7 +53,7 @@ History:
 		$this->createOption('CSS2URL',_FRIENDS_OPTIONS_CSS2URL,'text',$this->getAdminURL()."allfriends.css");
 		$this->createOption('actmail_subject',_FRIENDS_OPTIONS_ACTMAIL_SUBJECT,'text','An invitation from <%fromname%> of <%sitename%>');
         $this->createOption('actmail_body',_FRIENDS_OPTIONS_ACTMAIL_BODY,'textarea','Hi <%toname%>, I am <%fromname%> from the <%sitename%> site. My real name is <%fromrealname%>. I would like to add you to my friends list. See <a href="<%fromurl%>">my profile here</a>. If you would like to add me to your friend list, click this link: <a href="<%activateurl%>"><%activateurl%></a>');
-// I think we should look at making an option that acts like a template for formating the output of friend lists. This can be later on.		// let's create some mysql tables		sql_query("CREATE TABLE IF NOT EXISTS ". sql_table('plugin_friends').					" ( `memberid` int(11),					  `friendid` int(11),					  `invitekey` varchar(40),					  `friendorder` int(11),					  `invitetime` datetime NOT NULL default '0000-00-00 00:00:00',					  KEY `memberid` (`memberid`)) ENGINE=MyISAM");
+// I think we should look at making an option that acts like a template for formating the output of friend lists. This can be later on.		// let's create some mysql tables		sql_query("CREATE TABLE IF NOT EXISTS ". sql_table('plugin_friends').					" ( `memberid` int(11),					  `friendid` int(11),					  `invitekey` varchar(40),					  `friendorder` int(11),					  `invitetime` datetime NOT NULL default '0000-00-00 00:00:00',					  KEY `memberid` (`memberid`)) TYPE=MyISAM");
         if ($manager->pluginInstalled('NP_Profile')) {
             $plugin =& $manager->getPlugin('NP_Profile');            $valuearray = array(
 								'fname'=>strtolower('privacylevel'),

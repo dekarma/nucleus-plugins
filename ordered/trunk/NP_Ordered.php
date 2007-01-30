@@ -49,6 +49,8 @@
 
 /* History:
  *
+ * 1.21 - Unreleased -
+ *  * fix in ordered/index.php, to be explicit about action paramter location (use $thispage)
  * 1.20 - 12/01/2006 -
  *  * added support for setting template to be used for item detail page per category. Requirs use of new item form of Ordered skinvar
  * 1.10 - 11/16/2006 -

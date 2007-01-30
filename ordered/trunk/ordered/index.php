@@ -129,7 +129,7 @@ border-bottom: 1px solid #778;
  *      Blog Selector Form            *
  **************************************/
 	echo '<div class="center">'."\n";
-	echo '<form method="post" action="">'."\n";
+	echo '<form method="post" action="'.$thispage.'">'."\n";
 	echo '<h3>Blog to Manage: &nbsp;&nbsp;';
 	echo '<select name="bshow">'."\n";
 	echo '<option value="0" '.($bshow == '0' ? ' selected>' :'>').'Select a Blog</option>';
