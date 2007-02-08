@@ -1068,9 +1068,23 @@ password
 									$fstart = '';
 									$fend = '';
 								}
-								else {
-									$fstart = '<a href="';
+                                elseif ($param3 == 'link') {
+                                    $fstart = '<a href="';
 									$fend = '" title="'.$param1.'" >'.$value.'</a>';
+                                }
+								else {
+                                    $format = $this->getFieldAttribute($param1,'fformat');
+                                    if (trim($format) !== '') {
+                                        $label = $this->getFieldAttribute($param1,'flabel');
+                                        $fvalue = str_replace(array('%DATA%','%LABEL%'), array($value,$label), $format);
+                                        $value = $fvalue;
+                                        $fstart = '';
+                                        $fend = '';
+                                    }
+                                    else {
+                                        $fstart = '<a href="';
+                                        $fend = '" title="'.$param1.'" >'.$value.'</a>';
+                                    }
 								}
 								echo $fstart.$value.$fend . "\n";
 							}
@@ -1084,11 +1098,20 @@ password
 							}
 							else {
 								if ($param3 == 'raw') {
-									echo $value;
+									//echo $value;
 								}
-								else {
-									echo '<textarea readonly="readonly" cols="' . $cols . '" rows="' . $rows . '">' . $this->_br2nl($value) . '</textarea>' . "\n";
-								}
+                                else {
+                                    $format = $this->getFieldAttribute($param1,'fformat');
+                                    if (trim($format) !== '') {
+                                        $label = $this->getFieldAttribute($param1,'flabel');
+                                        $fvalue = str_replace(array('%DATA%','%LABEL%'), array($value,$label), $format);
+                                        $value = $fvalue;
+                                    }
+                                    else {
+                                        $value = '<textarea readonly="readonly" cols="' . $cols . '" rows="' . $rows . '">' . $this->_br2nl($value) . '</textarea>' . "\n";
+                                    }
+                                }
+                                echo $value;
 							}
 							break;
 						case 'mail':
@@ -1104,9 +1127,23 @@ password
 									$fstart = '';
 									$fend = '';
 								}
-								else {
-									$fstart = '<a href="mailto:';
+                                elseif ($param3 == 'link') {
+                                    $fstart = '<a href="mailto:';
 									$fend = '" title="Member '.$pmid.'">'.$safe_add.'</a>';
+                                }
+								else {
+                                    $format = $this->getFieldAttribute($param1,'fformat');
+                                    if (trim($format) !== '') {
+                                        $label = $this->getFieldAttribute($param1,'flabel');
+                                        $fvalue = str_replace(array('%DATA%','%LABEL%'), array($safe_add,$label), $format);
+                                        $safe_add = $fvalue;
+                                        $fstart = '';
+                                        $fend = '';
+                                    }
+                                    else {
+                                        $fstart = '<a href="mailto:';
+                                        $fend = '" title="Member '.$pmid.'">'.$safe_add.'</a>';
+                                    }
 								}
 								$safe_add = $fstart.$safe_add.$fend;
 								if ($this->showEmail > 1) {
@@ -1127,6 +1164,12 @@ password
 								echo '<input name="' . $param1 . '" type="file" size="' . $size . '" />' . "\n";
 							}
 							else {
+                                if (strlen($value) >= 3) {
+									$value = $CONF['MediaURL'] . $value;
+								}
+								else {
+									$value = $this->default['file']['default'];
+								}
 								if ($param3 == 'image') {
 									$fstart = '<img src="';
 									$fend = '" alt="'.$param1.'" />';
@@ -1135,16 +1178,25 @@ password
 									$fstart = '';
 									$fend = '';
 								}
-								else {
+								elseif ($param3 == 'link') {
 									$fstart = '<a href="';
 									$fend = '" title="'.$param1.'" >'.$param1.'</a>';
 								}
-								if (strlen($value) >= 3) {
-									echo $fstart.$CONF['MediaURL'] . $value.$fend . "\n";
-								}
-								else {
-									echo $fstart.$this->default['file']['default'].$fend ."\n";
-								}
+                                else {
+                                    $format = $this->getFieldAttribute($param1,'fformat');
+                                    if (trim($format) !== '') {
+                                        $label = $this->getFieldAttribute($param1,'flabel');
+                                        $fvalue = str_replace(array('%DATA%','%LABEL%'), array($value,$label), $format);
+                                        $value = $fvalue;
+                                        $fstart = '';
+                                        $fend = '';
+                                    }
+                                    else {
+                                        $fstart = '<a href="';
+                                        $fend = '" title="'.$param1.'" >'.$param1.'</a>';
+                                    }
+                                }
+								echo $fstart.$value.$fend . "\n";
 							}
 							break;
 						case 'password':
@@ -1189,6 +1241,22 @@ password
 									$opt = explode("|", $ropt);
 									if (count($opt) == 1) $opt[1] = trim($opt[0]);
 									if (trim($opt[1]) == $value) {
+                                        if ($param3 == 'raw') {
+                                            //change nothing
+                                        }
+                                        else {
+                                            $format = $this->getFieldAttribute($param1,'fformat');
+                                            if (trim($format) !== '') {
+                                                $label = $this->getFieldAttribute($param1,'flabel');
+                                                $fvalue = str_replace(array('%DATA%','%LABEL%'), array($opt[0],$label), $format);
+                                                $opt[0] = $fvalue;
+                                                $fstart = $estart;
+                                                $fend = $eend;
+                                            }
+                                            else {
+                                                //change nothing
+                                            }
+                                        }
 										echo trim($opt[0]) . "\n";
 									}
 								}
@@ -1218,6 +1286,22 @@ password
 									$opt = explode("|", $ropt);
 									if (count($opt) == 1) $opt[1] = trim($opt[0]);
 									if (trim($opt[1]) == $value) {
+                                        if ($param3 == 'raw') {
+                                            //change nothing
+                                        }
+                                        else {
+                                            $format = $this->getFieldAttribute($param1,'fformat');
+                                            if (trim($format) !== '') {
+                                                $label = $this->getFieldAttribute($param1,'flabel');
+                                                $fvalue = str_replace(array('%DATA%','%LABEL%'), array($opt[0],$label), $format);
+                                                $opt[0] = $fvalue;
+                                                $fstart = $estart;
+                                                $fend = $eend;
+                                            }
+                                            else {
+                                                //change nothing
+                                            }
+                                        }
 										echo trim($opt[0]) . "\n";
 									}
 								}
@@ -1313,10 +1397,24 @@ password
 												$fstart = $estart.'<a href="';
 												$fend = '" title="'.$param1.'" >'.trim($opt[1]).'</a>'.$eend;
 											}
-											else {
+											elseif ($param3 == 'raw') {
 												$fstart = $estart;
 												$fend = $eend;
 											}
+                                            else {
+                                                $format = $formatarr[2];
+                                                if (trim($format) !== '') {
+                                                    $label = $this->getFieldAttribute($param1,'flabel');
+                                                    $fvalue = str_replace(array('%DATA%','%LABEL%'), array($opt[0],$label), $format);
+                                                    $opt[0] = $fvalue;
+                                                    $fstart = $estart;
+                                                    $fend = $eend;
+                                                }
+                                                else {
+                                                    $fstart = $estart;
+                                                    $fend = $eend;
+                                                }
+                                            }
 											echo $fstart.trim($opt[0]).$fend . "\n";
 										}
 									}
@@ -1327,10 +1425,24 @@ password
 											$fstart = $estart.'<a href="';
 											$fend = '" title="'.$param1.'" >'.trim($opt).'</a>'.$eend;
 										}
-										else {
-											$fstart = $estart;
-											$fend = $eend;
-										}
+										elseif ($param3 == 'raw') {
+                                            $fstart = $estart;
+                                            $fend = $eend;
+                                        }
+                                        else {
+                                            $format = $formatarr[2];
+                                            if (trim($format) !== '') {
+                                                $label = $this->getFieldAttribute($param1,'flabel');
+                                                $fvalue = str_replace(array('%DATA%','%LABEL%'), array($opt,$label), $format);
+                                                $opt = $fvalue;
+                                                $fstart = $estart;
+                                                $fend = $eend;
+                                            }
+                                            else {
+                                                $fstart = $estart;
+                                                $fend = $eend;
+                                            }
+                                        }
 										echo $fstart.trim($opt).$fend . "\n";
 									}
 
