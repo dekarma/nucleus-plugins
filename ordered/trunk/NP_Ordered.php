@@ -88,7 +88,7 @@ class NP_Ordered extends NucleusPlugin {
 
 	// version of the plugin
 	function getVersion() {
-		return '1.2';
+		return '1.2.01';
 	}
 
 	// a description to be shown on the installed plugins listing
@@ -292,6 +292,7 @@ class NP_Ordered extends NucleusPlugin {
 			$this->templatemode = str_replace(")","",$tmode);
 			$b =& $blog;
 			$this->useitemtemplate = 1;
+            $this->setshowWhat(2);
 
 			$this->_setBlogCategory($blog, '');	// need this to select default category
 			$this->_preBlogContent('item',$blog);

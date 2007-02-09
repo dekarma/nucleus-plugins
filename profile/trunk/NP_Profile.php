@@ -115,7 +115,7 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://www.iai.com/';	}
 
-	function getVersion() {	return '2.11'; }
+	function getVersion() {	return '2.11.01'; }
 
 	function getDescription() {
 		return 'Gives each member a customisable profile';
