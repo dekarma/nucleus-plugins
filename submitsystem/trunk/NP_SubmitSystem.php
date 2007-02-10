@@ -15,10 +15,10 @@ class NP_SubmitSystem extends NucleusPlugin {
 		return 'http://www.legolasweb.nl/';
 	}
 	function getVersion() {
-		return '2.0.2';
+		return '2.1.0';
 	}
 	function getDescription() {
-		return 'Submit stuff...';
+		return 'Let users submit things to your weblog';
 	}
 
 	function supportsFeature($what) {
@@ -62,7 +62,7 @@ class NP_SubmitSystem extends NucleusPlugin {
 			  PRIMARY KEY  (ssl_id)
 			) TYPE=MyISAM AUTO_INCREMENT=1;
         	');
-
+		
 		$defaultskin = '<%parsedinclude(head.inc)%>' . "\n"
 			. '' . "\n"
 			. '<!-- page header -->' . "\n"
@@ -83,8 +83,20 @@ class NP_SubmitSystem extends NucleusPlugin {
 			. '' . "\n"
 			. '<!-- page footer -->' . "\n"
 			. '<%parsedinclude(footer.inc)%>';
-
+		
+		$defaultitem = '<p><%postername%> (<a href="mailto:<%posteremail%>">email</a><%ifposterwebsite%> | <a href="<%posterwebsite%>">website</a><%endif%>) submitted:</p>' . "\n"
+			.'' . "\n"
+			.'' . "\n"
+			.'<p><%body%></p>' . "\n"
+			.'' . "\n"
+			.'' . "\n"
+			.'<%ifextrafields%><p>Extra fields:<br /><%extrafield(<b><%efdescription%></b> <%efcontents%><br />)%></p><%endif%>' . "\n"
+			.'' . "\n"
+			.'' . "\n"
+			. '<%iffiles%><p>Attachments: <%file(<a href="<%filelink%>"><%file%></a><br />)%></p><%endif%>';
+		
 		$this->createOption('skin', 'Skin, must contain "<%SubmitSystemMain%>"', 'textarea', $defaultskin);
+		$this->createOption('itemskin', 'Item skin', 'textarea', $defaultitem);
 		$this->createOption('waittime', 'Number of seconds an user has to wait before he/she can submit again (0 = unlimited)', 'text', 300, 'numerical=true');
 		$this->createOption('fileupload', 'Allow file upload?', 'yesno', 'no');
 		$this->createOption('filesize', 'Max file size', 'text', 1048576, 'numerical=true');
@@ -98,6 +110,7 @@ class NP_SubmitSystem extends NucleusPlugin {
 		$this->createOption('captcha', 'Use captcha check (GD2 needed)?', 'yesno', 'no');
 		$this->createOption('emailnotification', 'Send an email to the admin mail when something gets submitted?', 'yesno', 'no');
 		$this->createOption('previewmode', 'Show editable preview before allowing?', 'yesno', 'yes');
+		$this->createOption('safepreview', 'Use safepreview (prevents JavaScript injection and unclosed/unopened tags)?', 'yesno', 'yes');
 	}
 	
 	function unInstall() {

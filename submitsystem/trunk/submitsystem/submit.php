@@ -2,7 +2,9 @@
 session_start();
 
 $strRel = '../../../'; 
-include($strRel . 'config.php');
+require ($strRel . 'config.php');
+
+require './texts.php';
 
 $blogid = $CONF['DefaultBlog'];
 
@@ -43,14 +45,15 @@ else {
 $output = null;
 
 if (in_array($blog->getShortName(), explode('|', $ss->getOption('excludeblogs')))) {
-	$output = 'This blog is excluded from submission';
+	$output = _SUBMIT_MSG_BLOGEXCLUDED;
 }
 else if (isset($_SESSION['waittime']) && $_SESSION['waittime'] > time()) {
-	$output = 'You aren\'t allowed to submit things in a very fast rate';
+	$output = _SUBMIT_MSG_TOOFAST;
 }
 else {
 	$posted = false;
-
+	$error = array();
+	
 	if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 		if ((($ss->getOption('captcha') == 'yes' && strtolower($_SESSION['captcha']) == strtolower($_POST['captcha'])) || $ss->getOption('captcha') == 'no') && !empty($_POST['poster']) && !empty($_POST['poster_email']) && !empty($_POST['title']) && !empty($_POST['body'])) {
 			$files = array();
@@ -65,13 +68,28 @@ else {
 						while (file_exists($DIR_MEDIA . $ss->getOption('fileprefix') . $name)) {
 							$name = rand(0, 9) . $name;
 						}
+						
 						if (@copy($_FILES['userfiles']['tmp_name'][$i], $DIR_MEDIA . $ss->getOption('fileprefix') . $name)) {
 							$files[] = $ss->getOption('fileprefix') . $name;
+						}
+						else {
+							$error[] = _SUBMIT_ERR_COPY;
+						}
+					}
+					else {
+						if (!is_uploaded_file($_FILES['userfiles']['tmp_name'][$i])) {
+							$error[] = _SUBMIT_ERR_UPLOAD;
+						}
+						if (!(in_array(strtolower(end(explode('.', $_FILES['userfiles']['name'][$i]))), explode('|', strtolower($ss->getOption('filetypes')))) || $ss->getOption('filetypes') == '*')) {
+							$error[] = _SUBMIT_ERR_TYPE;
+						}
+						if (!$_FILES['userfiles']['size'][$i] <= $ss->getOption('filesize')) {
+							$error[] = _SUBMIT_ERR_SIZE;
 						}
 					}
 				}
 			}
-
+			
 			$extrafields_content = array();
 			$extrafields = $ss->getOption('extrafields');
 			if (!empty($extrafields)) {
@@ -89,51 +107,77 @@ else {
 					}
 				}
 			}
-
-			sql_query('INSERT INTO ' . $ss->dbtable . ' ('
-				. 'ss_blogid,ss_title,ss_body,ss_poster_name,ss_poster_email,ss_poster_website,ss_poster_ip,ss_date,ss_extrafields,ss_files'
-				. ') VALUES ('
-				. $blogid . ','
-				. '\'' . htmlentities($_POST['title'], ENT_QUOTES, _CHARSET) . '\','
-				. '\'' . htmlentities($_POST['body'], ENT_QUOTES, _CHARSET) . '\','
-				. '\'' . htmlentities($_POST['poster'], ENT_QUOTES, _CHARSET) . '\','
-				. '\'' . htmlentities($_POST['poster_email'], ENT_QUOTES) . '\','
-				. '\'' . htmlentities($_POST['poster_website'], ENT_QUOTES) . '\','
-				. '\'' . htmlentities($_SERVER['REMOTE_ADDR'], ENT_QUOTES) . '\','
-				. 'NOW(),'
-				. '\'' . serialize($extrafields_content) . '\','
-				. '\'' . implode('|', $files) . '\''
-				. ')');
-
-			$posted = true;
-
-			if ($ss->getOption('emailnotification') == 'yes') {
-				$notification = new NOTIFICATION($CONF['AdminEmail']);
-				$message .= 'Hi,' . "\n";
-				$message .= "\n";
-				$message .= 'There is a new submission on your site,' . "\n";
-				$message .= 'please go to the admin area (' . $CONF['AdminURL'] . ') to moderate it' . "\n";
-				$message .= "\n";
-				$message .= 'C ya,' . "\n";
-				$message .= 'SubmitSystem Emailer';
-				$notification->notify('New submission', $message . getMailFooter(), $CONF['AdminEmail']);
+			
+			if (!$member->isLoggedIn()) {
+				$poster = $_POST['poster'];
+				$posteremail = $_POST['poster_email'];
+				$posterwebsite = $_POST['poster_website'];
+				
+				if (MEMBER::exists($poster)) {
+					$error[] = _SUBMIT_ERR_MEMBEREXISTS;
+				}
 			}
-
-			if ($ss->getOption('waittime') > 0) {
-				$_SESSION['waittime'] = time() + $ss->getOption('waittime');
+			else {
+				$poster = $member->getDisplayName();
+				$posteremail = $member->getEmail();
+				$posterwebsite = $member->getURL();
+			}
+			
+			if (is_empty($error)) {
+				sql_query('INSERT INTO ' . $ss->dbtable . ' ('
+					. 'ss_blogid,ss_title,ss_body,ss_poster_name,ss_poster_email,ss_poster_website,ss_poster_ip,ss_date,ss_extrafields,ss_files'
+					. ') VALUES ('
+					. $blogid . ','
+					. '\'' . htmlentities($_POST['title'], ENT_QUOTES, _CHARSET) . '\','
+					. '\'' . htmlentities($_POST['body'], ENT_QUOTES, _CHARSET) . '\','
+					. '\'' . htmlentities($poster, ENT_QUOTES, _CHARSET) . '\','
+					. '\'' . htmlentities($posteremail, ENT_QUOTES) . '\','
+					. '\'' . htmlentities($posterwebsite, ENT_QUOTES) . '\','
+					. '\'' . htmlentities($_SERVER['REMOTE_ADDR'], ENT_QUOTES) . '\','
+					. 'NOW(),'
+					. '\'' . serialize($extrafields_content) . '\','
+					. '\'' . implode('|', $files) . '\''
+					. ')');
+				
+				$posted = true;
+				
+				if ($ss->getOption('emailnotification') == 'yes') {
+					$notification = new NOTIFICATION($CONF['AdminEmail']);
+					$message .= 'Hi,' . "\n";
+					$message .= "\n";
+					$message .= 'There is a new submission on your site,' . "\n";
+					$message .= 'please go to the admin area (' . $CONF['AdminURL'] . ') to moderate it' . "\n";
+					$message .= "\n";
+					$message .= 'Have a nice day,' . "\n";
+					$message .= 'SubmitSystem Emailer';
+					$notification->notify('New submission', $message . getMailFooter(), $CONF['AdminEmail']);
+				}
+				
+				if ($ss->getOption('waittime') > 0) {
+					$_SESSION['waittime'] = time() + $ss->getOption('waittime');
+				}
+			}
+			else {
+				$output .= '<div class="errors">';
+				foreach ($error as $err) {
+					$output .= '<span class="error">' . $err . '</span>';
+				}
+				$output = '</div>';
 			}
 		}
 	}
-
+	
 	if ($posted == false) {
 		$output .= '<form action="' . $_SERVER['PHP_SELF'] . '?blogid=' . $blogid . '" method="post" name="submitform" enctype="multipart/form-data" onsubmit="submitform.submit.disabled = true;">';
 		$output .= '<input type="hidden" name="MAX_FILE_SIZE" value="' . $ss->getOption('filesize') . '" />';
 		$output .= '<table>';
-		$output .= '<tr><td>Your name [*]:</td><td><input name="poster" type="text" value="' . htmlentities($_POST['poster'], ENT_QUOTES, _CHARSET) . '" /></td></tr>';
-		$output .= '<tr><td>Your email [*]:</td><td><input name="poster_email" type="text" value="' . htmlentities($_POST['poster_email'], ENT_QUOTES) . '" /></td></tr>';
-		$output .= '<tr><td>Your website:</td><td><input name="poster_website" type="text" value="' . htmlentities($_POST['poster_website'], ENT_QUOTES) . '" /></td></tr>';
-		$output .= '<tr><td>Title [*]:</td><td><input name="title" type="text" value="' . htmlentities($_POST['title'], ENT_QUOTES, _CHARSET) . '" /></td></tr>';
-		$output .= '<tr><td>Body [*]:</td><td><textarea name="body" rows="10">' . htmlentities($_POST['body'], ENT_QUOTES, _CHARSET) . '</textarea></td></tr>';
+		if (!$member->isLoggedIn()) {
+			$output .= '<tr><td>' . _SUBMIT_YOURNAME . _SUBMIT_REQUIREDFIELD . ':</td><td><input name="poster" type="text" value="' . htmlentities($_POST['poster'], ENT_QUOTES, _CHARSET) . '" /></td></tr>';
+			$output .= '<tr><td>' . _SUBMIT_YOUREMAIL . _SUBMIT_REQUIREDFIELD . ':</td><td><input name="poster_email" type="text" value="' . htmlentities($_POST['poster_email'], ENT_QUOTES) . '" /></td></tr>';
+			$output .= '<tr><td>' . _SUBMIT_YOURWEBSITE . ':</td><td><input name="poster_website" type="text" value="' . htmlentities($_POST['poster_website'], ENT_QUOTES) . '" /></td></tr>';
+		}
+		$output .= '<tr><td>' . _SUBMIT_TITLE . _SUBMIT_REQUIREDFIELD . ':</td><td><input name="title" type="text" value="' . htmlentities($_POST['title'], ENT_QUOTES, _CHARSET) . '" /></td></tr>';
+		$output .= '<tr><td>' . _SUBMIT_BODY. _SUBMIT_REQUIREDFIELD . ':</td><td><textarea name="body" rows="10">' . htmlentities($_POST['body'], ENT_QUOTES, _CHARSET) . '</textarea></td></tr>';
 		$extrafields = $ss->getOption('extrafields');
 		if (!empty($extrafields)) {
 			foreach (explode('|', $extrafields) as $field) {
@@ -149,7 +193,7 @@ else {
 			}
 		}
 		if ($ss->getOption('fileupload') == 'yes' && $ss->getOption('filecount') > 0) {
-			$output .= '<tr><td>Files:</td><td>';
+			$output .= '<tr><td>' . _SUBMIT_FILES . ':</td><td>';
 			$count = $ss->getOption('filecount');
 			if ($count > 5) {
 				$count = 5;
@@ -175,14 +219,14 @@ else {
 			for ($i = 0; $i < 5; $i++) {
 				$_SESSION['captcha'] .= $chars[rand(0, count($chars) - 1)];
 			}
-			$output .= '<tr><td>Retype the code:</td><td><img src="captcha.php" /><br /><input name="captcha" type="text" value="" /></td></tr>';
+			$output .= '<tr><td>' . _SUBMIT_CAPTCHA . _SUBMIT_REQUIREDFIELD . ':</td><td><img src="captcha.php" /><br /><input name="captcha" type="text" value="" /></td></tr>';
 		}
-		$output .= '<tr><td colspan="2" style="text-align: center;"><input name="submit" type="submit" value="Submit" /></td></tr>';
+		$output .= '<tr><td colspan="2" style="text-align: center;"><input name="submit" type="submit" value="' . _SUBMIT_SUBMIT . '" /></td></tr>';
 		$output .= '</table>';
 		$output .= '</form>';
 	}
 	else {
-		$output .= 'Succesfully submitted<br /><a href="' . $blog->getURL() . '">Click here to return</a>';
+		$output .= _SUBMIT_MSG_SUCCESS . '<br /><a href="' . $blog->getURL() . '">' . _SUBMIT_MSG_RETURN . '</a>';
 	}
 }
 

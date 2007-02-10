@@ -18,6 +18,88 @@ if (!$member->isLoggedIn()) {
 	exit();
 }
 
+function generateBody($array) {
+	global $CONF, $ssadmin;
+	
+	$body = null;
+	$more = null;
+	
+	$body .= '<p>' . $array['ss_poster_name'] . ' (<a href="mailto:' . $array['ss_poster_email'] . '">email</a>';
+	if (!empty($array['ss_poster_website'])) {
+		$body .= ' | <a href="' . $array['ss_poster_website'] . '">website</a>';
+	}
+	$body .= ') submitted:</p>';
+	$body .= "\n\n";
+	$body .= '<p>' . nl2br($array['ss_body']) . '</p>';
+	$body .= "\n\n";
+	
+	$extrafields = unserialize($array['ss_extrafields']);
+	if (!empty($extrafields)) {
+		$body .= '<p>Extra fields:<br />';
+		foreach ($extrafields as $field) {
+			$body .= '<b>' . $field['description'] . '</b> ' . $field['contents'] . '<br />';
+		}
+		$body .= '</p>';
+		$body .= "\n\n";
+	}
+	
+	if (!empty($array['ss_files'])) {
+		$body .= '<p>Attachments: ';
+		$first = true;
+		foreach (explode('|', $array['ss_files']) as $file) {
+			if ($first == false) {
+				$body .= ' | ';
+			}
+			$body .= '<a href="' . $CONF['MediaURL'] . $file . '">' . $file . '</a>';
+			$first = false;
+		}
+		$body .= '</p>';
+	}
+	
+	if ($ssadmin->plugin->getOption('safepreview') == 'yes') {
+		$body = safeHTML($body);
+		$more = safeHTML($more);
+	}
+	
+	return array($body, $more);
+}
+
+function safeHTML($text) {
+	$text = preg_replace('/<(\/)?script(.*?)>/', '&lt;$1script$2&gt;', $text);
+	
+	$open = preg_match_all('/<(?!\/)(.*?)>/', $text, $opentags);
+	$close = preg_match_all('/<\/(.*?)>/', $text, $closetags);
+	$opentags = $opentags[1];
+	$closetags = $closetags[1];
+	
+	for ($i = 0; $i < count($opentags); $i++) {
+		$opentags[$i] = array_shift(explode(' ', $opentags[$i]));
+	}
+	
+	for ($i = 0; $i < count($opentags); $i++) {
+		$key = array_search($opentags[$i], $closetags);
+		
+		if ($key !== false) {
+			$opentags[$i] = false;
+			$closetags[$key] = false;
+		}
+	}
+	
+	foreach ($opentags as $o) {
+		if ($o != false) {
+			$text = $text . '</' . $o . '>';
+		}
+	}
+	
+	foreach ($closetags as $c) {
+		if ($c != false) {
+			$text = '<' . $c . '>' . $text;
+		}
+	}
+	
+	return $text;
+}
+
 if (isset($_GET['allow']) || isset($_GET['deny'])) {
 	if  (isset($_GET['allow'])) {
 		$id = $_GET['allow'];
@@ -73,39 +155,9 @@ if (isset($_GET['allow']) || isset($_GET['deny'])) {
 					$more = $_POST['more'];
 				}
 				else {
-					$body = null;
-					$more = null;
-					$body .= '<p>' . $array['ss_poster_name'] . ' (<a href="mailto:' . $array['ss_poster_email'] . '">email</a>';
-					if (!empty($array['ss_poster_website'])) {
-						$body .= ' | <a href="' . $array['ss_poster_website'] . '">website</a>';
-					}
-					$body .= ') submitted:</p>';
-					$body .= "\n\n";
-					$body .= '<p>' . nl2br($array['ss_body']) . '</p>';
-					$body .= "\n\n";
-
-					$extrafields = unserialize($array['ss_extrafields']);
-					if (!empty($extrafields)) {
-						$body .= '<p>Extra fields:<br />';
-						foreach ($extrafields as $field) {
-							$body .= '<b>' . $field['description'] . '</b> ' . $field['contents'] . '<br />';
-						}
-						$body .= '</p>';
-						$body .= "\n\n";
-					}
-
-					if (!empty($array['ss_files'])) {
-						$body .= '<p>Attachments: ';
-						$first = true;
-						foreach (explode('|', $array['ss_files']) as $file) {
-							if ($first == false) {
-								$body .= ' | ';
-							}
-							$body .= '<a href="' . $CONF['MediaURL'] . $file . '">' . $file . '</a>';
-							$first = false;
-						}
-						$body .= '</p>';
-					}
+					$fields = generateBody($array);
+					$body = $fields[0];
+					$more = $fields[1];
 				}
 
 				//sql_query('INSERT INTO ' . sql_table('item') . '('
@@ -157,38 +209,9 @@ if (isset($_GET['preview']) && intval($_GET['preview']) > 0) {
 	}
 
 	if (is_array($array) && (($ssadmin->plugin->getOption('moderatormode') == 'team' && $member->isTeamMember($array['ss_blogid'])) || ($ssadmin->plugin->getOption('moderatormode') == 'teamadmin' && $member->isBlogAdmin($array['ss_blogid'])) || $member->isAdmin())) {
-		$body = null;
-		$body .= '<p>' . $array['ss_poster_name'] . ' (<a href="mailto:' . $array['ss_poster_email'] . '">email</a>';
-		if (!empty($array['ss_poster_website'])) {
-			$body .= ' | <a href="' . $array['ss_poster_website'] . '">website</a>';
-		}
-		$body .= ') submitted:</p>';
-		$body .= "\n\n";
-		$body .= '<p>' . nl2br($array['ss_body']) . '</p>';
-		$body .= "\n\n";
-
-		$extrafields = unserialize($array['ss_extrafields']);
-		if (!empty($extrafields)) {
-			$body .= '<p>Extra fields:<br />';
-			foreach ($extrafields as $field) {
-				$body .= '<b>' . $field['description'] . '</b> ' . $field['contents'] . '<br />';
-			}
-			$body .= '</p>';
-			$body .= "\n\n";
-		}
-
-		if (!empty($array['ss_files'])) {
-			$body .= '<p>Attachments: ';
-			$first = true;
-			foreach (explode('|', $array['ss_files']) as $file) {
-				if ($first == false) {
-					$body .= ' | ';
-				}
-				$body .= '<a href="' . $CONF['MediaURL'] . $file . '">' . $file . '</a>';
-				$first = false;
-			}
-			$body .= '</p>';
-		}
+		$fields = generateBody($array);
+		$body = $fields[0];
+		$more = $fields[1];
 
 		echo('<script type="text/javascript">' . "\n");
 		echo('<!--' . "\n");
@@ -210,7 +233,7 @@ if (isset($_GET['preview']) && intval($_GET['preview']) > 0) {
 		echo('<table>');
 		echo('<tr><td>Title:</td><td><input type="text" id="title" name="title" ' . $javascriptpreview . ' value="' . $array['ss_title'] . '" /></td></tr>');
 		echo('<tr><td>Body:</td><td><textarea id="body" name="body" ' . $javascriptpreview . ' rows="10">' . $body . '</textarea></td></tr>');
-		echo('<tr><td>Extended:</td><td><textarea id="more" name="more" ' . $javascriptpreview . ' rows="10"></textarea></td></tr>');
+		echo('<tr><td>Extended:</td><td><textarea id="more" name="more" ' . $javascriptpreview . ' rows="10">' . $more . '</textarea></td></tr>');
 		echo('<tr><td colspan="2"><input type="submit" value="Add" /></td></tr>');
 		echo('</table>');
 		echo('</form>');
@@ -244,39 +267,13 @@ elseif ($_GET['page'] == 'showbody' && is_numeric($_GET['id']) && $_GET['id'] > 
 		echo('<div style="padding: 5px; border: 1px solid #000000;">');
 		echo('<h3>' . $row['ss_title'] . '</h3>');
 
-		$body = null;
-		$body .= '<p>' . $row['ss_poster_name'] . ' (<a href="mailto:' . $row['ss_poster_email'] . '">email</a>';
-		if (!empty($row['ss_poster_website'])) {
-			$body .= ' | <a href="' . $row['ss_poster_website'] . '">website</a>';
-		}
-		$body .= ') submitted:</p>';
-		$body .= "\n\n";
-		$body .= '<p>' . nl2br($row['ss_body']) . '</p>';
-		$body .= "\n\n";
-
-		$extrafields = unserialize($row['ss_extrafields']);
-		if (!empty($extrafields)) {
-			$body .= '<p>Extra fields:<br />';
-			foreach ($extrafields as $field) {
-				$body .= '<b>' . $field['description'] . '</b> ' . $field['contents'] . '<br />';
-			}
-			$body .= '</p>';
-			$body .= "\n\n";
-		}
-
-		if (!empty($row['ss_files'])) {
-			$body .= '<p>Attachments: ';
-			$first = true;
-			foreach (explode('|', $row['ss_files']) as $file) {
-				if ($first == false) {
-					$body .= ' | ';
-				}
-				$body .= '<a href="' . $CONF['MediaURL'] . $file . '">' . $file . '</a>';
-				$first = false;
-			}
-			$body .= '</p>';
-		}
+		$fields = generateBody($array);
+		$body = $fields[0];
+		$more = $fields[1];
+		
 		echo('<p>' . $body . '</p>');
+		echo('<p>' . $more . '</p>');
+		
 		echo('</div>');
 
 		echo('<p>');
