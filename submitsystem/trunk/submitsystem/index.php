@@ -267,7 +267,7 @@ elseif ($_GET['page'] == 'showbody' && is_numeric($_GET['id']) && $_GET['id'] > 
 		echo('<div style="padding: 5px; border: 1px solid #000000;">');
 		echo('<h3>' . $row['ss_title'] . '</h3>');
 
-		$fields = generateBody($array);
+		$fields = generateBody($row);
 		$body = $fields[0];
 		$more = $fields[1];
 		

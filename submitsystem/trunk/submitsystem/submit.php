@@ -55,7 +55,7 @@ else {
 	$error = array();
 	
 	if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-		if ((($ss->getOption('captcha') == 'yes' && strtolower($_SESSION['captcha']) == strtolower($_POST['captcha'])) || $ss->getOption('captcha') == 'no') && !empty($_POST['poster']) && !empty($_POST['poster_email']) && !empty($_POST['title']) && !empty($_POST['body'])) {
+		if ((($ss->getOption('captcha') == 'yes' && strtolower($_SESSION['captcha']) == strtolower($_POST['captcha'])) || $ss->getOption('captcha') == 'no') && ((!empty($_POST['poster']) && !empty($_POST['poster_email'])) || $member->isLoggedIn()) && !empty($_POST['title']) && !empty($_POST['body'])) {
 			$files = array();
 			if ($ss->getOption('fileupload') == 'yes' && $ss->getOption('filecount') > 0) {
 				$count = $ss->getOption('filecount');
@@ -77,14 +77,13 @@ else {
 						}
 					}
 					else {
-						if (!is_uploaded_file($_FILES['userfiles']['tmp_name'][$i])) {
-							$error[] = _SUBMIT_ERR_UPLOAD;
-						}
-						if (!(in_array(strtolower(end(explode('.', $_FILES['userfiles']['name'][$i]))), explode('|', strtolower($ss->getOption('filetypes')))) || $ss->getOption('filetypes') == '*')) {
-							$error[] = _SUBMIT_ERR_TYPE;
-						}
-						if (!$_FILES['userfiles']['size'][$i] <= $ss->getOption('filesize')) {
-							$error[] = _SUBMIT_ERR_SIZE;
+						if (is_uploaded_file($_FILES['userfiles']['tmp_name'][$i])) {
+							if (!(in_array(strtolower(end(explode('.', $_FILES['userfiles']['name'][$i]))), explode('|', strtolower($ss->getOption('filetypes')))) || $ss->getOption('filetypes') == '*')) {
+								$error[] = _SUBMIT_ERR_TYPE;
+							}
+							if (!$_FILES['userfiles']['size'][$i] <= $ss->getOption('filesize')) {
+								$error[] = _SUBMIT_ERR_SIZE;
+							}
 						}
 					}
 				}
@@ -123,7 +122,7 @@ else {
 				$posterwebsite = $member->getURL();
 			}
 			
-			if (is_empty($error)) {
+			if (empty($error)) {
 				sql_query('INSERT INTO ' . $ss->dbtable . ' ('
 					. 'ss_blogid,ss_title,ss_body,ss_poster_name,ss_poster_email,ss_poster_website,ss_poster_ip,ss_date,ss_extrafields,ss_files'
 					. ') VALUES ('
@@ -160,9 +159,9 @@ else {
 			else {
 				$output .= '<div class="errors">';
 				foreach ($error as $err) {
-					$output .= '<span class="error">' . $err . '</span>';
+					$output .= '<span class="error">' . $err . '</span><br />';
 				}
-				$output = '</div>';
+				$output .= '</div>';
 			}
 		}
 	}
