@@ -88,7 +88,7 @@ class NP_Ordered extends NucleusPlugin {
 
 	// version of the plugin
 	function getVersion() {
-		return '1.2.01';
+		return '1.2.02';
 	}
 
 	// a description to be shown on the installed plugins listing
@@ -217,7 +217,7 @@ class NP_Ordered extends NucleusPlugin {
         $this->_generateForm($currentorder);
     }
 
-	function doSkinVar($skinType,$kind = 'blog', $show = '',$template,$amount = '',$category = '', $blogname = '') {
+	function doSkinVar($skinType,$kind = 'blog', $show = '',$template = '',$amount = '',$category = '', $blogname = '') {
         global $manager, $blog, $startpos;
 
 		switch ($kind) {
