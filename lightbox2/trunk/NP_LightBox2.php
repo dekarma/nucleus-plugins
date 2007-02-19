@@ -32,6 +32,8 @@
 
    /*
     * History:
+	*
+	* v 1.2 - make so replace popup and replace normal image links work
     *
     * v 1.11 - make so thumbnails work when allow_url_open is false
     *
@@ -46,20 +48,11 @@ class NP_LightBox2 extends NucleusPlugin {
 	function getName() {return 'LightBox2';}
 	function getAuthor()  {return 'Frank Truscott, based on work by Seventoes';}
 	function getURL(){return 'http://www.iai.com/';}
-	function getVersion() {return '1.1';}
+	function getVersion() {return '1.2';}
 	function getDescription() {
 		return 'Simple plugin to enable LightBox2 on Nucleus Blogs';
 	}
 	function getEventList() { return array('PreItem'); }
-
-	function supportsFeature($feature) {
-    	switch($feature) {
-	        case 'SqlTablePrefix':
-	        	return 1;
-	        default:
-	    		return 0;
-		}
-	}
 
     function supportsFeature($feature) {		switch($feature) {			case 'SqlTablePrefix': return 1;			default: return 0;		}	}
 
@@ -89,7 +82,7 @@ class NP_LightBox2 extends NucleusPlugin {
 
 	function parse($matches) {
         $media_dir = $this->getOption('imagePath');
-        $media_url = $this->getOption('imageURL');
+		$media_url = $this->getOption('imageURL');
         if (!ini_get("allow_url_fopen")) {
             $thumb_path = $media_dir;
         }
@@ -150,6 +143,16 @@ class NP_LightBox2 extends NucleusPlugin {
 		return $r;
 	}
 
+	function parse_popup($matches) {
+		$media_dir = $this->getOption('imagePath');
+		$sections = explode("|", $matches[1]);
+		if (!is_file($media_dir.$sections[0])) {
+			$sections[0] = $this->currentItem->authorid."/".$sections[0];
+		}
+		$r = "<%LightBox2(".$sections[0]."|".end($sections).")%>";
+		return $r;
+	}
+
 	function str_replace_once($needle, $replace, $haystack) {
 	   // Looks for the first occurence of $needle in $haystack
 	   // and replaces it with $replace.
@@ -170,24 +173,27 @@ class NP_LightBox2 extends NucleusPlugin {
 			$rep = '';
 			//normal image link replacement
 			if ($this->getOption('repNormal') == "yes") {
-	        	$target = '/<a(?:\s+?)href=([^>]+)>(<img(?:\s+?)src=[^>]+>)/';
+	        	$target = '/<a(?:\s+?)href="([^>"]+)([^>]+)>(<img(?:\s+?)src=[^>]+>)/';
 				if (preg_match($target, $this->currentItem->$part)) {
 					preg_match($target, $this->currentItem->$part, $match);
+					//doError($match[1]);
 					$match[1] = str_replace("\"","",$match[1]);
-					if (strpos($match[1],"media/") == 0) {
+					if (strpos($match[1],"media/") === 0) {
 						$match[1] = $this->str_replace_once("media/", "", $match[1]);
 					}
-					if (strpos($text,"/media/") == 0) {
+					if (strpos($text,"/media/") === 0) {
 						$match[1] = $this->str_replace_once("/media/", "", $match[1]);
 					}
+					$match[1] = trim($match[1]);
 					$rep = $this->parse($match);
 					$this->currentItem->$part = preg_replace($target,$rep,$this->currentItem->$part);
 				}
 			}
 			//nucleus <%popup()%> code replacement
 			if ($this->getOption('repPopup') == "yes") {
-				$target = '/<%popup\((.+?)\)%>/';
-				if (preg_match($target, $this->currentItem->$part)) {
+				//$target = '/<%popup\((.+?)\)%>/';
+				$this->currentItem->$part = preg_replace_callback("#<\%popup\((.*?)\)%\>#", array(&$this, 'parse_popup'), $this->currentItem->$part);
+				/*if (preg_match($target, $this->currentItem->$part)) {
 					preg_match($target, $this->currentItem->$part, $match);
 					$count = 0;
 					foreach($match as $text) {
@@ -197,10 +203,11 @@ class NP_LightBox2 extends NucleusPlugin {
 							$caption = end($string);
 							$rep = $this->parse($image."|".$caption);
 							$this->currentItem->$part = preg_replace($target,$rep,$this->currentItem->$part);
+
 						}
 						$count++;
 					}
-				}
+				}*/
 			}
 
 			$this->currentItem->$part = str_replace(array("!~~","~~!"),array("<%LightBox2(",")%>"),$this->currentItem->$part);
