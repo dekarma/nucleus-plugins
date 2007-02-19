@@ -115,7 +115,7 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://www.iai.com/';	}
 
-	function getVersion() {	return '2.11.01'; }
+	function getVersion() {	return '2.11.02'; }
 
 	function getDescription() {
 		return 'Gives each member a customisable profile';
@@ -2028,7 +2028,7 @@ password
 				$destURL = $destURL.'&status=1';
 */
 			$destURL = $pgparts[0].'?'.$newparams;
-			header("Location:" . $destURL);
+			header("Location: " . $destURL);
 			break;
 		default:
 			doError(_PROFILE_ACTION_UNKNOWN);

@@ -405,7 +405,7 @@ class NP_Ordered extends NucleusPlugin {
     {
 		global $member, $itemid;
 
-        echo "<h3>NP_OrderedBlog</h3>\n";
+        echo "<h3>NP_Ordered</h3>\n";
 		$blogid = getBlogIDFromItemID($itemid);
 
 		if ($member->blogAdminRights($blogid)) {
