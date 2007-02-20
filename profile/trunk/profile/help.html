@@ -86,6 +86,7 @@ The ones in bold are Nucleus member fields and represent data kept by the Nucleu
    <li>image - Valid for fields of type file. Shows the file as an image for the named field. Default for file type.</li>
    <li>link - Valid for fields of type file, url, mail, list. Shows value of named field as a link. Default for url and mail types.</li>
    <li>raw - Valid for fields of type file, url, mail, list, textarea. Shows raw value of named field with no html tags. File fields show as a raw URL. Default for list types.</li>
+   <li>format - Valid for fields of type text, textarea, file, list, mail, url, dropdown, radio. Shows the value using a custom format as described in the Edit Custom Field Definitions Form section below. If no custom format given, will use type default for display.</li>
    </ul>
 <li><i>memberid</i> is the member id (number), or member name (login name) of the member who's profile field you wish to display.
 This is needed when NP_Profile cannot determine which member's info to display, such as on an index skin,
@@ -205,8 +206,13 @@ default setting set for that that field type in the type settings form.</p>
 <li><b>Enabled</b> : Is this field enabled? yes or no. If not enabled it will not be displayed anywhere.</li>
 <li><b>Length</b> : Integer. Usually leave as 0 (uses type default). Maxlength of field. # of rows for textarea.</li>
 <li><b>Size</b> : Integer. Usually leave as 0 (uses type default). Size of input field. # of columns for textarea.</li>
-<li><b>Format</b> : A format string indicating how the field should be displayed. Meaningful for date and list types as decribed below.
+<li><b>Format</b> : A format string indicating how the field should be displayed. Meaningful for all field types, but date, list and number require special formats as described below.
 	<ul>
+    <li>For most field types. The format can be any string, including html code, containing the special string of %DATA% (case matters). Each occurance of %DATA% or %LABEL% will be replaced by the raw data or label, respectively, for the given field. For example,:</li>
+        <ul>
+        <li>&lt;a href=&quot;skype://%DATA%&quot;&gt;%DATA%&lt;/a&gt; would give a link to a users skype name</li>
+        <li>&lt;div class=&quot;biography&quot;&gt;&lt;h2&gt;%LABEL%&lt;/h2&gt;%DATA%&lt;/div&gt; would put the contents of the field into a div of class biography and under a header of the field label.</li>
+        </ul>
 	<li>For date type fields. Format should consist of the letters M,D, and Y, separated by a character like -,or /. For Example,</li>
 		<ul>
 		<li>D-M-Y will display the date like 24-10-2006.</li>
@@ -214,13 +220,21 @@ default setting set for that that field type in the type settings form.</p>
 		<li>Y-D-M will display the date like 2006-24-10.</li>
 		<li>Y/M/D will display the date like 2006/10/24.</li>
 		</ul>
-	<li>For list type fields. Format should be like <i>tag</i>-<i>class</i>, where <i>tag</i> is one of ol,ul, or dl, and <i>class</i> is name of css class of list.</li>
+	<li>For list type fields. Format should be like <i>tag</i>-<i>class</i>-<i>format</i>, where <i>tag</i> is one of ol,ul, or dl, and <i>class</i> is name of css class of list, and <i>format</i> is a format like above. Any of these can be blank, but the - separator must be used. See examples below.</li>
 		<ul>
 		<li>ul-toppinglist will display the list items as an unordered list with a class of toppinglist.</li>
-		<li>ul-toppinglist will display the list items as an ordered list with a class of toppinglist.</li>
+        <li>ul-toppinglist-&lt;b&gt;%DATA%&lt;/b&gt; will display the list items as an unordered list with a class of toppinglist, and each list element will be bolded</li>
+		<li>--&lt;li&gt;&lt;b&gt;%DATA%&lt;/b&gt;&lt;/li&gt; will display the list items inside &lt;li&gt; tags, and each list element will be bolded. The &lt;ul&gt; tags would need to be in the skin.</li>
+		<li>ol-toppinglist will display the list items as an ordered list with a class of toppinglist.</li>
 		<li>dl-toppinglist will display the list items as an definition list with a class of toppinglist, each list element surrounded by &lt;dd&gt; and &lt;/dd&gt; tags.</li>
 		<li>(-) will surround each list element in parentheses, like (cheese)(mushrooms)(sausage).</li>
 		</ul>
+    <li>For number type fields. Format should be <i>places</i>-<i>decimalpoint</i>-<i>thousandsep</i> where <i>places</i> is the number of decimal places to show, <i>decimalpoint</i> is the character used for the decimal point, and <i>thousandsep</i> is the character used to spearate thousands. See examples below:</li>
+        <ul>
+        <li>2-.-, would display the number 12345.6789 as 12,345.67</li>
+        <li>1-,-. would display the number 12345.6789 as 12.345,6</li>
+        <li>0-.-, would display the number 12345.6789 as 12,345</li>
+        </ul>
 	</ul>
 
 <li><b>Width</b> : Integer. Max width of images for upload. Only valid for file type.</li>
@@ -259,7 +273,7 @@ default setting set for that that field type in the type settings form.</p>
 <li><b>Name</b> : The name of the type. Cannot be changed.</li>
 <li><b>Length</b> : Integer. Maxlength of field. # of rows for textarea.</li>
 <li><b>Size</b> : Integer. Size of input field. # of columns for textarea.</li>
-<li><b>Format</b> : A format string indicating how the field should be displayed. Meaningful for date and list types as decribed below.
+<li><b>Format</b> : A format string indicating how the field should be displayed. Here meaningful to set defaults for date, number, and list types as decribed below.
 	<ul>
 	<li>For date type fields. Format should consist of the letters M,D, and Y, separated by a character like -,or /. For Example,</li>
 		<ul>
@@ -268,14 +282,23 @@ default setting set for that that field type in the type settings form.</p>
 		<li>Y-D-M will display the date like 2006-24-10.</li>
 		<li>Y/M/D will display the date like 2006/10/24.</li>
 		</ul>
-	<li>For list type fields. Format should be like <i>tag</i>-<i>class</i>, where <i>tag</i> is one of ol,ul, or dl, and <i>class</i> is name of css class of list.</li>
+	<li>For list type fields. Format should be like <i>tag</i>-<i>class</i>-<i>format</i>, where <i>tag</i> is one of ol,ul, or dl, and <i>class</i> is name of css class of list, and <i>format</i> is a format like above. Any of these can be blank, but the - separator must be used. See examples below.</li>
 		<ul>
 		<li>ul-toppinglist will display the list items as an unordered list with a class of toppinglist.</li>
-		<li>ul-toppinglist will display the list items as an ordered list with a class of toppinglist.</li>
+        <li>ul-toppinglist-&lt;b&gt;%DATA%&lt;/b&gt; will display the list items as an unordered list with a class of toppinglist, and each list element will be bolded</li>
+		<li>--&lt;li&gt;&lt;b&gt;%DATA%&lt;/b&gt;&lt;/li&gt; will display the list items inside &lt;li&gt; tags, and each list element will be bolded. The &lt;ul&gt; tags would need to be in the skin.</li>
+		<li>ol-toppinglist will display the list items as an ordered list with a class of toppinglist.</li>
 		<li>dl-toppinglist will display the list items as an definition list with a class of toppinglist, each list element surrounded by &lt;dd&gt; and &lt;/dd&gt; tags.</li>
 		<li>(-) will surround each list element in parentheses, like (cheese)(mushrooms)(sausage).</li>
 		</ul>
-	</ul><li><b>Width</b> : Integer. Max width of images for upload. Only valid for file type.</li>
+    <li>For number type fields. Format should be <i>places</i>-<i>decimalpoint</i>-<i>thousandsep</i> where <i>places</i> is the number of decimal places to show, <i>decimalpoint</i> is the character used for the decimal point, and <i>thousandsep</i> is the character used to spearate thousands. See examples below:</li>
+        <ul>
+        <li>2-.-, would display the number 12345.6789 as 12,345.67</li>
+        <li>1-,-. would display the number 12345.6789 as 12.345,6</li>
+        <li>0-.-, would display the number 12345.6789 as 12,345</li>
+        </ul>
+	</ul>
+<li><b>Width</b> : Integer. Max width of images for upload. Only valid for file type.</li>
 <li><b>Height</b> : Integer. Max height of images for upload. Only valid for file type.</li>
 <li><b>File Size</b> : Integer. Max file size in bytes of images for upload. Blank uses Nucleus Max Upload Size from General Settings. Only valid for file type.</li>
 <li><b>File Type</b> : Allowed file types for upload. Default types are jpg;jpeg;gif;png (use ; to separate multiple types), but any extention can be permitted. Blank uses Nucleus Allowed Types from General Settings. Only valid for file type.</li>

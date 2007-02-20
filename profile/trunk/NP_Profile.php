@@ -1046,6 +1046,7 @@ password
 							}
 							break;
 						case 'number':
+/* Need to set up formatting like in help.html using php number_format() function */
 							$value = $this->getValue($pmid,$param1);
 							$maxlength = $this->getFieldAttribute($param1,'flength');
 							$size = $this->getFieldAttribute($param1,'fsize');
