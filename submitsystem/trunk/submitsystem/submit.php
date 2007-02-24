@@ -122,25 +122,24 @@ else {
 				$posterwebsite = $member->getURL();
 			}
 			
+			if (!$member->isLoggedIn() && empty($error)) {
+				$spamcheck = array(
+						'type' => 'SubmitSystem',
+						'body' => $_POST['title'] . ' ' . $_POST['body'],
+						'author' => $poster,
+						'url' => $posterwebsite,
+						'email' => $posteremail,
+						'data' => $_POST['title'] . ' ' . $_POST['body'] . ' ' . $posterwebsite . ' ' . $posteremail,
+						'live' => true,
+						'return' => true
+					);
+				$manager->notify('SpamCheck', array('spamcheck' => &$spamcheck));
+				if (isset($spamcheck['result']) && $spamcheck['result'] == true) {
+					$error[] = _SUBMIT_ERR_SPAMCHECK;
+				} 
+			}
+			
 			if (empty($error)) {
-				if (!$member->isLoggedIn()) {
-					$spamcheck = array(
-							'type' => 'SubmitSystem',
-							'body' => $_POST['title'] . ' ' . $_POST['body'],
-							'author' => $poster,
-							'url' => $posterwebsite,
-							'email' => $posteremail,
-							'data' => $_POST['title'] . ' ' . $_POST['body'] . ' ' . $posterwebsite . ' ' . $posteremail,
-							'live' => true,
-							'return' => true
-						);
-					$manager->notify('SpamCheck', array('spamcheck' => &$spamcheck));
-					if (isset($spamcheck['result']) && $spamcheck['result'] == true) {
-						echo '<p>' . _ERROR_DISALLOWED . '</p>';
-						exit();
-					} 
-				}
-				
 				sql_query('INSERT INTO ' . $ss->dbtable . ' ('
 					. 'ss_blogid,ss_title,ss_body,ss_poster_name,ss_poster_email,ss_poster_website,ss_poster_ip,ss_date,ss_extrafields,ss_files'
 					. ') VALUES ('

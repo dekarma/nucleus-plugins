@@ -14,6 +14,7 @@ define('_SUBMIT_ERR_UPLOAD', 'Failed to upload the file');
 define('_SUBMIT_ERR_TYPE', 'You\'re not allowed to upload files of this type');
 define('_SUBMIT_ERR_SIZE', 'Your file exceeds the filesize limit');
 define('_SUBMIT_ERR_MEMBEREXISTS', 'The membername you chose is already in use');
+define('_SUBMIT_ERR_SPAMCHECK', 'Your submission has been rated spam');
 
 // Submission field names
 define('_SUBMIT_YOURNAME', 'Your name');
