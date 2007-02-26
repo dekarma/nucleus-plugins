@@ -270,7 +270,7 @@ class NP_SiteList extends NucleusPlugin {
 				" ) TYPE=MyISAM;");
 
 			sql_query("INSERT INTO ".sql_table($this->tablename.'_options')
-				." (quickmenu, del_uninstall, def_nshow, def_litag, def_sman, Mail, MailTo, MailFrom, Cond01, Cond02, LogicOp, Autoverify, ThanksText, PageSize)"
+				." (quickmenu, del_uninstall, def_nshow, def_litag, def_sman, Mail, MailTo, MailFrom, Cond01, Cond02, LogicOp, Autoverify, ThanksText, PageSize, spamcheck, captcha, members_only)"
 				." VALUES ('".addslashes($this->getOption('quickmenu'))."'"
 							 .", '".addslashes($this->getOption('del_uninstall'))."'"
 							 .", '".addslashes($this->getOption('def_nshow'))."'"
