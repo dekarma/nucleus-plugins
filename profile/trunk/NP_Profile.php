@@ -93,6 +93,8 @@ History:
     * change CREATE TABLE queries to use TYPE=MyISAM instead of ENGINE=MyISAM for compatibility with mysql < 4.1
     * add configurability to display format for most field types
     * fixes bug in redirect after profile edit for certain php configurations.
+  v2.12 -- 8th release of version 2 adds the following to 2.11 version
+    * fixes bug in redirect for some fancy url schemes when using editlink (.a01)
 
 To do:
 * Offer some validation options for fields, i.e. isEmail, isURL, isList
@@ -117,7 +119,7 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://www.iai.com/';	}
 
-	function getVersion() {	return '2.11'; }
+	function getVersion() {	return '2.12.a01'; }
 
 	function getDescription() {
 		return 'Gives each member a customisable profile';
@@ -2026,7 +2028,7 @@ password
 			$paramarr = explode('&',$pgparts[1]);
 			$newparams = '';
 			foreach ($paramarr as $p) {
-				if (strpos($p,"status=") === false && strpos($p,"edit=") === false) {
+				if (strpos($p,"status=") === false && strpos($p,"edit=") === false && trim($p) !== '') {
 					$newparams .= "$p&";
 				}
 			}
