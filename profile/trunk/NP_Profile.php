@@ -95,6 +95,7 @@ History:
     * fixes bug in redirect after profile edit for certain php configurations.
   v2.12 -- 8th release of version 2 adds the following to 2.11 version
     * fixes bug in redirect for some fancy url schemes when using editlink (.a01)
+	* adds date() like formatting to date fields (.a02)
 
 To do:
 * Offer some validation options for fields, i.e. isEmail, isURL, isList
@@ -119,7 +120,7 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://www.iai.com/';	}
 
-	function getVersion() {	return '2.12.a01'; }
+	function getVersion() {	return '2.12.a02'; }
 
 	function getDescription() {
 		return 'Gives each member a customisable profile';
@@ -755,7 +756,7 @@ password
 	}
 
    function doSkinVar($skinType,$param1,$param2='',$param3 = '',$param4 = '') {
-		global $_GET, $CONF, $memberid, $membername, $member;
+		global $_GET, $CONF, $memberid, $membername, $member, $memberinfo;
 
 		$isEdit = false;
 		if (getVar('edit') == 1) {
@@ -768,7 +769,10 @@ password
 
 		if (in_array($skinType, array('member','archive','archivelist','item','index','template','comment'))) {
 			if (in_array($param1, array('startform','endform','status','editlink','submitbutton','editprofile')) || $this->getFieldAttribute($param1,'enabled')) {
-				$pmid = $memberid;
+				$pmid = 0;
+				if ($skinType == 'member') {
+					$pmid = $memberinfo->getID();
+				}
 
                 if (strtoupper($param4) == '%ME%') {
                     if ($member->getID() > 0) {
@@ -868,6 +872,8 @@ password
 					case 'editlink':
 						if ($skinType == 'member' && $member->id == $pmid) {
 							if ($isEdit) {
+								$editlink = createLink('member', array('memberid' => $member->id,'extra'=>array('')));
+/*
 								$rstring = serverVar('REQUEST_URI');
 								if (strpos($rstring, '?') !== false ) {
 									$rstringarr = explode('?',$rstring);
@@ -887,9 +893,12 @@ password
 									}
 								}
 								$editlink = "http://".serverVar('SERVER_NAME').$sstring.$qstring;
+*/
 								echo '<a class="profileeditlink" href="'.$editlink.'">'._PROFILE_SV_EDITLINK_FORM.'</a>';
 							}
 							else {
+								//$editlink = createLink('member', array('memberid' => $member->id,'extra'=>array('edit'=>'1')));
+
 								$rstring = serverVar('REQUEST_URI');
 								if (strpos($rstring, '?') !== false ) {
 									$rstringarr = explode('?',$rstring);
@@ -911,6 +920,7 @@ password
 								if ($qstring{0} == '?') $eparam = '&edit=1';
 								else $eparam = '?edit=1';
 								$editlink = "http://".serverVar('SERVER_NAME').$sstring.$qstring.$eparam;
+
 								echo '<a class="profileeditlink" href="'.$editlink.'">'._PROFILE_SV_EDITLINK_EDIT.'</a>';
 							}
 						}
@@ -1464,9 +1474,10 @@ password
 							}
 							break;
 						case 'date':
-							$format = strtoupper($this->getFieldAttribute($param1,'fformat'));
-							$seps = trim(str_replace(array('D','M','Y'),'',$format));
-							$format = str_replace(array($seps{0},$seps{1}),'',$format);
+							$format = $this->getFieldAttribute($param1,'fformat');
+							$formatarr = explode('?',$format);
+							$seps = trim(str_replace(array('D','M','Y'),'',strtoupper($formatarr[0])));
+							$formatarr[0] = str_replace(array($seps{0},$seps{1}),'',$formatarr[0]);
 							$date = $this->getValue($pmid,$param1);
 							if (strpos($date,'-') === False) {
 								$date = substr($date,0,2).'-'.substr($date,2,2).'-'.substr($date,4,4);
@@ -1477,26 +1488,36 @@ password
 								$day = $datearr[0];
 								$month = $datearr[1];
 								$year = $datearr[2];
+								if ($formatarr[1]) {
+									$format = $formatarr[1];
+									$value = date($format, mktime(0,0,0,$month,$day,$year));
+								}
+								else {
+									$format = $formatarr[0];
 									switch($format) {
-									case 'DMY':
-										$value = $day.$seps{0}.$month.$seps{1}.$year;
-										break;
-									case 'MDY':
-										$value = $month.$seps{0}.$day.$seps{1}.$year;
-										break;
-									case 'YMD':
-										$value = $year.$seps{0}.$month.$seps{1}.$day;
-										break;
-									case 'YDM':
-										$value = $year.$seps{0}.$day.$seps{1}.$month;
-										break;
-									default:
-										$value = $month.$seps{0}.$day.$seps{1}.$year;
-										break;
+										case 'DMY':
+											$value = $day.$seps{0}.$month.$seps{1}.$year;
+											break;
+										case 'MDY':
+											$value = $month.$seps{0}.$day.$seps{1}.$year;
+											break;
+										case 'YMD':
+											$value = $year.$seps{0}.$month.$seps{1}.$day;
+											break;
+										case 'YDM':
+											$value = $year.$seps{0}.$day.$seps{1}.$month;
+											break;
+										default:
+											$value = $month.$seps{0}.$day.$seps{1}.$year;
+											break;
 									}
+								}
 							}
 							if ($skinType == 'member' && $member->id == $pmid && $param2 != 'show' && $isEdit) {
-								echo '<input name="' . $param1 . '" type="text" maxlength="10" size="10" value="' . $value . '"/>' . "\n";
+								echo 'mm <input name="' . $param1 . '[]" type="text" maxlength="2" size="2" value="' . $month . '"/> ' . "\n";
+								echo 'dd <input name="' . $param1 . '[]" type="text" maxlength="2" size="2" value="' . $day . '"/> ' . "\n";
+								echo 'yyyy <input name="' . $param1 . '[]" type="text" maxlength="4" size="4" value="' . $year . '"/>' . "\n";
+								//echo '<input name="' . $param1 . '" type="text" maxlength="10" size="10" value="' . $value . '"/>' . "\n";
 							}
 							else {
 								echo $value;
@@ -1513,6 +1534,7 @@ password
 		global $CONF, $_POST, $_FILES, $member, $DIR_MEDIA, $HTTP_REFERER;
 		$key = array_keys($_POST);
 		$actiontype = postVar('type');
+		$destURL = '';
 
 		switch($actiontype) {
 		case 'updatefield':
@@ -1659,6 +1681,10 @@ password
 					if (($key[$i] != 'action') && ($key[$i] != 'type') && ($key[$i] != 'name') && ($key[$i] != 'submit') && ($key[$i] != 'memberid')) {
 						$field = $key[$i];
 						$value = postVar($key[$i]);
+						if (is_array($value)) {
+							$valuearr = $value;
+							$value = trim($valuearr[0]);
+						}
 						if ($this->getFieldAttribute($field,'required') && $value == '') {
 							$missing[$ismissing] = $this->getFieldAttribute($field,'flabel');
 							$ismissing += 1;
@@ -1895,6 +1921,11 @@ password
 									}
 									break;
 								case 'date':
+									$day = $valuearr[1];
+									$month = $valuearr[0];
+									$year = $valuearr[2];
+									if (trim($value) != '') {
+/*
 									$format = strtoupper($this->getFieldAttribute($field,'fformat'));
 									$seps = trim(str_replace(array('D','M','Y'),'',$format));
 									$format = str_replace(array($seps{0},$seps{1}),'',$format);
@@ -1928,7 +1959,7 @@ password
 											$year = $datearr[2];
 											break;
 										}
-
+*/
 
 										if (($year > 1850) && ($year <= date("Y")) && ($month > 0) && ($month < 13) && ($day > 0) && ($day < 32)) {
 											if(mysql_num_rows(sql_query("SELECT * FROM ".sql_table('plugin_profile')." WHERE memberid=$memberid AND field='".addslashes($field)."'")) > 0) {
@@ -2021,19 +2052,24 @@ password
 						}
 					} // end if filesize <1
 				} // end for loop through files
+				$destURL = serverVar('HTTP_REFERER');
+				//if (strpos($destURL,'editprofile') === true) {
+					$pgparts = explode('?',$destURL);
+					$paramarr = explode('&',$pgparts[1]);
+					$newparams = '';
+					foreach ($paramarr as $p) {
+						if (strpos($p,"status=") === false && strpos($p,"edit=") === false && trim($p) !== '') {
+							$newparams .= "$p&";
+						}
+					}
+					$newparams .= "status=1";
+					$destURL = $pgparts[0].'?'.$newparams;
+				//}
+				//else {
+				//	$destURL = createLink('member', array('memberid' => $member->id,'extra'=>array('status'=>'1')));
+				//}
 			} // end if postvar('memberid') == $member->id
 
-			$destURL = serverVar('HTTP_REFERER');
-			$pgparts = explode('?',$destURL);
-			$paramarr = explode('&',$pgparts[1]);
-			$newparams = '';
-			foreach ($paramarr as $p) {
-				if (strpos($p,"status=") === false && strpos($p,"edit=") === false && trim($p) !== '') {
-					$newparams .= "$p&";
-				}
-			}
-			$newparams .= "status=1";
-			$destURL = $pgparts[0].'?'.$newparams;
 			header("Location: " . $destURL);
 			break;
 		default:
