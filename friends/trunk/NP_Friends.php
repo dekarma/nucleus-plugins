@@ -33,9 +33,10 @@ History:
   v1.0 - Initial release
   v1.01 - Bug fix. uri error when friend does not have avatar
   v1.02 - Bug fix. Make compatible with mysql < 4.1
+  v1.03 - Fix how member page links created in allfriends.php, and fix charset issue on allfriends.php
 */
-class NP_Friends extends NucleusPlugin {// classwide variables or properties (set in init() method)    var $showRealName = 0; // whether to show real name of member    var $showAvatar = 1; // whether to show avatar if NP_Profile is installed
-	var $friendlevels = array(); // store the verbage for the three friend levels	function getName() { return 'Friends'; }	function getAuthor()  { return 'Wesley Luyten and Frank Truscott'; }	function getURL() {   return 'http://wessite.sin.khk.be/'; }	function getVersion() {   return '1.02'; }	function getDescription() {
+class NP_Friends extends NucleusPlugin {    var $showRealName = 0; // whether to show real name of member    var $showAvatar = 1; // whether to show avatar if NP_Profile is installed
+	var $friendlevels = array(); // store the verbage for the three friend levels	function getName() { return 'Friends'; }	function getAuthor()  { return 'Wesley Luyten and Frank Truscott'; }	function getURL() {   return 'http://wessite.sin.khk.be/'; }	function getVersion() {   return '1.03'; }	function getDescription() {
 		global $manager;
 		$warning = '';
 		if ($manager->pluginInstalled('NP_Profile')) {
@@ -108,6 +109,7 @@ History:
 			$b =& $manager->getBlog($bid);
 			$fblog = $b;	// references can't be placed in global variables?
 		}
+        $CONF['MemberURL'] = $fblog->getURL();
         switch ($actionType) {        case 'addfriend':
 			if (!$member->isLoggedIn()) doError(_NOTLOGGEDIN);
             if ($member->isAdmin() || $member->getID() == $you) {
@@ -118,7 +120,8 @@ History:
                 if ($member->getID() == $you) {                    $tomem = Member::createFromID($friendid);                    $tomail = $tomem->getEmail();
                     $frommail = $member->getEmail();
                     $toname = $tomem->getDisplayName();                    $youname = $member->getDisplayName();                    $yourealname = $member->getRealName();                    $sitename = $fblog->getName();                    $siteurl = $fblog->getURL();
-                    $youurl = $siteurl."?memberid=$you";                    $addurl = $CONF['ActionURL']."?action=plugin&name=Friends&type=activate&mid=$you&fid=$friendid&key=$key";
+                    /*$youurl = $siteurl."?memberid=$you";*/
+                    $youurl = createMemberLink($you, '');                    $addurl = $CONF['ActionURL']."?action=plugin&name=Friends&type=activate&mid=$you&fid=$friendid&key=$key";
                     $tagarray = array('<%fromname%>','<%fromrealname%>','<%fromurl%>','<%sitename%>','<%siteurl%>','<%activateurl%>','<%toname%>');
                     $valuearray = array($youname,$yourealname,$youurl,$sitename,$siteurl,$addurl,$toname);
                     $title = str_replace($tagarray,$valuearray,$this->getOption('actmail_subject'));
@@ -150,7 +153,7 @@ History:
 			}
 		break;        default:            doError(_BADACTION);        break;        }
 // send user back where he came from, If a direct request send to member's own page	$desturl = serverVar('HTTP_REFERER');
-	$desturl = str_replace(array('&confirm=1','&confirm=0'),'',$desturl);    if ($desturl == '' || $desturl == '-' || $actionType == 'activate') $desturl = $fblog->getURL()."?memberid=$you";	redirect($desturl);	exit;	}	function doSkinVar($skinType,$arg) {
+	$desturl = str_replace(array('&confirm=1','&confirm=0','?confirm=1','?confirm=0'),'',$desturl);    if ($desturl == '' || $desturl == '-' || $actionType == 'activate') $desturl = createMemberLink($you, '');	redirect($desturl);	exit;	}	function doSkinVar($skinType,$arg) {
         global $member, $memberinfo, $CONF, $manager, $blog;        if ($skinType == 'member') {            $currentlevel = 0;            if ($member->isLoggedIn()) {                $you = $member->getID();                $currentlevel = 1;            }            else $you = 0;            $currentid = $memberinfo->getID();
 			$privlevel = $this->getPrivacyLevel($currentid);            if ($this->isFriend($currentid, $you) == 1) $currentlevel = 2;
 

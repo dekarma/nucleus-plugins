@@ -96,6 +96,9 @@ History:
   v2.12 -- 8th release of version 2 adds the following to 2.11 version
     * fixes bug in redirect for some fancy url schemes when using editlink
 	* adds date() like formatting to date fields
+  v2.13 -- 9th release of version 2 adds the following to 2.12 version
+    * more fixes to bug in redirect for some fancy url schemes when using editlink(.a01)
+	* adds charset info to editprofile.php page (thanks, Shi)(.a01)
 
 To do:
 * Offer some validation options for fields, i.e. isEmail, isURL, isList
@@ -120,7 +123,7 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://www.iai.com/';	}
 
-	function getVersion() {	return '2.12'; }
+	function getVersion() {	return '2.13.a01'; }
 
 	function getDescription() {
 		return 'Gives each member a customisable profile';
@@ -759,7 +762,7 @@ password
 		global $_GET, $CONF, $memberid, $membername, $member, $memberinfo;
 
 		$isEdit = false;
-		if (getVar('edit') == 1) {
+		if (requestVar('edit') == 1) {
 			$isEdit = true;
 		}
 		if (substr($skinType,0,8) == 'template') {
@@ -872,6 +875,7 @@ password
 					case 'editlink':
 						if ($skinType == 'member' && $member->id == $pmid) {
 							if ($isEdit) {
+                                /*
 								$rstring = serverVar('REQUEST_URI');
 								if (strpos($rstring, '?') !== false ) {
 									$rstringarr = explode('?',$rstring);
@@ -890,10 +894,18 @@ password
 										$k = $k + 1;
 									}
 								}
-								$editlink = "http://".serverVar('SERVER_NAME').$sstring.$qstring;
+								//$editlink = "http://".serverVar('SERVER_NAME').$sstring.$qstring;
+                                $editlink = createMemberLink($member->id, '');
 								echo '<a class="profileeditlink" href="'.$editlink.'">'._PROFILE_SV_EDITLINK_FORM.'</a>';
+                                */
+                                $editlink = createMemberLink($member->id, '');
+                                echo '<form enctype="multipart/form-data" name="editform" action="' . $editlink . '" method="post">' . "\n";
+								echo '<input type="hidden" name="edit" value="0" />' . "\n";
+                                echo '<input class="profileeditlink" type="submit" name="submit" value="'._PROFILE_SV_EDITLINK_FORM.'" />' . "\n";
+                                echo "</form>\n";
 							}
 							else {
+                                /*
 								$rstring = serverVar('REQUEST_URI');
 								if (strpos($rstring, '?') !== false ) {
 									$rstringarr = explode('?',$rstring);
@@ -915,8 +927,13 @@ password
 								if ($qstring{0} == '?') $eparam = '&edit=1';
 								else $eparam = '?edit=1';
 								$editlink = "http://".serverVar('SERVER_NAME').$sstring.$qstring.$eparam;
-
-								echo '<a class="profileeditlink" href="'.$editlink.'">'._PROFILE_SV_EDITLINK_EDIT.'</a>';
+                                echo '<a class="profileeditlink" href="'.$editlink.'">'._PROFILE_SV_EDITLINK_EDIT.'</a>';
+                                */
+                                $editlink = createMemberLink($member->id, '');
+                                echo '<form enctype="multipart/form-data" name="editform" action="' . $editlink . '" method="post">' . "\n";
+								echo '<input type="hidden" name="edit" value="1" />' . "\n";
+                                echo '<input class="profileeditlink" type="submit" name="submit" value="'._PROFILE_SV_EDITLINK_EDIT.'" />' . "\n";
+                                echo "</form>\n";
 							}
 						}
 						break;

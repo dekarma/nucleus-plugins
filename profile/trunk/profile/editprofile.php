@@ -26,7 +26,7 @@ else $cssURL = '';
 
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-
+<meta http-equiv="Content-Type" content="text/html; charset=<?php echo _CHARSET ?>" />
 <!-- page stylesheet (site colors and layout definitions) -->
 <link rel="stylesheet" type="text/css" href="<?php echo $cssURL ?>" />
 <title><?php echo $blog->getName()?> &raquo; Member &raquo; Edit Profile</title>
@@ -41,7 +41,9 @@ else $cssURL = '';
 if (isset($plugin)) {
     $memberid = $member->getID();
     $memberinfo = MEMBER::createFromId($memberid);
-	$returnURL = $blog->getURL()."?memberid=$memberid";
+	/*$returnURL = $blog->getURL()."?memberid=$memberid";*/
+    $CONF['MemberURL'] = $blog->getURL();
+    $returnURL = createMemberLink($memberid, '');
 
     $thispage = $CONF['PluginURL'] . "profile/editprofile.php?blogid=$blogid";
     $cvalue = $plugin->getConfigValue('editprofile');
