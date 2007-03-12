@@ -99,6 +99,7 @@ History:
   v2.13 -- 9th release of version 2 adds the following to 2.12 version
     * more fixes to bug in redirect for some fancy url schemes when using editlink(.a01)
 	* adds charset info to editprofile.php page (thanks, Shi)(.a01)
+    * adds %VALUE% variable to format for radio, dropdown, and list types to output the stored value (thannks, Shi)(.a01)
 
 To do:
 * Offer some validation options for fields, i.e. isEmail, isURL, isList
@@ -1283,7 +1284,7 @@ password
                                             $format = $this->getFieldAttribute($param1,'fformat');
                                             if (trim($format) !== '') {
                                                 $label = $this->getFieldAttribute($param1,'flabel');
-                                                $fvalue = str_replace(array('%DATA%','%LABEL%'), array($opt[0],$label), $format);
+                                                $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%'), array($opt[0],$label,$opt[1]), $format);
                                                 $opt[0] = $fvalue;
                                                 $fstart = $estart;
                                                 $fend = $eend;
@@ -1328,7 +1329,7 @@ password
                                             $format = $this->getFieldAttribute($param1,'fformat');
                                             if (trim($format) !== '') {
                                                 $label = $this->getFieldAttribute($param1,'flabel');
-                                                $fvalue = str_replace(array('%DATA%','%LABEL%'), array($opt[0],$label), $format);
+                                                $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%'), array($opt[0],$label,$opt[1]), $format);
                                                 $opt[0] = $fvalue;
                                                 $fstart = $estart;
                                                 $fend = $eend;
@@ -1440,7 +1441,7 @@ password
                                                 $format = $formatarr[2];
                                                 if (trim($format) !== '') {
                                                     $label = $this->getFieldAttribute($param1,'flabel');
-                                                    $fvalue = str_replace(array('%DATA%','%LABEL%'), array($opt[0],$label), $format);
+                                                    $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%'), array($opt[0],$label,$opt[1]), $format);
                                                     $opt[0] = $fvalue;
                                                     $fstart = $estart;
                                                     $fend = $eend;
