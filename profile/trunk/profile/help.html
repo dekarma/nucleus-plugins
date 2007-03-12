@@ -25,7 +25,8 @@
 <p>Version 2 has changed much from version 1, including additional database tables and plugin options. This requires that version 1 be uninstalled before version 2 can be installed. Please follow this procedure to upgrade to version 2 from version 1.</p>
 <p>Upgrading from version 2.01 to 2.02+ also requires you follow this procedure, but step 2 can be skipped.</p>
 <p>Upgrading from version 2.02+ to 2.03+ does not require any special procedure. Simply copy the new files over the old files.</p>
-<p>Uppgrading from version 2.0x to 2.1 requires you follow the this procedure, but step 2 can be skipped.</p>
+<p>Uppgrading from version 2.0x to 2.1x requires you follow the this procedure, but step 2 can be skipped.</p>
+<p>Upgrading from version 2.1x to 2.1x does not require any special procedure. Simply copy the new files over the old files.</p>
 <ol>
 <li>Backup your database.</li>
 <li>Make a copy of your existing nucleus/plugins/NP_Profile.php file to a safe place. You will need this if you wish to revert later and to help you migrate your custom field settings to the version 2 database storage.</li>
@@ -39,7 +40,7 @@
 
 <h3><a name="installation">Installation</a></h3>
 
-<p>The NP_Profile plugin can be downloaded from <a href="http://www.iai.com/NP_Profile.zip" title="Download NP_Profile">here</a>.</p>
+<p>The NP_Profile plugin can be downloaded from <a href="http://www.iai.com/sandbox/item/48#profile" title="Download NP_Profile">here</a>.</p>
 
 <p>Download and extract the zip file. Copy the NP_Profile.php file and the profile directory to the nucleus/plugins directory.</p>
 
@@ -180,6 +181,7 @@ On an item page or in a template (see TemplateVar below) will show the real name
 <h3><a name="manage">Profile Management</a></h3>
 
 <p>All Profile management should be done by a user with Administrator privileges for the site. Admin users can add, modify, delete, enable, and require fields, as desired. Additionally, default attribute settings can be set for each file type.</p>
+<p>Site administrators can, as of v2.13, edit the profile of all users by visiting the users member page.</p>
 <p>The field and type definitions can be managed from any of two places depending on your settings, as follows:</p>
 <ol>
 <li><b>Your Plugins Page</b> : Full management is available by going to the Plugins page in your Nucleus Admin GUI. Click on the &lsquo;admin&rsquo; link in the right column of the row for the Profile plugin. The full management functions will be described below. This management method is always available.</li>
@@ -208,9 +210,19 @@ default setting set for that that field type in the type settings form.</p>
 <li><b>Size</b> : Integer. Usually leave as 0 (uses type default). Size of input field. # of columns for textarea.</li>
 <li><b>Format</b> : A format string indicating how the field should be displayed. Meaningful for all field types, but date, list and number require special formats as described below.
 	<ul>
-    <li>For most field types. The format can be any string, including html code, containing the special string of %DATA% (case matters). Each occurance of %DATA% or %LABEL% will be replaced by the raw data or label, respectively, for the given field. For example,:</li>
+    <li>For most field types. The format can be any string, including html code, containing the special string of %DATA% (case matters). Each occurance of %DATA% or %LABEL% will be replaced by the raw data or label, respectively, for the given field. Below the format variables are described and examples are given:</li>
+        <br /><b>Format Variables:</b>
         <ul>
-        <li>&lt;a href=&quot;skype://%DATA%&quot;&gt;%DATA%&lt;/a&gt; would give a link to a users skype name</li>
+        <li><b>%DATA%</b> - The value of the field. For fields of type radio, dropdown, and list, this is the display value, i.e. if options are yes|1;no|0, then %DATA% would be yes or no.</li>
+        <li><b>%LABEL%</b> - The label of the field.</li>
+        <li><b>%VALUE%</b> - The stored value of the field. For all field types except radio, dropdown, and list, this is the same as %DATA%. For radio, dropdown, and list field types, this is the value stored in the database, i.e. if options are yes|1;no|0, then %VALUE% would be 1 or 0.</li>
+        <li><b>%FIELD%</b> - The name of the field.</li>
+        <li><b>%MEMBER%</b> - The login name of the member whose data is being viewed.</li>
+        <li><b>%ID%</b> - The member id number of the member whose data is being viewed.</li>
+        </ul>
+        <b>Examples:</b>
+        <ul>
+        <li>&lt;a href=&quot;skype://%DATA%&quot; title=&quot;Call %MEMBER% using Skype&quot;&gt;%DATA%&lt;/a&gt; would give a link to a users skype name</li>
         <li>&lt;div class=&quot;biography&quot;&gt;&lt;h2&gt;%LABEL%&lt;/h2&gt;%DATA%&lt;/div&gt; would put the contents of the field into a div of class biography and under a header of the field label.</li>
         </ul>
 	<li>For date type fields. Format should consist of the letters M, D, and Y, separated by a character like -, or /. The order of the letters M, D, and Y will also dictate the order of input. Optionally, for more detailed formatting, a date format string can be added here by appending ?<i>format</i> to this field where <i>format</i> is a valid <a href="http://us3.php.net/manual/en/function.date.php" title="PHP Date Function">php date() format</a>.For Example, if the date to display is 04 February 2007, </li>
@@ -431,6 +443,15 @@ http://forum.nucleuscms.org/viewtopic.php?t=13919</a> </p>
 <h3><a name="history">Version History</a></h3>
 
 <ul>
+<li>Version 2.13: 3-13-2007<br />
+Nineth release of version 2 adds the following to 2.12 version
+    <ul>
+    <li> More fixes to bug in redirect for some fancy url schemes when using editlink
+    <li> Adds charset info to editprofile.php page (thanks, Shi)
+    <li> Adds %VALUE%, %FIELD%, %MEMBER%, %ID% variables to format.
+    <li> Permits site admins to edit all user profiles, except passwords. (thanks, Shi)
+	</ul>
+</li>
 <li>Version 2.12: 3-7-2007<br />
 Eighth release of version 2 adds the following to the 2.11 version
     <ul>

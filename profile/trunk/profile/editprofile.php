@@ -39,13 +39,17 @@ else $cssURL = '';
 <div id="content">
 <?php
 if (isset($plugin)) {
-    $memberid = $member->getID();
+    if (intRequestVar('memberid') > 0) {
+        $memberid = intRequestVar('memberid');
+    }
+    else {
+        $memberid = $member->getID();
+    }
     $memberinfo = MEMBER::createFromId($memberid);
-	/*$returnURL = $blog->getURL()."?memberid=$memberid";*/
     $CONF['MemberURL'] = $blog->getURL();
     $returnURL = createMemberLink($memberid, '');
 
-    $thispage = $CONF['PluginURL'] . "profile/editprofile.php?blogid=$blogid";
+    $thispage = $CONF['PluginURL'] . "profile/editprofile.php?blogid=$blogid&memberid=$memberid";
     $cvalue = $plugin->getConfigValue('editprofile');
 
     if (trim($cvalue) != '') {
@@ -61,7 +65,7 @@ if (isset($plugin)) {
         }
         $lines[$i] = '[/1]';
     }
-    echo "<h2>".$member->getDisplayName().$plugin->doSkinVar('member','avatar','show','image','')."</h2>\n";
+    echo "<h2>".$memberinfo->getDisplayName().$plugin->doSkinVar('member','avatar','show','image','')."</h2>\n";
 
 	echo "<div class=\"returnlink\">\n";
 	echo "<a href=\"$returnURL\" title=\""._PROFILE_SV_EDITLINK_FORM."\">"._PROFILE_SV_EDITLINK_FORM."</a>\n";

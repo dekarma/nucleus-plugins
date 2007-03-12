@@ -97,9 +97,10 @@ History:
     * fixes bug in redirect for some fancy url schemes when using editlink
 	* adds date() like formatting to date fields
   v2.13 -- 9th release of version 2 adds the following to 2.12 version
-    * more fixes to bug in redirect for some fancy url schemes when using editlink(.a01)
-	* adds charset info to editprofile.php page (thanks, Shi)(.a01)
-    * adds %VALUE% variable to format for radio, dropdown, and list types to output the stored value (thannks, Shi)(.a01)
+    * more fixes to bug in redirect for some fancy url schemes when using editlink
+	* adds charset info to editprofile.php page (thanks, Shi)
+    * adds %VALUE%, %FIELD%, %MEMBER%, %ID% variables to format.
+    * permits site admins to edit all user profiles, except passwords. (thanks, Shi)
 
 To do:
 * Offer some validation options for fields, i.e. isEmail, isURL, isList
@@ -124,7 +125,7 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://www.iai.com/';	}
 
-	function getVersion() {	return '2.13.a01'; }
+	function getVersion() {	return '2.13.a02'; }
 
 	function getDescription() {
 		return 'Gives each member a customisable profile';
@@ -762,10 +763,6 @@ password
    function doSkinVar($skinType,$param1,$param2='',$param3 = '',$param4 = '') {
 		global $_GET, $CONF, $memberid, $membername, $member, $memberinfo;
 
-		$isEdit = false;
-		if (requestVar('edit') == 1) {
-			$isEdit = true;
-		}
 		if (substr($skinType,0,8) == 'template') {
 			$tiid = intval(str_replace(array('template','(',')'), array('','',''),$skinType));
 			$skinType = 'template';
@@ -811,11 +808,16 @@ password
 				}
 				$pmid = intval($pmid);
 
+                $isEdit = false;
+                if (requestVar('edit') == 1 && $skinType == 'member' && ($member->id == $pmid || $member->isAdmin())) {
+                    $isEdit = true;
+                }
+
 				if ($param2 == 'label') {
 					$isreq = (bool)$this->getFieldAttribute($param1,'required');
 					$bstyle = '';
 					$estyle = '';
-					if ($skinType == 'member' && $member->id == $pmid && $isreq) {
+					if ($isEdit && $isreq) {
 						$bstyle = $this->req_emp['start'];
 						$estyle = $this->req_emp['end'];
 					}
@@ -825,7 +827,7 @@ password
 					$this->restrictView = $this->restrictViewer();
 					switch($param1) {
 					case 'password':
-						if ($skinType == 'member' && $member->id == $pmid && $isEdit) {
+						if ($isEdit) {
 							$size = $this->getFieldAttribute($param1,'fsize');
 							$maxlength = $this->getFieldAttribute($param1,'flength');
 							echo '<h2>'._PROFILE_SV_CHANGE_PASSWORD.'</h2>';
@@ -847,90 +849,43 @@ password
 						}
 						break;
 					case 'startform':
-						if ($skinType == 'member' && $member->id == $pmid && $isEdit) {
+						if ($isEdit) {
 							echo '<form enctype="multipart/form-data" name="profileform" action="' . $CONF['IndexURL'] . 'action.php" method="post">' . "\n";
 						}
 						break;
 					case 'endform':
-						if ($skinType == 'member' && $member->id == $pmid && $isEdit) {
+						if ($isEdit) {
 							echo '<input type="hidden" name="action" value="plugin" />';
 							echo '<input type="hidden" name="name" value="Profile" />';
 							echo '<input type="hidden" name="type" value="update" />';
-							echo '<input type="hidden" name="memberid" value="' . $member->id . '" />' . "\n";
+							echo '<input type="hidden" name="memberid" value="' . $pmid . '" />' . "\n";
 							echo '<input type="submit" name="submit" value="'._PROFILE_SUBMIT.'" />' . "\n";
 							echo "</form>\n";
 						}
 						break;
                     case 'submitbutton':
-						if ($skinType == 'member' && $member->id == $pmid && $isEdit) {
+						if (isEdit) {
 							echo '<input type="submit" name="submit" value="'._PROFILE_SUBMIT.'" />' . "\n";
 						}
 						break;
 					case 'status':
-						if ($skinType == 'member' && $member->id == $pmid) {
+						if ($skinType == 'member' && ($member->id == $pmid || $member->isAdmin())) {
 							if (getVar('status') == 1) {
 								echo _PROFILE_SV_STATUS_UPDATED;
 							}
 						}
 						break;
 					case 'editlink':
-						if ($skinType == 'member' && $member->id == $pmid) {
+						if ($skinType == 'member' && ($member->id == $pmid || $member->isAdmin())) {
 							if ($isEdit) {
-                                /*
-								$rstring = serverVar('REQUEST_URI');
-								if (strpos($rstring, '?') !== false ) {
-									$rstringarr = explode('?',$rstring);
-									$sstring = $rstringarr[0];
-									$qstringarr = explode('&',$rstringarr[1]);
-								}
-								else {
-									$sstring = $rstring;
-									$qstringarr = array('');
-								}
-								$qstring = '';
-								$k = 0;
-								foreach ($qstringarr as $param) {
-									if ($param != '' && strpos($param,'status') === false && strpos($param,'edit') === false) {
-										$qstring = ($k == 0 ? '?' : '&').$param;
-										$k = $k + 1;
-									}
-								}
-								//$editlink = "http://".serverVar('SERVER_NAME').$sstring.$qstring;
-                                $editlink = createMemberLink($member->id, '');
-								echo '<a class="profileeditlink" href="'.$editlink.'">'._PROFILE_SV_EDITLINK_FORM.'</a>';
-                                */
-                                $editlink = createMemberLink($member->id, '');
+                                $editlink = createMemberLink($pmid, '');
                                 echo '<form enctype="multipart/form-data" name="editform" action="' . $editlink . '" method="post">' . "\n";
 								echo '<input type="hidden" name="edit" value="0" />' . "\n";
                                 echo '<input class="profileeditlink" type="submit" name="submit" value="'._PROFILE_SV_EDITLINK_FORM.'" />' . "\n";
                                 echo "</form>\n";
 							}
 							else {
-                                /*
-								$rstring = serverVar('REQUEST_URI');
-								if (strpos($rstring, '?') !== false ) {
-									$rstringarr = explode('?',$rstring);
-									$sstring = $rstringarr[0];
-									$qstringarr = explode('&',$rstringarr[1]);
-								}
-								else {
-									$sstring = $rstring;
-									$qstringarr = array('');
-								}
-								$qstring = '';
-								$k = 0;
-								foreach ($qstringarr as $param) {
-									if ($param != '' && strpos($param,'status') === false && strpos($param,'edit') === false) {
-										$qstring = ($k == 0 ? '?' : '&').$param;
-										$k = $k + 1;
-									}
-								}
-								if ($qstring{0} == '?') $eparam = '&edit=1';
-								else $eparam = '?edit=1';
-								$editlink = "http://".serverVar('SERVER_NAME').$sstring.$qstring.$eparam;
-                                echo '<a class="profileeditlink" href="'.$editlink.'">'._PROFILE_SV_EDITLINK_EDIT.'</a>';
-                                */
-                                $editlink = createMemberLink($member->id, '');
+                                $editlink = createMemberLink($pmid, '');
                                 echo '<form enctype="multipart/form-data" name="editform" action="' . $editlink . '" method="post">' . "\n";
 								echo '<input type="hidden" name="edit" value="1" />' . "\n";
                                 echo '<input class="profileeditlink" type="submit" name="submit" value="'._PROFILE_SV_EDITLINK_EDIT.'" />' . "\n";
@@ -941,13 +896,13 @@ password
 					case 'editprofile':
 						global $blog;
 						$blogid = $blog->getID();
-						if ($skinType == 'member' && $member->id == $pmid) {
+						if ($skinType == 'member' && ($member->id == $pmid || $member->isAdmin())) {
 							if ($isEdit) {
 								//$editlink = $CONF['PluginURL']."profile/editprofile.php?edit=1";
 								//echo '<a class="profileeditlink" href="'.$editlink.'">'._PROFILE_SV_EDITLINK_FORM.'</a>';
 							}
 							else {
-								$editlink = $CONF['PluginURL']."profile/editprofile.php?edit=1&blogid=$blogid";
+								$editlink = $CONF['PluginURL']."profile/editprofile.php?edit=1&blogid=$blogid&memberid=$pmid";
 								echo '<a class="profileeditlink" href="'.$editlink.'">'._PROFILE_SV_EDITLINK_EDIT.'</a>';
 							}
 						}
@@ -958,7 +913,7 @@ password
 						$value = mysql_result($result,'memail');
 						$size = $this->getFieldAttribute($param1,'fsize');
 						$maxlength = $this->getFieldAttribute($param1,'flength');
-						if ($skinType == 'member' && $member->id == $pmid && $param2 != 'show' && $isEdit) {
+						if ($param2 != 'show' && $isEdit) {
 							echo '<input name="' . $param1 . '" type="text" maxlength="' . $maxlength . '" size="' . $size . '" value="' . $value . '"/>' . "\n";
 						}
 						else {
@@ -988,7 +943,7 @@ password
 						$value = mysql_result($result,'mname');
 						$size = $this->getFieldAttribute($param1,'fsize');
 						$maxlength = $this->getFieldAttribute($param1,'flength');
-						if ($skinType == 'member' && $member->id == $pmid && $param2 != 'show' && $isEdit) {
+						if ($param2 != 'show' && $isEdit) {
 							echo '<input name="' . $param1 . '" type="text" maxlength="' . $maxlength . '" size="' . $size . '" value="' . $value . '"/>' . "\n";
 						}
 						else {
@@ -1001,7 +956,7 @@ password
 						$value = mysql_result($result,'mrealname');
 						$size = $this->getFieldAttribute($param1,'fsize');
 						$maxlength = $this->getFieldAttribute($param1,'flength');
-						if ($skinType == 'member' && $member->id == $pmid && $param2 != 'show' && $isEdit) {
+						if ($param2 != 'show' && $isEdit) {
 							echo '<input name="' . $param1 . '" type="text" maxlength="' . $maxlength . '" size="' . $size . '" value="' . $value . '"/>' . "\n";
 						}
 						else {
@@ -1014,7 +969,7 @@ password
 						$value = mysql_result($result,'murl');
 						$size = $this->getFieldAttribute($param1,'fsize');
 						$maxlength = $this->getFieldAttribute($param1,'flength');
-						if ($skinType == 'member' && $member->id == $pmid && $param2 != 'show' && $isEdit) {
+						if ($param2 != 'show' && $isEdit) {
 							echo '<input name="' . $param1 . '" type="text" maxlength="' . $maxlength . '" size="' . $size . '" value="' . $value . '"/>' . "\n";
 						}
 						else {
@@ -1035,7 +990,7 @@ password
 						$value = mysql_result($result,'mnotes');
 						$rows = $this->getFieldAttribute($param1,'flength');
 						$cols = $this->getFieldAttribute($param1,'fsize');
-						if ($skinType == 'member' && $member->id == $pmid && $param2 != 'show' && $isEdit) {
+						if ($param2 != 'show' && $isEdit) {
 							echo '<textarea name="' . $param1 . '" cols="' . $cols . '" rows="' . $rows . '">' . $value . '</textarea>' . "\n";
 						}
 						else {
@@ -1049,13 +1004,15 @@ password
 						break;
 					default:
 						if ($this->restrictView && !$this->getFieldAttribute($param1,'fpublic')) break;
+                        $pobj = mysql_fetch_object(sql_query('SELECT mname as result FROM '.sql_table(member).' WHERE mnumber=' . $pmid));
+                        $pname = $pobj->result;
 						$type = $this->getFieldAttribute($param1,'ftype');
 						switch($type) {
 						case 'text':
 							$value = $this->getValue($pmid,$param1);
 							$maxlength = $this->getFieldAttribute($param1,'flength');
 							$size = $this->getFieldAttribute($param1,'fsize');
-							if ($skinType == 'member' && $member->id == $pmid && $param2 != 'show' && $isEdit) {
+							if ($param2 != 'show' && $isEdit) {
 								echo '<input name="' . $param1 . '" type="text" maxlength="' . $maxlength . '" size="' . $size . '" value="' . $value . '"/>' . "\n";
 							}
 							else {
@@ -1065,7 +1022,7 @@ password
                                     $format = $this->getFieldAttribute($param1,'fformat');
                                     if (trim($format) !== '') {
                                         $label = $this->getFieldAttribute($param1,'flabel');
-                                        $fvalue = str_replace(array('%DATA%','%LABEL%'), array($value,$label), $format);
+                                        $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $format);
                                         $value = $fvalue;
                                     }
                                 }
@@ -1076,7 +1033,7 @@ password
 							$value = $this->getValue($pmid,$param1);
 							$maxlength = $this->getFieldAttribute($param1,'flength');
 							$size = $this->getFieldAttribute($param1,'fsize');
-							if ($skinType == 'member' && $member->id == $pmid && $param2 != 'show' && $isEdit) {
+							if ($param2 != 'show' && $isEdit) {
 								echo '<input name="' . $param1 . '" type="text" maxlength="' . $maxlength . '" size="' . $size . '" value="' . $value . '"/>' . "\n";
 							}
 							else {
@@ -1096,7 +1053,7 @@ password
 							$value = $this->getValue($pmid,$param1);
 							$maxlength = $this->getFieldAttribute($param1,'flength');
 							$size = $this->getFieldAttribute($param1,'fsize');
-							if ($skinType == 'member' && $member->id == $pmid && $param2 != 'show' && $isEdit) {
+							if ($param2 != 'show' && $isEdit) {
 								echo '<input name="' . $param1 . '" type="text" maxlength="' . $maxlength . '" size="' . $size . '" value="' . $value . '"/>' . "\n";
 							}
 							else {
@@ -1112,7 +1069,7 @@ password
                                     $format = $this->getFieldAttribute($param1,'fformat');
                                     if (trim($format) !== '') {
                                         $label = $this->getFieldAttribute($param1,'flabel');
-                                        $fvalue = str_replace(array('%DATA%','%LABEL%'), array($value,$label), $format);
+                                        $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $format);
                                         $value = $fvalue;
                                         $fstart = '';
                                         $fend = '';
@@ -1129,7 +1086,7 @@ password
 							$value = $this->getValue($pmid,$param1);
 							$cols = $this->getFieldAttribute($param1,'fsize');
 							$rows = $this->getFieldAttribute($param1,'flength');
-							if ($skinType == 'member' && $member->id == $pmid && $param2 != 'show' && $isEdit) {
+							if ($param2 != 'show' && $isEdit) {
 								echo '<textarea name="' . $param1 . '" cols="' . $cols . '" rows="' . $rows . '">' . $this->_br2nl($value) . '</textarea>' . "\n";
 							}
 							else {
@@ -1140,7 +1097,7 @@ password
                                     $format = $this->getFieldAttribute($param1,'fformat');
                                     if (trim($format) !== '') {
                                         $label = $this->getFieldAttribute($param1,'flabel');
-                                        $fvalue = str_replace(array('%DATA%','%LABEL%'), array($value,$label), $format);
+                                        $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $format);
                                         $value = $fvalue;
                                     }
                                     else {
@@ -1154,7 +1111,7 @@ password
 							$value = $this->getValue($pmid,$param1);
 							$maxlength = $this->getFieldAttribute($param1,'flength');
 							$size = $this->getFieldAttribute($param1,'fsize');
-							if ($skinType == 'member' && $member->id == $pmid && $param2 != 'show' && $isEdit) {
+							if ($param2 != 'show' && $isEdit) {
 								echo '<input name="' . $param1 . '" type="text" maxlength="' . $maxlength . '" size="' . $size . '" value="' . $value . '"/>' . "\n";
 							}
 							else {
@@ -1171,7 +1128,7 @@ password
                                     $format = $this->getFieldAttribute($param1,'fformat');
                                     if (trim($format) !== '') {
                                         $label = $this->getFieldAttribute($param1,'flabel');
-                                        $fvalue = str_replace(array('%DATA%','%LABEL%'), array($safe_add,$label), $format);
+                                        $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $format);
                                         $safe_add = $fvalue;
                                         $fstart = '';
                                         $fend = '';
@@ -1196,7 +1153,7 @@ password
 						case 'file':
 							$value = $this->getValue($pmid,$param1);
 							$size = $this->getFieldAttribute($param1,'fsize');
-							if ($skinType == 'member' && $member->id == $pmid && $param2 != 'show' && $isEdit) {
+							if ($param2 != 'show' && $isEdit) {
 								echo '<input name="' . $param1 . '" type="file" size="' . $size . '" />' . "\n";
 							}
 							else {
@@ -1222,7 +1179,7 @@ password
                                     $format = $this->getFieldAttribute($param1,'fformat');
                                     if (trim($format) !== '') {
                                         $label = $this->getFieldAttribute($param1,'flabel');
-                                        $fvalue = str_replace(array('%DATA%','%LABEL%'), array($value,$label), $format);
+                                        $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $format);
                                         $value = $fvalue;
                                         $fstart = '';
                                         $fend = '';
@@ -1238,7 +1195,7 @@ password
 						case 'password':
 							$maxlength = $this->getFieldAttribute($param1,'flength');
 							$size = $this->getFieldAttribute($param1,'fsize');
-							if ($skinType == 'member' && $member->id == $pmid && $param2 != 'show' && $isEdit) {
+							if ($param2 != 'show' && $isEdit) {
 								echo '<input name="' . $param1 . '" type="password" maxlength="' . $maxlength . '" size="' . $size . '" />' . "\n";
 							}
 							else {
@@ -1253,7 +1210,7 @@ password
                             }
 							$size = $this->getFieldAttribute($param1,'fsize');
 							$rawoptions = explode(";", $this->getFieldAttribute($param1,'foptions'));
-							if ($skinType == 'member' && $member->id == $pmid && $param2 != 'show' && $isEdit) {
+							if ($param2 != 'show' && $isEdit) {
 								if ($size) {
 									echo '<select name="' . $param1 . '" size="' . $size . '">' . "\n";
 								}
@@ -1284,7 +1241,7 @@ password
                                             $format = $this->getFieldAttribute($param1,'fformat');
                                             if (trim($format) !== '') {
                                                 $label = $this->getFieldAttribute($param1,'flabel');
-                                                $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%'), array($opt[0],$label,$opt[1]), $format);
+                                                $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($opt[0],$label,$opt[1],$param1,$pname,$pmid), $format);
                                                 $opt[0] = $fvalue;
                                                 $fstart = $estart;
                                                 $fend = $eend;
@@ -1305,7 +1262,7 @@ password
                                 $value = $defvalue;
                             }
 							$rawoptions = explode(";", $this->getFieldAttribute($param1,'foptions'));
-							if ($skinType == 'member' && $member->id == $pmid && $param2 != 'show' && $isEdit) {
+							if ($param2 != 'show' && $isEdit) {
 								foreach ($rawoptions as $ropt) {
 									$opt = explode("|", $ropt);
 									if (count($opt) == 1) $opt[1] = trim($opt[0]);
@@ -1329,7 +1286,7 @@ password
                                             $format = $this->getFieldAttribute($param1,'fformat');
                                             if (trim($format) !== '') {
                                                 $label = $this->getFieldAttribute($param1,'flabel');
-                                                $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%'), array($opt[0],$label,$opt[1]), $format);
+                                                $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($opt[0],$label,$opt[1],$param1,$pname,$pmid), $format);
                                                 $opt[0] = $fvalue;
                                                 $fstart = $estart;
                                                 $fend = $eend;
@@ -1353,7 +1310,7 @@ password
 							$rawoptions = explode(";", $this->getFieldAttribute($param1,'foptions'));
 							$numopts = count($rawoptions);
 							if ($numopts == 1 && trim($rawoptions[0]) == '') $numopts = 0;
-							if ($skinType == 'member' && $member->id == $pmid && $param2 != 'show' && $isEdit) {
+							if ($param2 != 'show' && $isEdit) {
 								if ($numopts) {
 									echo "<table style=\"background-color:transparent\">\n";
 									$j = 0;
@@ -1441,7 +1398,7 @@ password
                                                 $format = $formatarr[2];
                                                 if (trim($format) !== '') {
                                                     $label = $this->getFieldAttribute($param1,'flabel');
-                                                    $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%'), array($opt[0],$label,$opt[1]), $format);
+                                                    $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($opt[0],$label,$opt[1],$param1,$pname,$pmid), $format);
                                                     $opt[0] = $fvalue;
                                                     $fstart = $estart;
                                                     $fend = $eend;
@@ -1469,7 +1426,7 @@ password
                                             $format = $formatarr[2];
                                             if (trim($format) !== '') {
                                                 $label = $this->getFieldAttribute($param1,'flabel');
-                                                $fvalue = str_replace(array('%DATA%','%LABEL%'), array($opt,$label), $format);
+                                                $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($opt,$label,$opt,$param1,$pname,$pmid), $format);
                                                 $opt = $fvalue;
                                                 $fstart = $estart;
                                                 $fend = $eend;
@@ -1531,7 +1488,7 @@ password
 									}
 								}
 							}
-							if ($skinType == 'member' && $member->id == $pmid && $param2 != 'show' && $isEdit) {
+							if ($param2 != 'show' && $isEdit) {
 								$minput = _PROFILE_MM.' <input name="' . $param1 . '[]" type="text" maxlength="2" size="2" value="' . $month . '"/> ' . "\n";
 								$dinput = _PROFILE_DD.' <input name="' . $param1 . '[]" type="text" maxlength="2" size="2" value="' . $day . '"/> ' . "\n";
 								$yinput = _PROFILE_YYYY.' <input name="' . $param1 . '[]" type="text" maxlength="4" size="4" value="' . $year . '"/>' . "\n";
@@ -1686,8 +1643,15 @@ password
 			/* Actions for members go here (type='update')*/
 			// Check if the POST is done by the right member
 			$destURL = serverVar('HTTP_REFERER');
-			if ($member->id == postVar('memberid')) {
-				$memberid = $member->id;
+			if (intval($member->id) > 0 && ($member->id == intPostVar('memberid') || $member->isAdmin())) {
+				//$memberid = $member->id;
+                $memberid = intPostVar('memberid');
+                if ($member->id != $memberid && $member->isAdmin()) {
+                    $memberobj = MEMBER::createFromId($memberid);
+                }
+                else {
+                    $memberobj =& $member;
+                }
 				$vpass = postVar('verifypassword');
 				$opass = postVar('oldpassword');
 
@@ -1733,45 +1697,45 @@ password
 							if (in_array($field, $this->nufields)) {
 								switch($field) {
 								case 'nick':
-									if ($value != $member->displayname) {
+									if ($value != $memberobj->displayname) {
 										if (!isValidDisplayName($value)) {
 											doError(_ERROR_BADNAME);
 										}
-										else if ($member->isNameProtected($value)) {
+										else if ($memberobj->isNameProtected($value)) {
 											doError(_ERROR_NICKNAMEINUSE);
 										}
 										else {
-											$member->setDisplayName($value);
-											$member->write();
+											$memberobj->setDisplayName($value);
+											$memberobj->write();
 										}
 									}
 									break;
 								case 'mail':
-									if ($value != $member->email) {
+									if ($value != $memberobj->email) {
 										$value = stringStripTags($value);
 										if (!isValidMailAddress($value)) {
 											doError(_ERROR_BADMAILADDRESS);
 										}
 										else {
-											$member->setEmail($value);
-											$member->write();
+											$memberobj->setEmail($value);
+											$memberobj->write();
 										}
 									}
 									break;
 								case 'realname':
-									if ($value != $member->realname) {
+									if ($value != $memberobj->realname) {
 										$value = stringStripTags($value);
-										$member->setRealName($value);
-										$member->write();
+										$memberobj->setRealName($value);
+										$memberobj->write();
 									}
 									break;
 								case 'url':
-									if ($value != $member->url) {
+									if ($value != $memberobj->url) {
 										$value = stringStripTags($value);
                                         $value = $this->prepURL($value);
 										if (($this->validUrl($value)) || ($value == '')) {
-											$member->setURL($value);
-											$member->write();
+											$memberobj->setURL($value);
+											$memberobj->write();
 										}
 										else {
 											doError(_PROFILE_ACTION_BAD_URL);
@@ -1781,17 +1745,17 @@ password
 								case 'notes':
 									if ($value != $this->notes) {
 										$value = stringStripTags($value);
-										$member->setNotes($value);
-										$member->write();
+										$memberobj->setNotes($value);
+										$memberobj->write();
 									}
 									break;
 								case 'password':
 									if ($value != '') {
-										if ($member->checkPassword($opass)) {
+										if ($memberobj->checkPassword($opass)) {
 											if ($value == $vpass) {
 												if ($this->_validate_passwd($value,$this->pwd_min_length, $this->pwd_complexity)) {
-													$member->setPassword($value);
-													$member->write();
+													$memberobj->setPassword($value);
+													$memberobj->write();
 												}
 												else {
 													$pnverror = _PROFILE_ACTION_BAD_PWD_VALID."<br />";
@@ -2049,7 +2013,7 @@ password
 						}
 
 						// Copy the file
-						$newname = $member->id . ".$field.$extention";
+						$newname = $memberobj->id . ".$field.$extention";
 						copy ($tmp_name, $DIR_MEDIA.$newname) or doError(_PROFILE_ACTION_BAD_FILE_COPY);
                         // chmod uploaded file
                         $oldumask = umask(0000);
@@ -2229,11 +2193,13 @@ password
 	}
 
 	function _deleteMemberData($mid = 0){
+        $mid = intval($mid);
 		$pquery = "DELETE FROM ".sql_table('plugin_profile')." WHERE memberid='$mid'";
 		sql_query($pquery);
 	}
 
 	function getValue($memberid, $field) {
+        $memberid = intval($memberid);
 		$result = sql_query("SELECT value FROM ".sql_table('plugin_profile')." WHERE memberid=$memberid AND field='".addslashes($field)."' ORDER BY torder ASC");
 		$value = '';
 		if (mysql_num_rows($result) > 0) {
@@ -2419,6 +2385,7 @@ password
 
 	function restrictViewer() {
 		global $member, $memberinfo, $manager;
+        if ($member->isAdmin()) return 0;
 		if (!$this->getFieldAttribute('privacylevel','enabled')) return 0;
 		if (isset($memberinfo)) {
 			$privlevel = $this->getValue($memberinfo->getID(),'privacylevel');
