@@ -763,7 +763,7 @@ password
    function doSkinVar($skinType,$param1,$param2='',$param3 = '',$param4 = '') {
 		global $_GET, $CONF, $memberid, $membername, $member, $memberinfo;
 
-		if (substr($skinType,0,8) == 'template') {
+		if ($this->_mySubstr($skinType,0,8) == 'template') {
 			$tiid = intval(str_replace(array('template','(',')'), array('','',''),$skinType));
 			$skinType = 'template';
 		}
@@ -1450,7 +1450,7 @@ password
 							$formatarr[0] = str_replace(array($seps{0},$seps{1}),'',$formatarr[0]);
 							$date = $this->getValue($pmid,$param1);
 							if (strpos($date,'-') === False) {
-								$date = substr($date,0,2).'-'.substr($date,2,2).'-'.substr($date,4,4);
+								$date = $this->_mySubstr($date,0,2).'-'.$this->_mySubstr($date,2,2).'-'.$this->_mySubstr($date,4,4);
 							}
 							$datearr = explode('-',$date);
 							if ($date == '' || $date == '--') $value = '';
@@ -1790,7 +1790,7 @@ password
 
 								switch($type) {
 								case 'text':
-									$value = substr($value,0,$this->getFieldAttribute($field,'flength'));
+									$value = $this->_mySubstr($value,0,$this->getFieldAttribute($field,'flength'));
 									if(mysql_num_rows(sql_query("SELECT * FROM ".sql_table('plugin_profile')." WHERE memberid=$memberid AND field='".addslashes($field)."'")) > 0) {
 										sql_query("UPDATE ".sql_table('plugin_profile')." SET value='$value' WHERE field='".addslashes($field)."' AND memberid=$memberid");
 									}
@@ -1799,7 +1799,7 @@ password
 									}
 									break;
 								case 'number':
-									$value = substr($value,0,$this->getFieldAttribute($field,'flength'));
+									$value = $this->_mySubstr($value,0,$this->getFieldAttribute($field,'flength'));
 									if (is_numeric($value)) {
 										if(mysql_num_rows(sql_query("SELECT * FROM ".sql_table('plugin_profile')." WHERE memberid=$memberid AND field='".addslashes($field)."'")) > 0) {
 											sql_query("UPDATE ".sql_table('plugin_profile')." SET value='$value' WHERE field='".addslashes($field)."' AND memberid=$memberid");
@@ -1813,7 +1813,7 @@ password
 									}
 									break;
 								case 'url':
-									$value = substr($value,0,$this->getFieldAttribute($field,'flength'));
+									$value = $this->_mySubstr($value,0,$this->getFieldAttribute($field,'flength'));
                                     $value = $this->prepURL($value);
                                     $custProt = $this->getFieldAttribute($field,'foptions');
 									if ($this->validUrl($value,$custProt) || $value == '') {
@@ -1830,7 +1830,7 @@ password
 									break;
 								case 'textarea':
                                     if (strlen($value) > 250) {
-                                        $cvalue = substr(trim(chunk_split($value,250,'::')),0,-2);
+                                        $cvalue = $this->_mySubstr(trim(chunk_split($value,250,'::')),0,-2);
                                     }
                                     else $cvalue = trim($value);
 									$cvaluearr = explode('::',$cvalue);
@@ -1861,7 +1861,7 @@ password
 									}
 									break;
 								case 'password':
-									$value = substr($value,0,$this->getFieldAttribute($field,'flength'));
+									$value = $this->_mySubstr($value,0,$this->getFieldAttribute($field,'flength'));
 									if ($value != '') {
 										if(mysql_num_rows(sql_query("SELECT * FROM ".sql_table('plugin_profile')." WHERE memberid=$memberid AND field='".addslashes($field)."'")) > 0) {
 											sql_query("UPDATE ".sql_table('plugin_profile')." SET value='$value' WHERE field='".addslashes($field)."' AND memberid=$memberid");
@@ -2258,7 +2258,7 @@ password
 		$domainName = "";
 
 		for ($i = 0; $i < strlen($emailAddress); $i++) {
-			$c = substr($emailAddress, $i, 1);
+			$c = $this->_mySubstr($emailAddress, $i, 1);
 			if ($c == "@") {
 				$userName = $ent;
 				$ent = "";
@@ -2289,7 +2289,7 @@ password
 	function validUrl($url, $custProtocols = '') {
         $cprots = explode(';',str_replace(',',';',$custProtocols));
         $cprots = array_merge($cprots,$this->allowedProtocols);
-        if ( in_array(substr($url, 0, intval(strpos($url,'://'))), $cprots) ) {
+        if ( in_array($this->_mySubstr($url, 0, intval(strpos($url,'://'))), $cprots) ) {
 			return true;
 		}
 	}
@@ -2297,7 +2297,7 @@ password
     function prepURL($url) {
         if (trim($url) == '') return '';
 		if (strpos($url,'://') === false) $url = 'http://'.$url;
-		if (in_array(substr($url,-1,1),array('&','?'))) $url = substr($url,0,-1);
+		if (in_array($this->_mySubstr($url,-1,1),array('&','?'))) $url = $this->_mySubstr($url,0,-1);
 		$url = preg_replace('|[^a-z0-9-~+_.?#=&;,/:@%]|i', '', $url);
 		return $url;
 	}
@@ -2406,7 +2406,15 @@ password
                 if ($member->isLoggedIn()) return 0;
                 else return 1;
             }        }
+	}
 
+	function _mySubstr($str = '',$start = 0, $len = 1) {
+		if (function_exists('mb_substr')) {
+			return mb_substr($str,$start,$len);
+		}
+		else {
+			return substr($str,$start,$len);
+		}
 	}
 
 }
