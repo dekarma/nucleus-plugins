@@ -636,7 +636,7 @@ border-bottom: 1px solid #778;
 				echo '<form method="post" action="">'."\n";
 				echo '<input type="hidden" name="tname" value="'.$tname.'" />'."\n";
 				echo add_field_select_field($fresult,$fname,0);
-				$opers = array('like'=>'LIKE', 'eq'=>'=', '!eq'=>'!=', 'lt'=>'<', 'lteq'=>'<=', 'gt'=>'>', 'gteq'=>'>=');
+				$opers = array('like'=>'LIKE', '!LIKE'=>'NOT LIKE', 'eq'=>'=', '!eq'=>'!=', 'lt'=>'<', 'lteq'=>'<=', 'gt'=>'>', 'gteq'=>'>=');
 				echo add_oper_select_field($opers,$oname,0);
 				echo add_value_input_field($iname,$ilabel);
 				echo '</select><input type="submit" value="Get" class="formbutton" /></form>'."\n";
@@ -647,9 +647,9 @@ border-bottom: 1px solid #778;
 				echo '<div class="center">'."\n";
 				$op = $opers[$oname];
 				$iname = addslashes($iname);
-				if ($op == 'LIKE') $iname = "%$iname%";
+				if ($op == 'LIKE' || $op == 'NOT LIKE') $iname = "%$iname%";
 
-				$dlsql = "SELECT * FROM $tname WHERE $fname $op '$iname'";
+				$dlsql = "SELECT * FROM $tname WHERE `$fname` $op '$iname'";
 				echo "Your Query: $dlsql \n";
 				$dlresult = mysql_query($dlsql);
 
