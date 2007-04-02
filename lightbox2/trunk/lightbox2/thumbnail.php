@@ -52,7 +52,7 @@ if ($img) {
         $tmp_img = imagecreatetruecolor($new_width, $new_height);
 
         # Copy and resize old image into new image
-        imagecopyresized($tmp_img, $img, 0, 0, 0, 0,
+        imagecopyresampled($tmp_img, $img, 0, 0, 0, 0,
                          $new_width, $new_height, $width, $height);
         imagedestroy($img);
         $img = $tmp_img;
