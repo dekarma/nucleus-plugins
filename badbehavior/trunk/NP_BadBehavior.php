@@ -20,9 +20,7 @@
 
 /*
     Version history:
-	- 1.1 (2006-08-31): added display of plugin event subscriptions, added find
-	feature for php/configuration settings and php/loaded modules.
-    - 1.0 (2006-06-07): initial release (Frank Truscott)
+
 */
 
 class NP_BadBehavior extends NucleusPlugin {
