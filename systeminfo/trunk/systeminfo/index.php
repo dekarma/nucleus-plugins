@@ -727,7 +727,7 @@ border-bottom: 1px solid #778;
 		return $menu;
 	}
 
-		function add_field_select_field($result, $fname = '', $hasAll = 1) {
+    function add_field_select_field($result, $fname = '', $hasAll = 1) {
 
 		echo '<select name="fname">'."\n";
 		if ($hasAll) $menu = '<option value="all"'.($fname == 'all' ? ' selected>' : '>')."all</option>\n";
@@ -742,7 +742,7 @@ border-bottom: 1px solid #778;
 		return $menu;
 	}
 
-		function add_oper_select_field($opers, $oname = '', $hasAll = 0) {
+    function add_oper_select_field($opers, $oname = '', $hasAll = 0) {
 
 		echo '<select name="oname">'."\n";
 		if ($hasAll) $menu = '<option value="all"'.($oname == 'all' ? ' selected>' : '>')."all</option>\n";
