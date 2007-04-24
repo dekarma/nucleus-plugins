@@ -27,7 +27,7 @@ class NP_SkinChooser extends NucleusPlugin {
 	function getName() {	return 'SkinChooser'; 	}
 	function getAuthor()  { return 'Frank Truscott'; 	}
 	function getURL() { return 'http://www.iai.com/'; }
-	function getVersion() {	return '0.1b'; }
+	function getVersion() {	return '0.2'; }
 	function getDescription() {
 		return 'Let guests choose skins.';
 	}
@@ -84,7 +84,8 @@ class NP_SkinChooser extends NucleusPlugin {
   	}
 
 	function event_InitSkinParse(&$data) {
-		$newskinid = intval(cookieVar('nucleus_skinchooser_skin'));
+        global $blogid;
+        $newskinid = intval(cookieVar('nucleus_skinchooser_skin_'.$blogid));
 		if ($newskinid > 0 && array_key_exists($newskinid,$this->getAvailableSkins())) {
 			//doError($newskinid);
 			global $skinid;
@@ -101,11 +102,12 @@ class NP_SkinChooser extends NucleusPlugin {
 	}
 
 	function doSkinVar($skinType) {
-        global $CONF,$skinid;
+        global $CONF,$skinid,$blogid;
 
         $skin_array = $this->getAvailableSkins();
         echo '<form method="post" action="'.$CONF['ActionURL'].'">'."\n";
         echo "<input type=\"hidden\" name=\"action\" value=\"plugin\" />\n";        echo "<input type=\"hidden\" name=\"name\" value=\"SkinChooser\" />\n";        echo "<input type=\"hidden\" name=\"type\" value=\"set_cookie\" />\n";
+        echo "<input type=\"hidden\" name=\"bid\" value=\"$blogid\" />\n";
         echo '<select name="sid">'."\n";
         $menu = '';
         foreach ($skin_array as $key=>$value) {
@@ -127,8 +129,9 @@ class NP_SkinChooser extends NucleusPlugin {
         switch ($type) {
             case 'set_cookie':
                 $sid = intPostVar('sid');
+                $bid = intPostVar('bid');
                 if ($sid > 0) {
-                    setcookie("nucleus_skinchooser_skin", $sid, time() + 60*60*24*365,$CONF['CookiePath'],$CONF['CookieDomain'],$CONF['CookieSecure']);
+                    setcookie("nucleus_skinchooser_skin_$bid", $sid, time() + 60*60*24*365,$CONF['CookiePath'],$CONF['CookieDomain'],$CONF['CookieSecure']);
                 }
             break;
             default:

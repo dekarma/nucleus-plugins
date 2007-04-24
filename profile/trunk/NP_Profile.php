@@ -103,9 +103,13 @@ History:
     * permits site admins to edit all user profiles, except passwords. (thanks, Shi)
   v2.14 -- 10th release of version 2 adds the following to 2.13 version
     * fix getAvatar function (add global $CONF;)
-  v2.15 -- 11th release of version 2 adds the follwoing to 2.14 version
+  v2.15.mv -- special mod for MedwayVotes site
     * allow for use on custom skinparts (or at least doesn't forbid its use) (2.15.a01)
-    * CONSIDER: DISPLAYING NOTHING IF VALUE IS BLANK (EXCEPT FOR ON FORM), INCLUDING NO LABEL (IF FLAG SET) AND NO FORMATTED OUTPUT
+    * allow longer, textarea fields (config using file size field in field/type definition) (update help file) (2.15.a02)
+    * allow param4 as %CAT%. matches username to category desc  (update help file) (2.15.a02)
+    * allow param4 as %BLOG%. matches username to blog shortname (update help file) (2.15.a02)
+    * fix bug in textarea fields where space at begin or end of chunk are lost. Should go in main. (update help file) (2.15.a02)
+    * when using custom format, nothing is displayed if requested value is null. (update help file) (2.15.a02)
 
 To do:
 * Offer some validation options for fields, i.e. isEmail, isURL, isList
@@ -130,7 +134,7 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://www.iai.com/';	}
 
-	function getVersion() {	return '2.14'; }
+	function getVersion() {	return '2.15.a02'; }
 
 	function getDescription() {
 		return 'Gives each member a customisable profile';
@@ -596,7 +600,7 @@ class NP_Profile extends NucleusPlugin {
 // fill in the plugin_profile_types table
 		$types = array(
 			array('type'=>'text','flength'=>255,'fsize'=>40,'fformat'=>'','fwidth'=>0,'fheight'=>0,'ffilesize'=>0,'ffiletype'=>'','foptions'=>'','fvalidate'=>''),
-			array('type'=>'textarea','flength'=>8,'fsize'=>35,'fformat'=>'','fwidth'=>0,'fheight'=>0,'ffilesize'=>0,'ffiletype'=>'','foptions'=>'','fvalidate'=>''),
+			array('type'=>'textarea','flength'=>8,'fsize'=>35,'fformat'=>'','fwidth'=>0,'fheight'=>0,'ffilesize'=>5000,'ffiletype'=>'','foptions'=>'','fvalidate'=>''),
 			array('type'=>'mail','flength'=>60,'fsize'=>25,'fformat'=>'','fwidth'=>0,'fheight'=>0,'ffilesize'=>0,'ffiletype'=>'','foptions'=>'','fvalidate'=>''),
 			array('type'=>'file','flength'=>255,'fsize'=>25,'fformat'=>'','fwidth'=>64,'fheight'=>64,'ffilesize'=>50000,'ffiletype'=>'jpg;gif;png;jpeg','foptions'=>'','fvalidate'=>''),
 			array('type'=>'list','flength'=>255,'fsize'=>40,'fformat'=>'ul-profilelist','fwidth'=>0,'fheight'=>0,'ffilesize'=>0,'ffiletype'=>'','foptions'=>'','fvalidate'=>''),
@@ -788,6 +792,23 @@ password
                     else {
                         return;
                     }
+                }
+
+                if (strtoupper($param4) == '%CAT%') {
+                    global $catid;
+                    $cdesc = quickQuery('SELECT cdesc as result FROM '.sql_table('category').' WHERE catid='.intval($catid));
+                    $pmid = $this->_getMemberIdFromName($cdesc);
+
+                    if (!$pmid) return;
+                }
+
+                if (strtoupper($param4) == '%BLOG%') {
+                    global $blog,$blogid;
+                    //$bshort = quickQuery('SELECT bshort as result FROM '.sql_table('blog').' WHERE bnumber='.intval($blogid));
+                    $bshort = $blog->bshortname;
+                    $pmid = $this->_getMemberIdFromName($bshort);
+
+                    if (!$pmid) return;
                 }
 
 				if (intval($pmid) < 1) {
@@ -1026,7 +1047,7 @@ password
                                 }
                                 else {
                                     $format = $this->getFieldAttribute($param1,'fformat');
-                                    if (trim($format) !== '') {
+                                    if (trim($format) !== '' && $value !== '') {
                                         $label = $this->getFieldAttribute($param1,'flabel');
                                         $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $format);
                                         $value = $fvalue;
@@ -1071,7 +1092,7 @@ password
                                     $fstart = '<a href="';
 									$fend = '" title="'.$param1.'" >'.$value.'</a>';
                                 }
-								else {
+								elseif ($value !== '')  {
                                     $format = $this->getFieldAttribute($param1,'fformat');
                                     if (trim($format) !== '') {
                                         $label = $this->getFieldAttribute($param1,'flabel');
@@ -1089,7 +1110,8 @@ password
 							}
 							break;
 						case 'textarea':
-							$value = $this->getValue($pmid,$param1);
+							$value = str_replace("::"," ",$this->getValue($pmid,$param1));
+                        //if ($param1 == 'platform') doError($value);
 							$cols = $this->getFieldAttribute($param1,'fsize');
 							$rows = $this->getFieldAttribute($param1,'flength');
 							if ($param2 != 'show' && $isEdit) {
@@ -1099,7 +1121,7 @@ password
 								if ($param3 == 'raw') {
 									//echo $value;
 								}
-                                else {
+                                elseif ($value !== '') {
                                     $format = $this->getFieldAttribute($param1,'fformat');
                                     if (trim($format) !== '') {
                                         $label = $this->getFieldAttribute($param1,'flabel');
@@ -1132,7 +1154,7 @@ password
                                 }
 								else {
                                     $format = $this->getFieldAttribute($param1,'fformat');
-                                    if (trim($format) !== '') {
+                                    if (trim($format) !== '' && $value !== '') {
                                         $label = $this->getFieldAttribute($param1,'flabel');
                                         $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $format);
                                         $safe_add = $fvalue;
@@ -1183,7 +1205,7 @@ password
 								}
                                 else {
                                     $format = $this->getFieldAttribute($param1,'fformat');
-                                    if (trim($format) !== '') {
+                                    if (trim($format) !== '' && $value !== '') {
                                         $label = $this->getFieldAttribute($param1,'flabel');
                                         $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $format);
                                         $value = $fvalue;
@@ -1245,7 +1267,7 @@ password
                                         }
                                         else {
                                             $format = $this->getFieldAttribute($param1,'fformat');
-                                            if (trim($format) !== '') {
+                                            if (trim($format) !== '' && $value !== '') {
                                                 $label = $this->getFieldAttribute($param1,'flabel');
                                                 $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($opt[0],$label,$opt[1],$param1,$pname,$pmid), $format);
                                                 $opt[0] = $fvalue;
@@ -1290,7 +1312,7 @@ password
                                         }
                                         else {
                                             $format = $this->getFieldAttribute($param1,'fformat');
-                                            if (trim($format) !== '') {
+                                            if (trim($format) !== '' && $value !== '') {
                                                 $label = $this->getFieldAttribute($param1,'flabel');
                                                 $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($opt[0],$label,$opt[1],$param1,$pname,$pmid), $format);
                                                 $opt[0] = $fvalue;
@@ -1402,7 +1424,7 @@ password
 											}
                                             else {
                                                 $format = $formatarr[2];
-                                                if (trim($format) !== '') {
+                                                if (trim($format) !== '' && $opt[1] !== '') {
                                                     $label = $this->getFieldAttribute($param1,'flabel');
                                                     $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($opt[0],$label,$opt[1],$param1,$pname,$pmid), $format);
                                                     $opt[0] = $fvalue;
@@ -1430,7 +1452,7 @@ password
                                         }
                                         else {
                                             $format = $formatarr[2];
-                                            if (trim($format) !== '') {
+                                            if (trim($format) !== '' && $opt !== '') {
                                                 $label = $this->getFieldAttribute($param1,'flabel');
                                                 $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($opt,$label,$opt,$param1,$pname,$pmid), $format);
                                                 $opt = $fvalue;
@@ -1840,9 +1862,20 @@ password
                                     }
                                     else $cvalue = trim($value);
 									$cvaluearr = explode('::',$cvalue);
+                                    $chunk_limit = intval($this->getFieldAttribute($field,'ffilesize'));
+                                    if ($chunk_limit) $chunk_limit = intval($chunk_limit / 250);
+                                    else $chunk_limit = 20;
+                                    if ($chunk_limit < 1) $chunk_limit = 1;
 									$t = 0;
 									foreach ($cvaluearr as $tord=>$val) {
-										if ($tord > 13) break;
+                                        if ($this->_mySubstr($val,-1,1) == ' ') {
+                                            $val = rtrim($val," ")."::";
+                                        }
+                                        if ($this->_mySubstr($val,0,1) == ' ') {
+                                            $val = "::".ltrim($val," ");
+                                        }
+                                        // edit number in next line to determine max length in bytes of textarea fields (n x 250)
+										if ($tord > $chunk_limit) break;
 										if(mysql_num_rows(sql_query("SELECT * FROM ".sql_table('plugin_profile')." WHERE memberid=$memberid AND field='".addslashes($field)."' AND torder=$tord")) > 0) {
 											sql_query("UPDATE ".sql_table('plugin_profile')." SET value='$val' WHERE field='".addslashes($field)."' AND memberid=$memberid AND torder=$tord");
 										}
@@ -2385,7 +2418,7 @@ password
         // this reg expr below is messing with th <b> tag as well!!!
 		/*$text = trim(preg_replace('|[<][b][r]?\s*?\/??>|i', "\n", $text));*/
 		$text = preg_replace("/<br[^>]*>/isU", "\n", $text);
-		$text = trim(str_replace("\n ", "\n", $text));
+		$text = trim(str_replace(array("\n "), array("\n"), $text));
 		return $text;
 		//return str_replace("<br />", "\n", $text);
 	}
