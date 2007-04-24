@@ -103,6 +103,9 @@ History:
     * permits site admins to edit all user profiles, except passwords. (thanks, Shi)
   v2.14 -- 10th release of version 2 adds the following to 2.13 version
     * fix getAvatar function (add global $CONF;)
+  v2.15 -- 11th release of version 2 adds the follwoing to 2.14 version
+    * allow for use on custom skinparts (or at least doesn't forbid its use) (2.15.a01)
+    * CONSIDER: DISPLAYING NOTHING IF VALUE IS BLANK (EXCEPT FOR ON FORM), INCLUDING NO LABEL (IF FLAG SET) AND NO FORMATTED OUTPUT
 
 To do:
 * Offer some validation options for fields, i.e. isEmail, isURL, isList
@@ -770,7 +773,8 @@ password
 			$skinType = 'template';
 		}
 
-		if (in_array($skinType, array('member','archive','archivelist','item','index','template','comment'))) {
+		//if (in_array($skinType, array('member','archive','archivelist','item','index','template','comment'))) {
+        if (!in_array($skinType, array('error','search'))) {
 			if (in_array($param1, array('startform','endform','status','editlink','submitbutton','editprofile')) || $this->getFieldAttribute($param1,'enabled')) {
 				$pmid = 0;
 				if ($skinType == 'member') {

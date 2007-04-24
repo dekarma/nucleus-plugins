@@ -34,12 +34,22 @@ class NP_ThickBox extends NucleusPlugin {
 	function getName() {return 'ThickBox';}
 	function getAuthor()  {return 'Frank Truscott, based on work by Seventoes';}
 	function getURL(){return 'http://www.iai.com/';}
-	function getVersion() {return '1.31';}
+	function getVersion() {return '1.31.01';}
 	function getDescription() {
 		return 'Simple plugin to enable ThickBox on Nucleus Blogs';
 	}
-	function getEventList() { return array('PreItem'); }
 
+    function supportsFeature($what)	{
+		switch($what)
+		{
+		case 'SqlTablePrefix':
+			return 1;
+		default:
+			return 0;
+		}
+	}
+
+	function getEventList() { return array('PreItem'); }
 
 	function install() {
 		global $CONF, $DIR_MEDIA;
