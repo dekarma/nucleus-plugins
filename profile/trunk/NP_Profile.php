@@ -110,6 +110,9 @@ History:
     * allow param4 as %BLOG%. matches username to blog shortname
     * fix bug in textarea fields where space at begin or end of chunk are lost.
     * when using custom format, nothing is displayed if requested value is null.
+  v2.16 -- 12th release of version 2 adds the following to 2.15 version
+    * allow custom formatting of core nucleus member fields (mail, url, nick, realname, notes) (2.16.a01)
+    * add format option to handle case where value is null (ie show this if value is null). (future)
 
 To do:
 * Offer some validation options for fields, i.e. isEmail, isURL, isList
@@ -134,7 +137,7 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://www.iai.com/';	}
 
-	function getVersion() {	return '2.15.a02'; }
+	function getVersion() {	return '2.16.a01'; }
 
 	function getDescription() {
 		return 'Gives each member a customisable profile';
@@ -949,10 +952,24 @@ password
 								$fstart = '';
 								$fend = '';
 							}
+                            elseif ($param3 == 'link') {
+                                $fstart = '<a href="mailto:';
+                                $fend = '" title="Member '.$pmid.'">'.$safe_add.'</a>';
+                            }
 							else {
+                                $format = $this->getFieldAttribute($param1,'fformat');
+                                if (trim($format) !== '' && $value !== '') {
+                                    $label = $this->getFieldAttribute($param1,'flabel');
+                                    $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $format);
+                                    $safe_add = $fvalue;
+                                    $fstart = '';
+                                    $fend = '';
+                                }
+                                else {
 								$fstart = '<a href="mailto:';
 								$fend = '" title="Member '.$pmid.'">'.$safe_add.'</a>';
 							}
+                            }
 							$safe_add = $fstart.$safe_add.$fend;
 							if ($this->showEmail > 1) {
 								echo $safe_add;
@@ -974,6 +991,16 @@ password
 							echo '<input name="' . $param1 . '" type="text" maxlength="' . $maxlength . '" size="' . $size . '" value="' . $value . '"/>' . "\n";
 						}
 						else {
+							if ($param3 == 'raw') {
+                            }
+                            else {
+                                $format = $this->getFieldAttribute($param1,'fformat');
+                                if (trim($format) !== '' && $value !== '') {
+                                    $label = $this->getFieldAttribute($param1,'flabel');
+                                    $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $format);
+                                    $value = $fvalue;
+                                }
+                            }
 							echo $value;
 						}
 						break;
@@ -987,6 +1014,16 @@ password
 							echo '<input name="' . $param1 . '" type="text" maxlength="' . $maxlength . '" size="' . $size . '" value="' . $value . '"/>' . "\n";
 						}
 						else {
+							if ($param3 == 'raw') {
+                            }
+                            else {
+                                $format = $this->getFieldAttribute($param1,'fformat');
+                                if (trim($format) !== '' && $value !== '') {
+                                    $label = $this->getFieldAttribute($param1,'flabel');
+                                    $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $format);
+                                    $value = $fvalue;
+                                }
+                            }
 							echo $value;
 						}
 						break;
@@ -1004,10 +1041,24 @@ password
 								$fstart = '';
 								$fend = '';
 							}
+                            elseif ($param3 == 'link') {
+                                $fstart = '<a href="';
+                                $fend = '" title="'.$param1.'" >'.$value.'</a>';
+                            }
+                            elseif ($value !== '')  {
+                                $format = $this->getFieldAttribute($param1,'fformat');
+                                if (trim($format) !== '') {
+                                    $label = $this->getFieldAttribute($param1,'flabel');
+                                    $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $format);
+                                    $value = $fvalue;
+                                    $fstart = '';
+                                    $fend = '';
+                                }
 							else {
 								$fstart = '<a href="';
 								$fend = '" title="'.$param1.'" >'.$value.'</a>';
 							}
+                            }
 							echo $fstart.$value.$fend . "\n";
 						}
 						break;
@@ -1022,11 +1073,20 @@ password
 						}
 						else {
 							if ($param3 == 'raw') {
-								echo $value;
+                                //echo $value;
 							}
+                            elseif ($value !== '') {
+                                $format = $this->getFieldAttribute($param1,'fformat');
+                                if (trim($format) !== '') {
+                                    $label = $this->getFieldAttribute($param1,'flabel');
+                                    $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $format);
+                                    $value = $fvalue;
+                                }
 							else {
-								echo '<textarea readonly="readonly" cols="' . $cols . '" rows="' . $rows . '">' . $value . '</textarea>' . "\n";
+                                    $value = '<textarea readonly="readonly" cols="' . $cols . '" rows="' . $rows . '">' . $this->_br2nl($value) . '</textarea>' . "\n";
 							}
+						}
+                            echo $value;
 						}
 						break;
 					default:

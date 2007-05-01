@@ -134,7 +134,7 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://www.iai.com/';	}
 
-	function getVersion() {	return '2.15.a02'; }
+	function getVersion() {	return '2.15'; }
 
 	function getDescription() {
 		return 'Gives each member a customisable profile';
@@ -2445,7 +2445,8 @@ password
 			else {
                 if ($member->isLoggedIn()) return 0;
                 else return 1;
-            }        }
+            }
+        }
 	}
 
 	function _mySubstr($str = '',$start = 0, $len = 1) {
