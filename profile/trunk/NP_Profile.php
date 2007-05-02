@@ -112,7 +112,11 @@ History:
     * when using custom format, nothing is displayed if requested value is null.
   v2.16 -- 12th release of version 2 adds the following to 2.15 version
     * allow custom formatting of core nucleus member fields (mail, url, nick, realname, notes) (2.16.a01)
-    * add format option to handle case where value is null (ie show this if value is null). (future)
+    * add format option to handle case where value is null (ie show this if value is null). (2.16.a02)
+    * fix bug where you couldn't blank out a previously entered date field. (2.16.a02)
+[FUTURE]
+  [v2.20 -- future release to require upgrade procedure (uninstall/reinstall)]
+    * rename fvalidate column to fformatnull. See all occurences of fvalidate in this file and in profile/index.php.
 
 To do:
 * Offer some validation options for fields, i.e. isEmail, isURL, isList
@@ -128,7 +132,7 @@ class NP_Profile extends NucleusPlugin {
 	var $nutypes = array('date','dropdown','file','list','mail','number','password','radio','text','textarea','url'); // supported field types
 	var $req_emp = array();
 	var $showEmail = 0;
-    var $allowedProtocols = array("http","https"); // protocols that will be allowed in sitelist links
+    var $allowedProtocols = array("http","https"); // protocols that will be allowed in url fields
 	var $restrictView = 0;
 
 	function getName() { return 'Profile Plugin'; }
@@ -137,7 +141,7 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://www.iai.com/';	}
 
-	function getVersion() {	return '2.16.a01'; }
+	function getVersion() {	return '2.16.a02'; }
 
 	function getDescription() {
 		return 'Gives each member a customisable profile';
@@ -948,7 +952,12 @@ password
 						}
 						else {
 							$safe_add = $this->safeAddress($value);
-							if ($param3 == 'raw') {
+                            if ($value == '') {
+                                $formatnull = $this->getFieldAttribute($param1,'fvalidate');
+                                $label = $this->getFieldAttribute($param1,'flabel');
+                                $safe_add = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $formatnull);
+                            }
+							elseif ($param3 == 'raw') {
 								$fstart = '';
 								$fend = '';
 							}
@@ -1014,7 +1023,13 @@ password
 							echo '<input name="' . $param1 . '" type="text" maxlength="' . $maxlength . '" size="' . $size . '" value="' . $value . '"/>' . "\n";
 						}
 						else {
-							if ($param3 == 'raw') {
+							if ($value == '') {
+                                $formatnull = $this->getFieldAttribute($param1,'fvalidate');
+                                $label = $this->getFieldAttribute($param1,'flabel');
+                                $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $formatnull);
+                                $value = $fvalue;
+                            }
+                            elseif ($param3 == 'raw') {
                             }
                             else {
                                 $format = $this->getFieldAttribute($param1,'fformat');
@@ -1037,7 +1052,13 @@ password
 							echo '<input name="' . $param1 . '" type="text" maxlength="' . $maxlength . '" size="' . $size . '" value="' . $value . '"/>' . "\n";
 						}
 						else {
-							if ($param3 == 'raw') {
+							if ($value == '') {
+                                $formatnull = $this->getFieldAttribute($param1,'fvalidate');
+                                $label = $this->getFieldAttribute($param1,'flabel');
+                                $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $formatnull);
+                                $value = $fvalue;
+                            }
+                            elseif ($param3 == 'raw') {
 								$fstart = '';
 								$fend = '';
 							}
@@ -1072,7 +1093,13 @@ password
 							echo '<textarea name="' . $param1 . '" cols="' . $cols . '" rows="' . $rows . '">' . $value . '</textarea>' . "\n";
 						}
 						else {
-							if ($param3 == 'raw') {
+							if ($value == '') {
+                                $formatnull = $this->getFieldAttribute($param1,'fvalidate');
+                                $label = $this->getFieldAttribute($param1,'flabel');
+                                $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $formatnull);
+                                $value = $fvalue;
+                            }
+                            elseif ($param3 == 'raw') {
                                 //echo $value;
 							}
                             elseif ($value !== '') {
@@ -1103,7 +1130,13 @@ password
 								echo '<input name="' . $param1 . '" type="text" maxlength="' . $maxlength . '" size="' . $size . '" value="' . $value . '"/>' . "\n";
 							}
 							else {
-                                if ($param3 == 'raw') {
+                                if ($value == '') {
+                                    $formatnull = $this->getFieldAttribute($param1,'fvalidate');
+                                    $label = $this->getFieldAttribute($param1,'flabel');
+                                    $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $formatnull);
+                                    $value = $fvalue;
+                                }
+                                elseif ($param3 == 'raw') {
                                 }
                                 else {
                                     $format = $this->getFieldAttribute($param1,'fformat');
@@ -1124,7 +1157,13 @@ password
 								echo '<input name="' . $param1 . '" type="text" maxlength="' . $maxlength . '" size="' . $size . '" value="' . $value . '"/>' . "\n";
 							}
 							else {
-                                if ($param3 == 'raw') {
+                                if ($value == '') {
+                                    $formatnull = $this->getFieldAttribute($param1,'fvalidate');
+                                    $label = $this->getFieldAttribute($param1,'flabel');
+                                    $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $formatnull);
+                                    $value = $fvalue;
+                                }
+                                elseif ($param3 == 'raw') {
                                 }
                                 else {
                                     $format = $this->getFieldAttribute($param1,'fformat');
@@ -1144,7 +1183,13 @@ password
 								echo '<input name="' . $param1 . '" type="text" maxlength="' . $maxlength . '" size="' . $size . '" value="' . $value . '"/>' . "\n";
 							}
 							else {
-								if ($param3 == 'raw') {
+								if ($value == '') {
+                                    $formatnull = $this->getFieldAttribute($param1,'fvalidate');
+                                    $label = $this->getFieldAttribute($param1,'flabel');
+                                    $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $formatnull);
+                                    $value = $fvalue;
+                                }
+                                elseif ($param3 == 'raw') {
 									$fstart = '';
 									$fend = '';
 								}
@@ -1178,7 +1223,13 @@ password
 								echo '<textarea name="' . $param1 . '" cols="' . $cols . '" rows="' . $rows . '">' . $this->_br2nl($value) . '</textarea>' . "\n";
 							}
 							else {
-								if ($param3 == 'raw') {
+								if ($value == '') {
+                                    $formatnull = $this->getFieldAttribute($param1,'fvalidate');
+                                    $label = $this->getFieldAttribute($param1,'flabel');
+                                    $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $formatnull);
+                                    $value = $fvalue;
+                                }
+                                elseif ($param3 == 'raw') {
 									//echo $value;
 								}
                                 elseif ($value !== '') {
@@ -1204,7 +1255,12 @@ password
 							}
 							else {
 								$safe_add = $this->safeAddress($value);
-								if ($param3 == 'raw') {
+								if ($value == '') {
+                                    $formatnull = $this->getFieldAttribute($param1,'fvalidate');
+                                    $label = $this->getFieldAttribute($param1,'flabel');
+                                    $safe_add = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $formatnull);
+                                }
+                                elseif ($param3 == 'raw') {
 									$fstart = '';
 									$fend = '';
 								}
@@ -1245,9 +1301,15 @@ password
 								echo '<input name="' . $param1 . '" type="file" size="' . $size . '" />' . "\n";
 							}
 							else {
+                                $formatnull = $this->getFieldAttribute($param1,'fvalidate');
                                 if (strlen($value) >= 3) {
 									$value = $CONF['MediaURL'] . $value;
 								}
+                                elseif (trim($formatnull) != '') {
+                                    $label = $this->getFieldAttribute($param1,'flabel');
+                                    $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $formatnull);
+                                    $value = $fvalue;
+                                }
 								else {
 									$value = $this->default['file']['default'];
 								}
@@ -1541,7 +1603,13 @@ password
 								$date = $this->_mySubstr($date,0,2).'-'.$this->_mySubstr($date,2,2).'-'.$this->_mySubstr($date,4,4);
 							}
 							$datearr = explode('-',$date);
-							if ($date == '' || $date == '--') $value = '';
+							if ($date == '' || $date == '--') {
+                                $value = '';
+                                $formatnull = $this->getFieldAttribute($param1,'fvalidate');
+                                $label = $this->getFieldAttribute($param1,'flabel');
+                                $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $formatnull);
+                                $value = $fvalue;
+                            }
 							else {
 								$day = $datearr[0];
 								$month = $datearr[1];
@@ -2052,6 +2120,14 @@ password
 											doError(_PROFILE_ACTION_BAD_DATE." : $format, "._PROFILE_ACTION_BAD_DATE_HELP);
 										}
 									}
+                                    else {
+                                        if(mysql_num_rows(sql_query("SELECT * FROM ".sql_table('plugin_profile')." WHERE memberid=$memberid AND field='".addslashes($field)."'")) > 0) {
+                                            sql_query("UPDATE ".sql_table('plugin_profile')." SET value='' WHERE field='".addslashes($field)."' AND memberid=$memberid");
+                                        }
+                                        else {
+                                            sql_query("INSERT INTO ".sql_table('plugin_profile')." VALUES($memberid,'$field','','0')");
+                                        }
+                                    }
 									break;
 								} // End innerswitch
 							} // end else not a nufield

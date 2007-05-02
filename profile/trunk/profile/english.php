@@ -136,7 +136,7 @@ define('_PROFILE_ADMIN_HELP_REQUIRED',		'Is this a required field?');
 define('_PROFILE_ADMIN_HELP_ENABLED',		'Is this field enabled. If no, will be ignored by skinvar.');
 define('_PROFILE_ADMIN_HELP_LENGTH',		'Integer. Usually leave as 0 (uses type default). Maxlength of field. # of rows for textarea.');
 define('_PROFILE_ADMIN_HELP_SIZE',		'Integer. Usually leave as 0 (uses type default). Size of input field. # of columns for textarea.');
-define('_PROFILE_ADMIN_HELP_FORMAT',		'A date format string, like D-M-Y, M-D-Y, Y-M-D, or Y-D-M. Only meaningful for date type. Or for list fields, something of format <i>tag</i>-<i>class</i>, where <i>tag</i> is one of ol,ul, or dl, and <i>class</i> is name of css class of list.');
+define('_PROFILE_ADMIN_HELP_FORMAT',		'A date format string, like D-M-Y, M-D-Y, Y-M-D, or Y-D-M. Only meaningful for date type. Or for list fields, something of format <i>tag</i>-<i>class</i>, where <i>tag</i> is one of ol,ul, or dl, and <i>class</i> is name of css class of list. For more formatting options, please see the help file.');
 define('_PROFILE_ADMIN_HELP_WIDTH',		'Integer. Max width of images for upload. Only valid for file type.');
 define('_PROFILE_ADMIN_HELP_HEIGHT',		'Integer. Max height of images for upload. Only valid for file type.');
 define('_PROFILE_ADMIN_HELP_FILESIZE',		'Integer. Max file size in bytes of images for upload. Blank uses default for type. Only valid for file type.');
@@ -177,4 +177,8 @@ define('_PROFILE_ADMIN_HELP_PUBLIC',		'Should member data for this field be view
 define('_PROFILE_MM',		   'mm');
 define('_PROFILE_DD',		   'dd');
 define('_PROFILE_YYYY',		   'yyyy');
+
+// new in 2.16
+define('_PROFILE_FORMATNULL',       'empty value format');
+define('_PROFILE_ADMIN_HELP_FORMATNULL',		'What to display when the value of the field is null. Accepts same variables as Format field. See help file.');
 ?>

@@ -210,7 +210,7 @@ default setting set for that that field type in the type settings form.</p>
 <li><b>Enabled</b> : Is this field enabled? yes or no. If not enabled it will not be displayed anywhere.</li>
 <li><b>Length</b> : Integer. Usually leave as 0 (uses type default). Maxlength of field. # of rows for textarea.</li>
 <li><b>Size</b> : Integer. Usually leave as 0 (uses type default). Size of input field. # of columns for textarea.</li>
-<li><b>Format</b> : A format string indicating how the field should be displayed. Meaningful for all field types, but date, list and number require special formats as described below.
+<li><b>Format</b> : A format string indicating how the field should be displayed. Meaningful for all field types, but date, list and number require special formats as described below.</li>
 	<ul>
     <li>For most field types. The format can be any string, including html code, containing the special string of %DATA% (case matters). Each occurance of %DATA% or %LABEL% will be replaced by the raw data or label, respectively, for the given field. Below the format variables are described and examples are given:</li>
         <br /><b>Format Variables:</b>
@@ -253,6 +253,7 @@ default setting set for that that field type in the type settings form.</p>
         <li>0-.-, would display the number 12345.6789 as 12,345</li>
         </ul>
 	</ul>
+<li><b>Empty Value Format</b> : (new in 2.16) A format string indicating how the field should be displayed when the value is null. Accepts same format variables as in Format field above. Meaningful for all field types except list, dropdown, and radio.</li>
 
 <li><b>Width</b> : Integer. Max width of images for upload. Only valid for file type.</li>
 <li><b>Height</b> : Integer. Max height of images for upload. Only valid for file type.</li>
@@ -267,7 +268,7 @@ default setting set for that that field type in the type settings form.</p>
         <li>'yes;no' is the same as 'yes|yes;no|no'</li>
         <li>If left blank for fields of type list, the user can enter a comma, or semi-colon, separated list which will be handled as a list.</li>
         </ul>
-    <li>For fields of type url: Optional. Sets any special URL protocls accepted in this field (beyond http and https, which a re always accepted). Format is a semi-colon separated list of protocol identifiers. For example,</li>
+    <li>For fields of type url: Optional. Sets any special URL protocols accepted in this field (beyond http and https, which are always accepted). Format is a semi-colon separated list of protocol identifiers. For example,</li>
         <ul>
         <li>'ftp' will allow urls with protocols of http, https, or ftp.</li>
         <li>'ftp;skype' will allow urls with protocols of http, https, ftp, or skype.</li>
@@ -290,8 +291,23 @@ default setting set for that that field type in the type settings form.</p>
 <li><b>Name</b> : The name of the type. Cannot be changed.</li>
 <li><b>Length</b> : Integer. Maxlength of field. # of rows for textarea.</li>
 <li><b>Size</b> : Integer. Size of input field. # of columns for textarea.</li>
-<li><b>Format</b> : A format string indicating how the field should be displayed. Here meaningful only to set defaults for date, number, and list types as decribed below.
+<li><b>Format</b> : A format string indicating how the field should be displayed. Meaningful for all field types, but date, list and number require special formats as described below.</li>
 	<ul>
+    <li>For most field types. The format can be any string, including html code, containing the special string of %DATA% (case matters). Each occurance of %DATA% or %LABEL% will be replaced by the raw data or label, respectively, for the given field. Below the format variables are described and examples are given:</li>
+        <br /><b>Format Variables:</b>
+        <ul>
+        <li><b>%DATA%</b> - The value of the field. For fields of type radio, dropdown, and list, this is the display value, i.e. if options are yes|1;no|0, then %DATA% would be yes or no.</li>
+        <li><b>%LABEL%</b> - The label of the field.</li>
+        <li><b>%VALUE%</b> - The stored value of the field. For all field types except radio, dropdown, and list, this is the same as %DATA%. For radio, dropdown, and list field types, this is the value stored in the database, i.e. if options are yes|1;no|0, then %VALUE% would be 1 or 0.</li>
+        <li><b>%FIELD%</b> - The name of the field.</li>
+        <li><b>%MEMBER%</b> - The login name of the member whose data is being viewed.</li>
+        <li><b>%ID%</b> - The member id number of the member whose data is being viewed.</li>
+        </ul>
+        <b>Examples:</b>
+        <ul>
+        <li>&lt;a href=&quot;skype://%DATA%&quot; title=&quot;Call %MEMBER% using Skype&quot;&gt;%DATA%&lt;/a&gt; would give a link to a users skype name</li>
+        <li>&lt;div class=&quot;biography&quot;&gt;&lt;h2&gt;%LABEL%&lt;/h2&gt;%DATA%&lt;/div&gt; would put the contents of the field into a div of class biography and under a header of the field label.</li>
+        </ul>
 	<li>For date type fields. Format should consist of the letters M, D, and Y, separated by a character like -, or /. The order of the letters M, D, and Y will also dictate the order of input. Optionally, for more detailed formatting, a date format string can be added here by appending ?<i>format</i> to this field where <i>format</i> is a valid <a href="http://us3.php.net/manual/en/function.date.php" title="PHP Date Function">php date() format</a>.For Example, if the date to display is 04 February 2007, </li>
 		<ul>
 		<li><i>D-M-Y</i> will display the date like 04-02-2007.</li>
@@ -318,6 +334,7 @@ default setting set for that that field type in the type settings form.</p>
         <li>0-.-, would display the number 12345.6789 as 12,345</li>
         </ul>
 	</ul>
+<li><b>Empty Value Format</b> : (new in 2.16) A format string indicating how the field should be displayed when the value is null. Accepts same format variables as in Format field above. Meaningful for all field types except list, dropdown, and radio.</li>
 <li><b>Width</b> : Integer. Max width of images for upload. Only valid for file type.</li>
 <li><b>Height</b> : Integer. Max height of images for upload. Only valid for file type.</li>
 <li><b>File Size</b> : Integer. Max file size in bytes of images for upload. Blank uses Nucleus Max Upload Size from General Settings. Only valid for file type. (Special for textarea type, max size in bytes of text area. If no value given here, default of 5000 bytes used.)</li>
