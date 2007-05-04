@@ -34,7 +34,7 @@ class NP_ThickBox extends NucleusPlugin {
 	function getName() {return 'ThickBox';}
 	function getAuthor()  {return 'Frank Truscott, based on work by Seventoes';}
 	function getURL(){return 'http://www.iai.com/';}
-	function getVersion() {return '1.31.01';}
+	function getVersion() {return '1.32';}
 	function getDescription() {
 		return 'Simple plugin to enable ThickBox on Nucleus Blogs';
 	}
@@ -65,15 +65,29 @@ class NP_ThickBox extends NucleusPlugin {
 		$this->createOption('repNormal', 'Replace normal image links with thickbox?', 'yesno', 'no');
 	}
 
-	function doSkinVar($skinType) {
-        if ($this->getOption('rootDir')) $tb_root = $this->getOption('rootDir');
-        else $tb_root = $this->getAdminURL();
-        echo '<script type="text/javascript">'."\n";
-        echo 'var TB_ROOT_DIR = "'.$tb_root.'"';
-        echo '</script>'."\n";
-		echo '<link rel="stylesheet" href="'.$tb_root.'css/thickbox.css" type="text/css" media="screen" />'."\n";
-		echo '<script type="text/javascript" src="'.$tb_root.'js/jquery.js"></script>'."\n";
-		echo '<script type="text/javascript" src="'.$tb_root.'js/thickbox.js"></script>'."\n";
+	function doSkinVar() {
+        $params = func_get_args();
+        $skinType = array_shift($params);
+        $arrsize = count($params);
+
+        if ($arrsize == 0 || trim($params[0]) == '') $gbdata = '';
+        elseif ($arrsize == 1) $gbdata = $params[0];
+        else $gbdata = implode('|',$params);
+
+        if ($gbdata == '') {
+            if ($this->getOption('rootDir')) $tb_root = $this->getOption('rootDir');
+            else $tb_root = $this->getAdminURL();
+            echo '<script type="text/javascript">'."\n";
+            echo 'var TB_ROOT_DIR = "'.$tb_root.'"';
+            echo '</script>'."\n";
+            echo '<link rel="stylesheet" href="'.$tb_root.'css/thickbox.css" type="text/css" media="screen" />'."\n";
+            echo '<script type="text/javascript" src="'.$tb_root.'js/jquery.js"></script>'."\n";
+            echo '<script type="text/javascript" src="'.$tb_root.'js/thickbox.js"></script>'."\n";
+        }
+        else {
+            $args = array(&$this,$gbdata);
+            echo $this->parse($args);
+        }
 	}
 
 	function parse($matches) {

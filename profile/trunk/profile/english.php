@@ -181,4 +181,7 @@ define('_PROFILE_YYYY',		   'yyyy');
 // new in 2.16
 define('_PROFILE_FORMATNULL',       'empty value format');
 define('_PROFILE_ADMIN_HELP_FORMATNULL',		'What to display when the value of the field is null. Accepts same variables as Format field. See help file.');
+define('_PROFILE_OPT_EMAIL_PUBLIC_DENY',		'Text to show when user not authorized to view email address');
+define('_PROFILE_OPT_EMAIL_PUBLIC_DENY_TEXT',		'<i>Not Authorized to View</i>');
+
 ?>

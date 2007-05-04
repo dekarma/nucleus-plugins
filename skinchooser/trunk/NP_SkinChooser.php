@@ -21,9 +21,13 @@
 /*
     Version history:
     * v 0.1b - initial beta release.
+    * v 0.2 - 2nd release
+      * set cookies per blog, for multi-blog sites that don't share skins
+      * option to choose random default skin !!!(may need to remove, requires the per blog skin list)!!!
 */
 
 class NP_SkinChooser extends NucleusPlugin {
+    var $def_skin = '';
 	function getName() {	return 'SkinChooser'; 	}
 	function getAuthor()  { return 'Frank Truscott'; 	}
 	function getURL() { return 'http://www.iai.com/'; }
@@ -49,6 +53,7 @@ class NP_SkinChooser extends NucleusPlugin {
         $this->createOption("del_uninstall", "Delete tables on uninstall?", "yesno", "no");
 		$this->createOption('quickmenu', 'Show Admin Area in quick menu?', 'yesno', 'yes');
         $this->createOption('accesslevel', 'Who should have access to SkinChooser admin', 'select', 'Site Admins', 'Site Admins|8|Blog Admins|4|Team Members|2|All Logged-In Users|1');
+        $this->createOption('randomdef', 'Select random skin from list as default when no skin chosen?', 'yesno', 'no');
 
         // Create tables needed
         $query = "CREATE TABLE IF NOT EXISTS `".sql_table('plug_skinchooser')."` (
@@ -85,8 +90,19 @@ class NP_SkinChooser extends NucleusPlugin {
 
 	function event_InitSkinParse(&$data) {
         global $blogid;
+
         $newskinid = intval(cookieVar('nucleus_skinchooser_skin_'.$blogid));
-		if ($newskinid > 0 && array_key_exists($newskinid,$this->getAvailableSkins())) {
+        $avail_skins = $this->getAvailableSkins();
+        $use_random = $this->getOption('randomdef');
+        if ($use_random == '') {
+            $this->createOption('randomdef', 'Select random skin from list as default when no skin chosen?', 'yesno', 'no');
+            $use_random = 'no';
+        }
+        if ($newskinid == 0 && $use_random == 'yes') {
+            srand((float) microtime() * 10000000);
+            $newskinid = intval($avail_skins[array_rand($avail_skins)]);
+        }
+		if ($newskinid > 0 && array_key_exists($newskinid,$avail_skins)) {
 			//doError($newskinid);
 			global $skinid;
 			$newskinname = SKIN::getNameFromId($newskinid);

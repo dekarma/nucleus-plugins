@@ -114,6 +114,7 @@ History:
     * allow custom formatting of core nucleus member fields (mail, url, nick, realname, notes) (2.16.a01)
     * add format option to handle case where value is null (ie show this if value is null). (2.16.a02)
     * fix bug where you couldn't blank out a previously entered date field. (2.16.a02)
+    * add option for deny message when user can't view email address (2.16.a03)
 [FUTURE]
   [v2.20 -- future release to require upgrade procedure (uninstall/reinstall)]
     * rename fvalidate column to fformatnull. See all occurences of fvalidate in this file and in profile/index.php.
@@ -141,10 +142,13 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://www.iai.com/';	}
 
-	function getVersion() {	return '2.16.a02'; }
+	function getVersion() {	return '2.16.a03'; }
 
 	function getDescription() {
-		return 'Gives each member a customisable profile';
+        if (!$this->_optionExists('email_public_deny') && $this->_optionExists('email_public')) {
+            $this->createOption('email_public_deny', _PROFILE_OPT_EMAIL_PUBLIC_DENY, 'text',_PROFILE_OPT_EMAIL_PUBLIC_DENY_TEXT);
+        }
+		return 'Gives each member a customisable profile.';
 	}
 
 	function getMinNucleusVersion() { return 322; }
@@ -177,6 +181,7 @@ class NP_Profile extends NucleusPlugin {
 		$this->createOption('pwd_min_length', _PROFILE_OPT_PWD_MIN_LENGTH, 'text','0');
 		$this->createOption('pwd_complexity', _PROFILE_OPT_PWD_COMPLEXITY, 'select','0',_PROFILE_OPT_SELECT_OFF_COMP.'|0|'._PROFILE_OPT_SELECT_ONE_COMP.'|1|'._PROFILE_OPT_SELECT_TWO_COMP.'|2|'._PROFILE_OPT_SELECT_THREE_COMP.'|3|'._PROFILE_OPT_SELECT_FOUR_COMP.'|4');
 		$this->createOption('CSS2URL',_PROFILE_OPTIONS_CSS2URL,'text',$this->getAdminURL()."editprofile.css");
+        $this->createOption('email_public_deny', _PROFILE_OPT_EMAIL_PUBLIC_DENY, 'text',_PROFILE_OPT_EMAIL_PUBLIC_DENY_TEXT);
 
 // create needed tables
 		sql_query("CREATE TABLE IF NOT EXISTS ". sql_table('plugin_profile').
@@ -987,7 +992,7 @@ password
 								echo $safe_add;
 							}
 							else {
-								// show nothing
+								echo $this->getOption('email_public_deny');
 							}
 						}
 						break;
@@ -1290,7 +1295,7 @@ password
 									echo $safe_add;
 								}
 								else {
-									// show nothing
+									echo $this->getOption('email_public_deny');
 								}
 							}
 							break;
@@ -2592,6 +2597,11 @@ password
 			return substr($str,$start,$len);
 		}
 	}
+
+    function _optionExists($optionname) {
+        $query = "SELECT oid as result FROM " . sql_table('plugin_option_desc') . " WHERE opid=" . intval($this->plugid)." AND oname='".addslashes($optionname)."'";
+        return intval(quickQuery($query));
+    }
 
 }
 ?>
