@@ -115,6 +115,9 @@ History:
     * add format option to handle case where value is null (ie show this if value is null). (2.16.a02)
     * fix bug where you couldn't blank out a previously entered date field. (2.16.a02)
     * add option for deny message when user can't view email address (2.16.a03)
+	* add formatting options to mail type to allow custom formatting of actual address. 4 new format vars
+	  for mail types: %ADDRESS% (full address), %USERNAME% (part of address to left of @), %TLD% (Top-Level Domain, part right of last .),
+	  and %SITENAME% (the middle part of the address, after the @ and before the last .) (2.16.a04) [NEED TO ADD TO HELP FILE]
 [FUTURE]
   [v2.20 -- future release to require upgrade procedure (uninstall/reinstall)]
     * rename fvalidate column to fformatnull. See all occurences of fvalidate in this file and in profile/index.php.
@@ -142,7 +145,7 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://www.iai.com/';	}
 
-	function getVersion() {	return '2.16.a03'; }
+	function getVersion() {	return '2.16.a04'; }
 
 	function getDescription() {
         if (!$this->_optionExists('email_public_deny') && $this->_optionExists('email_public')) {
@@ -956,11 +959,12 @@ password
 							echo '<input name="' . $param1 . '" type="text" maxlength="' . $maxlength . '" size="' . $size . '" value="' . $value . '"/>' . "\n";
 						}
 						else {
-							$safe_add = $this->safeAddress($value);
+							$safe_add_arr = $this->safeAddress($value);
+							$safe_add = $safe_add_arr['address'];
                             if ($value == '') {
                                 $formatnull = $this->getFieldAttribute($param1,'fvalidate');
                                 $label = $this->getFieldAttribute($param1,'flabel');
-                                $safe_add = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $formatnull);
+                                $safe_add = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%','%ADDRESS%','%USERNAME%','%SITENAME%','%TLD%'), array($value,$label,$value,$param1,$pname,$pmid,$safe_add,$safe_add_arr['username'],$safe_add_arr['sitename'],$safe_add_arr['tld']), $formatnull);
                             }
 							elseif ($param3 == 'raw') {
 								$fstart = '';
@@ -974,7 +978,7 @@ password
                                 $format = $this->getFieldAttribute($param1,'fformat');
                                 if (trim($format) !== '' && $value !== '') {
                                     $label = $this->getFieldAttribute($param1,'flabel');
-                                    $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $format);
+                                    $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%','%ADDRESS%','%USERNAME%','%SITENAME%','%TLD%'), array($value,$label,$value,$param1,$pname,$pmid,$safe_add,$safe_add_arr['username'],$safe_add_arr['sitename'],$safe_add_arr['tld']), $format);
                                     $safe_add = $fvalue;
                                     $fstart = '';
                                     $fend = '';
@@ -1259,12 +1263,13 @@ password
 								echo '<input name="' . $param1 . '" type="text" maxlength="' . $maxlength . '" size="' . $size . '" value="' . $value . '"/>' . "\n";
 							}
 							else {
-								$safe_add = $this->safeAddress($value);
+								$safe_add_arr = $this->safeAddress($value);
+								$safe_add = $safe_add_arr['address'];
 								if ($value == '') {
                                     $formatnull = $this->getFieldAttribute($param1,'fvalidate');
                                     $label = $this->getFieldAttribute($param1,'flabel');
-                                    $safe_add = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $formatnull);
-                                }
+                                    $safe_add = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%','%ADDRESS%','%USERNAME%','%SITENAME%','%TLD%'), array($value,$label,$value,$param1,$pname,$pmid,$safe_add,$safe_add_arr['username'],$safe_add_arr['sitename'],$safe_add_arr['tld']), $formatnull);
+								}
                                 elseif ($param3 == 'raw') {
 									$fstart = '';
 									$fend = '';
@@ -1277,8 +1282,8 @@ password
                                     $format = $this->getFieldAttribute($param1,'fformat');
                                     if (trim($format) !== '' && $value !== '') {
                                         $label = $this->getFieldAttribute($param1,'flabel');
-                                        $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $format);
-                                        $safe_add = $fvalue;
+                                        $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%','%ADDRESS%','%USERNAME%','%SITENAME%','%TLD%'), array($value,$label,$value,$param1,$pname,$pmid,$safe_add,$safe_add_arr['username'],$safe_add_arr['sitename'],$safe_add_arr['tld']), $format);
+										$safe_add = $fvalue;
                                         $fstart = '';
                                         $fend = '';
                                     }
@@ -2437,6 +2442,7 @@ password
 		$ent = "";
 		$userName = "";
 		$domainName = "";
+		$result_array = array();
 
 		for ($i = 0; $i < strlen($emailAddress); $i++) {
 			$c = $this->_mySubstr($emailAddress, $i, 1);
@@ -2450,21 +2456,21 @@ password
 		}
 
 		$domainName = $ent;
+		$result_array['username'] = $userName;
+		$result_array['domainname'] = $domainName;
+		$domain_arr = explode("&#46;",$domainName);
+		$result_array['tld'] = array_pop($domain_arr);
+		$result_array['sitename'] = implode("&#46;",$domain_arr);
 
-		if ($xhtml == 1) {
-			//$endResult = "<a href=\"mailto:$userName@$domainName\" title=\"$theTitle\">$userName@$domainName</a>";
-			$endResult = "$userName@$domainName";
-		}
-		else {
-			//$endResult = "<a href=\"mailto:$userName@$domainName\" title=\"$theTitle\">$userName@$domainName</a>";
-			$endResult = "$userName@$domainName";
-		}
+		$endResult = "$userName@$domainName";
+
 		if ($isItSafe) {
-			return(htmlentities($endResult));
+			$result_array['address'] = htmlentities($endResult);
 		}
 		else {
-			return($endResult);
+			$result_array['address'] = $endResult;
 		}
+		return $result_array;
 	}
 
 	function validUrl($url, $custProtocols = '') {
