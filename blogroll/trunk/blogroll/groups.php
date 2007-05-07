@@ -35,7 +35,7 @@
     elseif ($type == "add" || $type == "edit") {
       if ($type == "add") {
         echo '<h3 style="padding-left: 0px">Add new group</h3>';
-       echo '<form name="edit" method="post" action="'.$_SERVER['PHP_SELF'].'">';
+        echo '<form name="edit" method="post" action="'.$_SERVER['PHP_SELF'].'">';
         $url = 'http://';
         $text = '';
         $title = '';
@@ -66,7 +66,6 @@
   }
   
   function _listGroups($owner) {
-//    $groups = sql_query("SELECT * FROM `".sql_table('plug_blogroll_groups')."` WHERE `owner`=\"$owner\" ORDER BY `name`");
     echo "<h3 style=\"padding-left: 0px\">Manage groups</h3>";
     echo "<table><thead><tr><th>Name</th><th>Description</th><th>Num of Links</th><th>Action</th></tr></thead><tbody>";
     foreach (_getGroups($owner) as $group) {
@@ -79,17 +78,18 @@
     echo "</tbody></table>";
   }
 	
-	function _getGroups($owner) {
-	  $output = array();
+  function _getGroups($owner) {
+    $output = array();
     $groups = sql_query("SELECT * FROM `".sql_table('plug_blogroll_groups')."` WHERE `owner`=\"$owner\" ORDER BY `name`");
     while ($group = mysql_fetch_assoc($groups)) {
-	    $query = sql_query("SELECT COUNT(`id`) AS `count` FROM `".sql_table('plug_blogroll_links')."` WHERE `group`=".$group['id']);
-  	  $count = mysql_fetch_assoc($query);
-			$group = array_merge($group, $count);
-		  array_push($output, $group);
-		}
-		return($output);
-	}
+      $query = sql_query("SELECT COUNT(`id`) AS `count` FROM `".sql_table('plug_blogroll_links')."` WHERE `group`=".$group['id']);
+      $count = mysql_fetch_assoc($query);
+      $group = array_merge($group, $count);
+      array_push($output, $group);
+    }
+
+    return($output);
+  }
   
   if ($_POST['action'] != "") {
     switch ($_POST['action']) {
@@ -106,7 +106,7 @@
     }
   }
   
-  elseif ($_GET['page'] != "managelinks") {
+  elseif ($_GET['page'] != "managelinks" && $_GET['page'] != "managetag") {
     _listGroups($memberid);
     _makeGroupForm("add", "");
   }

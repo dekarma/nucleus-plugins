@@ -23,8 +23,10 @@ if ($_GET['n'] == "") {
 
   echo "<h2>Blogroll</h2>";
   echo "<ul>";
-  echo "<li><a href=\"index.php?action=pluginoptions&amp;plugid=".$oPluginAdmin->plugin->plugid."\">Edit options</a></li>";
-  echo "<li><a href=\"".$oPluginAdmin->plugin->getAdminURL()."\">Manage groups</a></li>";
+  if ($member->isAdmin() == true) {
+    echo "<li><a href=\"index.php?action=pluginoptions&amp;plugid=".$oPluginAdmin->plugin->plugid."\">Edit options</a></li>";
+  }
+  echo "<li><a href=\"".$oPluginAdmin->plugin->getAdminURL()."\">Blogroll Management Main Menu</a></li>";
 	echo "<li><a href=\"".$oPluginAdmin->plugin->getAdminURL()."bookmarklet.php\">Bookmarklet</a></li>";
   echo "</ul>";
 
@@ -33,6 +35,7 @@ if ($_GET['n'] == "") {
   
   if ($_POST['action'] != "") echo "<h3 style=\"padding-left: 0px\">Result</h3>";
   include("groups.php");
+  include("tags.php");
   include("links.php");
 
   $oPluginAdmin->end();
@@ -49,4 +52,6 @@ else {
   if (!$robot) { $query = sql_query('UPDATE `'.sql_table('plug_blogroll_links').'` SET `clicked`=NOW(), `counter`='.++$result['counter'].' WHERE `id`='.$_GET['n']); }
   header('Location: '.$result['url']);
 }
+
+//phpinfo(INFO_VARIABLES);
 ?>

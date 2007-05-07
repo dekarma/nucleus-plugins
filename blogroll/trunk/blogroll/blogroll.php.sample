@@ -1,0 +1,11 @@
+<?php
+
+$CONF = array();
+$CONF['Self'] = '.';
+
+include('./config.php');
+
+selectSkin('blogroll');
+selector();
+
+?>

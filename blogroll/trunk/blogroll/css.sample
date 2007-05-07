@@ -1,0 +1,4 @@
+.tinyT { font-size:14px;}
+.smallT { font-size:20px;}
+.mediumT { font-size:24px;}
+.largeT { font-size:26px; font-weight: bold;}

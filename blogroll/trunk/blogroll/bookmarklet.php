@@ -3,8 +3,9 @@
 include('../../../config.php');
 if (!$member->isLoggedIn()) doError('You\'re not logged in.');
 
+include($DIR_LIBS . 'PLUGINADMIN.php');
+
 if ($_POST['action'] == "" && $_GET['action'] == "") {
-  include($DIR_LIBS . 'PLUGINADMIN.php');
 
   // create the admin area page
   $oPluginAdmin = new PluginAdmin('Blogroll');
@@ -30,13 +31,15 @@ else {
   $url = $_POST['url'] == "" ? $_GET['url'] : $_POST['url'];
   $text = $_POST['text'] == "" ? stripslashes($_GET['text']) : $_POST['text'];
   $desc = $_POST['desc'] == "" ? stripslashes($_GET['desc']) : $_POST['desc'];
+  $comment = $_POST['comment'] == "" ? stripslashes($_GET['comment']) : $_POST['comment'];
+  $tag = $_POST['tag'] == "" ? stripslashes($_GET['tag']) : $_POST['tag'];
   $counter = $_POST['counter'] == "" ? 0 : $_POST['counter'];
   $groupid = $_POST['group'];
-  
+
   if ($_POST['action'] == "bmaddlink") {
     if ($groupid == "") $error = "Please choose a group to add the link to.";
   	else {
-  	  $error = _addLink($memberid, $groupid, $url, $text, $title, $counter);
+  	  $error = _addLink($memberid, $groupid, $url, htmlspecialchars($text), htmlspecialchars($desc), htmlspecialchars($comment), $tag, $counter);
   		if ($error[0]) {
   		  header("Location: $url");
   			exit();
@@ -58,9 +61,13 @@ else {
   echo "<tr onmouseover='focusRow(this);' onmouseout='blurRow(this);'>";
   echo "<td>URL</td><td><input name=\"url\" type=\"text\" id=\"url\" value=\"$url\" size=\"50\" maxlength=\"255\"></td></tr>";
   echo "<tr onmouseover='focusRow(this);' onmouseout='blurRow(this);'>";
-  echo "<td>Text</td><td><input name=\"text\" type=\"text\" id=\"text\" value=\"$text\" size=\"50\" maxlength=\"255\"> (optional)</td></tr>";
+  echo "<td>Title</td><td><input name=\"text\" type=\"text\" id=\"text\" value=\"$text\" size=\"50\" maxlength=\"255\"> (optional)</td></tr>";
   echo "<tr onmouseover='focusRow(this);' onmouseout='blurRow(this);'>";
-  echo "<td>Description</td><td><input name=\"title\" type=\"text\" id=\"title\" value=\"$title\" size=\"50\" maxlength=\"255\"> (optional)</tr></td>";
+  echo "<td>Description</td><td><input name=\"desc\" type=\"text\" id=\"desc\" value=\"$desc\" size=\"50\" maxlength=\"255\"> (optional)</tr></td>";
+  echo "<tr onmouseover='focusRow(this);' onmouseout='blurRow(this);'>";
+  echo "<td>Comment</td><td><input name=\"comment\" type=\"text\" id=\"comment\" value=\"$comment\" size=\"50\" maxlength=\"1024\"> (optional)</tr></td>";
+  echo "<tr onmouseover='focusRow(this);' onmouseout='blurRow(this);'>";
+  echo "<td>Tag</td><td><input name=\"tag\" type=\"text\" id=\"tag\" value=\"$tag\" size=\"50\" maxlength=\"255\"> (optional)</tr></td>";
   echo "<tr onmouseover='focusRow(this);' onmouseout='blurRow(this);'>";
   echo "<td>Counter</td><td><input name=\"counter\" type=\"text\" id=\"counter\" value=\"$counter\" value=\"0\" size=\"5\" maxlength=\"10\"></td></tr>";
   echo "<tr onmouseover='focusRow(this);' onmouseout='blurRow(this);'>";
