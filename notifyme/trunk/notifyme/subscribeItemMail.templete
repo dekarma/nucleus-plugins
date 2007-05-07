@@ -1,0 +1,3 @@
+Dear %##EMAIL##%,<p />Thanks for subscribing to '%##TITLE##%'.<p />
+Please activate your subscription now by visting: <a href="%##AUTHLINK##%">%##AUTHLINK##%</a><p />
+To unsubscribe to this item's comments, click: <a href="%##LINK##%">%##LINK##%</a>

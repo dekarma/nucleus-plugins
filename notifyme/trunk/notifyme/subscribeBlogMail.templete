@@ -1,0 +1,7 @@
+Dear %##EMAIL##%,<p />Thanks for subscribing to '%##BLOG##%'.<p />
+Please activate your subscription now by visting: <a href="%##AUTHLINK##%">%##AUTHLINK##%</a><p />
+
+email address: %##EMAIL##%<p />
+access key: %##KEY##%<p />
+To unsubscribe from this blog: <a href="%##LINK##%">%##LINK##%</a><p />
+To manage all subscriptions: <a href="%##MLINK##%">here</a>

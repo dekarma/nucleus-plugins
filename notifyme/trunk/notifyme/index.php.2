@@ -1,0 +1,86 @@
+<?php
+	/*
+	    History
+	    v0.1 (v0.17) - place holder version
+	    v0.2 (v0.18) - initial release
+	*/
+
+	// if your 'plugin' directory is not in the default location,
+	// edit this variable to point to your site directory
+	// (where config.php is)
+	$strRel = '../../../'; 
+
+	include($strRel . 'config.php');
+	if (!$member->isLoggedIn())
+		doError('You\'re not logged in.');
+		
+	include($DIR_LIBS . 'PLUGINADMIN.php');
+
+	// create the admin area page
+	$oPluginAdmin = new PluginAdmin('NotifyMe');
+	$oPluginAdmin->start();
+
+	echo '<h2>NotifyMe Subscription Management</h2>';
+	$query = mysql_query("SELECT count(*) as total FROM " . sql_table('plugin_notifyaddress'));
+	$row = mysql_fetch_object($query);
+	$total = $row->total;
+	echo "Total number of subscriptions: " . $total;
+
+	// Change the following line to change the num of entries to display at a time
+	$numToShow = 10;
+
+	$offset = intRequestVar('offset');
+	$query = "SELECT id,email,blogID,itemid FROM " . sql_table('plugin_notifyaddress') . " ORDER BY id LIMIT "
+		. $offset . "," . $numToShow;
+        $rows = mysql_query($query);
+        echo "<table>\n";
+        echo "<th>Subscription ID</th><th>Email</th><th>Blog ID</th><th>Item ID</th><th>Actions</th>";
+
+	while($row = mysql_fetch_object($rows)) {
+		echo "<tr>";
+		echo "<td>" . $row->id . "</td>";
+		echo "<td><a href=\"mailto:" . $row->email . "\">".$row->email."</td>";
+		echo "<td>" . "<a href=\"" . $CONF['IndexURL'] . createBlogidLink($row->blogID) . "\">" . getBlogNameFromID($row->blogID) . "</a></td>";
+		if ($row->itemid == 0) {
+			echo "<td>all</td>";
+		} else {
+			echo "<td><a href=\"" . $CONF['IndexURL'] . createItemLink($row->itemid) . "\">" . $row->itemid . "</a></td>";
+		}
+		$delurl = $CONF['ActionURL'] . '?action=plugin&name=NotifyMe&type=form&emailaddress=' . $row->email
+			. '&redirecturl=noredirect&currBlogId=' . $row->blogID;
+		if ($row->itemid != 0) {
+			$delurl = $delurl . '&itemid=' . $row->itemid;
+		}
+
+		echo "<td>" . "<a href=\"" . $delurl . "\">Delete</a>" . "</td>";
+		echo "</tr>";
+	}
+
+	echo "</table>\n";
+
+	if ($offset > 0) {
+		$newoffset = $offset-$numToShow;
+		$prevlink = $CONF['AdminURL'] . "plugins/notifyme/?&offset=" . $newoffset;
+	} else {
+		$prevlink = "";
+	}
+
+	if ($total > ($offset+$numToShow)) {
+		$newoffset = $offset+$numToShow;
+		$nextlink = $CONF['AdminURL'] . "plugins/notifyme/?&offset=" . $newoffset;
+	} else {
+		$nextlink = "";
+	}
+
+	if ($prevlink != "") {
+		echo "<a href=\"".$prevlink."\">Prev Page</a>";
+	}
+	if ($prevlink != "" && $nextlink != "") {
+		echo "|";
+	}
+	if ($nextlink != "") {
+		echo "<a href=\"".$nextlink."\">Next Page</a>";
+	}
+
+	$oPluginAdmin->end();
+?>

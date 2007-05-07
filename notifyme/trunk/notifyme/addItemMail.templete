@@ -1,0 +1,6 @@
+<h3>%##TITLE##%</h3>
+%##BODY##%
+<br />
+%##MORE##%
+<p />
+URL: <a href="%##URL##%">%##URL##%</a>
