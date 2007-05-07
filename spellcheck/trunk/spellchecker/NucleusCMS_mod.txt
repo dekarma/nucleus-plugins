@@ -1,0 +1,1 @@
+Note: spell_checker.php is mod to supprt NucleusCMS

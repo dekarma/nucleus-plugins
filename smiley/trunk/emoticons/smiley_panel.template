@@ -1,0 +1,64 @@
+<table width="100" border="0" cellspacing="0" cellpadding="5">
+<tr align="center">
+<td colspan="4" class="emotions"><b>Emoticons</b></td>
+</tr>
+<tr align="center" valign="middle">
+<td><a href="javascript:insertext(':D')">
+<img style="border: none;" alt="biggrin" src="##URL##/emoticons/icon_biggrin.gif"
+/></a> </td>
+<td><a href="javascript:insertext(':!:')">
+<img style="border: none;" alt="!" src="##URL##/emoticons/icon_exclaim.gif" /></a>
+</td>
+<td><a href="javascript:insertext(':?:')">
+<img style="border: none;" alt="?" src="##URL##/emoticons/icon_question.gif" /></a>
+</td>
+<td><a href="javascript:insertext('8)')">
+<img style="border: none;" alt="cool " src="##URL##/emoticons/icon_cool.gif" /></a>
+</td>
+<td><a href="javascript:insertext(':?')">
+<img style="border: none;" alt="confused" src="##URL##/emoticons/icon_confused.gif"
+/></a> </td>
+<td><a href="javascript:insertext(':idea:')">
+<img style="border: none;" alt="idea" src="##URL##/emoticons/icon_idea.gif" /></a>
+</td>
+<td><a href="javascript:insertext(':lol:')">
+<img style="border: none;" alt="lol" src="##URL##/emoticons/icon_lol.gif" /></a> </td>
+<td><a href="javascript:insertext(':oops:')">
+<img style="border: none;" alt="oops" src="##URL##/emoticons/icon_redface.gif" /></a>
+</td>
+<td><a href="javascript:insertext(':cry:')">
+<img style="border: none;" alt="cry" src="##URL##/emoticons/icon_cry.gif" /></a> </td>
+<td> <a href="javascript:insertext(':twisted:')">
+<img style="border: none;" alt="twisted" src="##URL##/emoticons/icon_twisted.gif"
+/></a></td>
+<td> <a href="javascript:insertext(':arrow:')">
+<img style="border: none;" alt="arrow" src="##URL##/emoticons/icon_arrow.gif"
+/></a></td>
+<td> <a href="javascript:insertext('8O')">
+<img style="border: none;" alt="eek" src="##URL##/emoticons/icon_eek.gif"
+/></a></td></tr>
+<tr align="center" valign="middle">
+<td> <a href="javascript:insertext(':evil:')">
+<img style="border: none;" alt="evil" src="##URL##/emoticons/icon_evil.gif"
+/></a></td>
+<td> <a href="javascript:insertext(':-(')">
+<img style="border: none;" alt="frown" src="##URL##/emoticons/icon_frown.gif"
+/></a></td>
+<td> <a href="javascript:insertext(':x')">
+<img style="border: none;" alt="mad" src="##URL##/emoticons/icon_mad.gif" /></a></td>
+<td><a href="javascript:insertext(':wink:')">
+<img style="border: none;" alt="wink" src="##URL##/emoticons/icon_wink.gif"
+/></a></td>
+<td><a href="javascript:insertext(':|')">
+<img style="border: none;" alt="neutral" src="##URL##/emoticons/icon_neutral.gif"
+/></a></td>
+<td><a href="javascript:insertext(':P')">
+<img style="border: none;" alt="razz" src="##URL##/emoticons/icon_razz.gif"
+/></a></td>
+<td><a href="javascript:insertext(':roll:')">
+<img style="border: none;" alt="rolleyes" src="##URL##/emoticons/icon_rolleyes.gif"
+/></a></td>
+<td><a href="javascript:insertext(':o')">
+<img style="border: none;" alt="surprised" src="##URL##/emoticons/icon_surprised.gif"
+/></a></td></tr>
+</table>
