@@ -1,0 +1,104 @@
+<h2>
+	All trackbacks for &quot;<?php echo $story['title'];?>&quot;
+	<?php if ($count > $amount): ?>
+		(Page <?php echo ceil($start / $amount) + 1;?> of <?php echo ceil($count / $amount);?>)
+	<?php endif; ?>
+</h2>
+
+<?php if(count($items)): ?>
+<?php if ($count > $amount): ?>
+<table class="navigation">
+	<tr>
+		<td style='padding: 0;'>
+			<?php if ($start > 0): ?>
+			<form method="post" action="<?php echo $CONF['PluginURL'];?>trackback/index.php">
+				<div>
+					<input type="submit" value="&lt;&lt; Previous" />	
+					<input type="hidden" name="action" value="list" />
+					<input type="hidden" name="id" value="<?php echo $story['id'];?>" />
+					<input type="hidden" name="start" value="<?php echo max(0,$start - $amount);?>" />
+				</div>
+			</form>
+			<?php endif; ?>
+		</td>
+		<td style='padding: 0; text-align: right;'>	
+			<?php if ($start + $amount < $count): ?>
+			<form method="post" action="<?php echo $CONF['PluginURL'];?>trackback/index.php">
+				<div>
+					<input type="submit" value="Next &gt; &gt;" />
+					<input type="hidden" name="action" value="list" />
+					<input type="hidden" name="id" value="<?php echo $story['id'];?>" />
+					<input type="hidden" name="start" value="<?php echo ($start + $amount);?>" />
+				</div>
+			</form>
+			<?php endif; ?>
+		</td>
+	</tr>
+</table>
+<?php endif; ?>
+
+<table>
+	<thead>
+		<tr>
+			<th>Title, Blog and Excerpt</th>
+			<th>Date</th>
+			<th colspan='3'>Actions</th>
+		</tr>
+	</thead>
+	<tbody>
+		<?php while (list(,$item) = each ($items)): ?>
+		<tr onmouseover='focusRow(this);' onmouseout='blurRow(this);'>
+			<td>
+				<strong><?php echo $item['title'];?></strong> 
+				<em>(<?php echo $item['blog_name'];?>)</em><br />
+				<?php echo $item['excerpt'];?>
+			</td>
+			<td>
+				<?php echo str_replace(' ', '&nbsp;', date("Y-m-d @ H:i",$item['timestamp']));?>
+			</td>
+			<td>
+				<a href='<?php echo $item['url'];?>'>Visit</a>
+			</td>
+			<td>
+				<a href='<?php echo $CONF['PluginURL'];?>trackback/index.php?action=block&amp;tb=<?php echo $item['id'];?>&amp;next=list&amp;id=<?php echo $story['id'];?>&amp;start=<?php echo $start;?>'>Block</a>
+			</td>
+			<td>
+				<a href='<?php echo $CONF['PluginURL'];?>trackback/index.php?action=delete&amp;tb=<?php echo $item['id'];?>&amp;next=list&amp;id=<?php echo $story['id'];?>&amp;start=<?php echo $start;?>'>Delete</a>
+			</td>
+		</tr>
+		<?php endwhile; ?>
+	</tbody>
+</table>
+
+<?php if ($count > $amount): ?>
+<table class="navigation">
+	<tr>
+		<td style='padding: 0;'>
+			<?php if ($start > 0): ?>
+			<form method="post" action="<?php echo $CONF['PluginURL'];?>trackback/index.php">
+				<div>
+					<input type="submit" value="&lt;&lt; Previous" />	
+					<input type="hidden" name="action" value="list" />
+					<input type="hidden" name="id" value="<?php echo $story['id'];?>" />
+					<input type="hidden" name="start" value="<?php echo max(0,$start - $amount);?>" />
+				</div>
+			</form>
+			<?php endif; ?>
+		</td>
+		<td style='padding: 0; text-align: right;'>	
+			<?php if ($start + $amount < $count): ?>
+			<form method="post" action="<?php echo $CONF['PluginURL'];?>trackback/index.php">
+				<div>
+					<input type="submit" value="Next &gt; &gt;" />
+					<input type="hidden" name="action" value="list" />
+					<input type="hidden" name="id" value="<?php echo $story['id'];?>" />
+					<input type="hidden" name="start" value="<?php echo ($start + $amount);?>" />
+				</div>
+			</form>
+			<?php endif; ?>
+		</td>
+	</tr>
+</table>
+<?php endif; ?>
+<?php endif; ?>
+

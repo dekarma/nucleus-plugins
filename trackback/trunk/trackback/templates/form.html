@@ -1,0 +1,57 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+	<head>
+		<title>Add TrackBack</title>
+		<link rel="stylesheet" type="text/css" href="<?php echo $CONF['AdminURL']?>styles/bookmarklet.css" />
+	</head>
+	
+	<body>
+		<h1>TrackBack Ping</h1>
+<?php if ($success): ?>
+		<p>
+			<strong>Your trackback has been received properly.</strong>
+		</p>
+<?php endif; ?>
+<?php if ($error): ?>
+		<p>
+			<strong><?php echo $status; ?></strong>
+		</p>
+<?php endif; ?>
+<?php if ($form): ?>		
+		<form method="post" action="<?php echo $CONF['ActionURL'] ?>">
+		
+		<div>
+			<input type="hidden" name="tb_id" value="<?php echo $itemid;?>" />
+			<input type="hidden" name="action" value="plugin" />
+			<input type="hidden" name="name" value="TrackBack" />
+			<input type="hidden" name="type" value="ping" />
+			<input type="hidden" name="tb_key" value="<?php echo $key; ?>" />
+
+			<table>
+				<tr>
+					<td>Article URL</td>
+					<td><input type="text" value="" name="url" size="60" /></td>
+				</tr>
+				<tr>
+					<td>Article Title</td>
+					<td><input type="text" value="" name="title" size="60" /></td>
+				</tr>
+				<tr>
+					<td>Excerpt from article</td>
+					<td><textarea name="excerpt" cols="40" rows="5"></textarea></td>
+				</tr>
+				<tr>
+					<td>Your Blog Name</td>
+					<td><input type="text" value="" name="blog_name" size="60" /></td>
+				</tr>
+				<tr>
+					<td>Add TrackBack</td>
+					<td><input type="submit" value="Add TrackBack" /></td>
+				</tr>
+			</table>
+		</div>
+		
+		</form>
+<?php endif; ?>
+	</body>
+</html>

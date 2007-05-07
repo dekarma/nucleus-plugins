@@ -1,0 +1,35 @@
+<h2>Overview of all items</h2>
+
+<?php if(count($blogs)): ?>
+
+<table>
+<?php while (list(,$blog) = each ($blogs)): ?>
+<?php if(count($blog['items'])): ?>
+	<thead>
+		<tr>
+			<th>Blog: <?php echo htmlspecialchars($blog['bname']);?></th>
+			<th>Total</th>
+			<th>Action</th>
+		</tr>
+	</thead>
+	<tbody>
+		<?php while (list(,$item) = each ($blog['items'])): ?>
+		<tr onmouseover='focusRow(this);' onmouseout='blurRow(this);'>
+			<td>
+				<?php echo $item['ititle'];?>
+			</td>
+			<td>
+				<?php echo htmlspecialchars($item['total']);?>
+			</td>
+			<td>
+				<a href='<?php echo $CONF['PluginURL'];?>trackback/index.php?action=list&amp;id=<?php echo $item['inumber'];?>'>Trackbacks</a>
+			</td>
+		</tr>
+		<?php endwhile; ?>
+	</tbody>
+<?php endif; ?>
+<?php endwhile; ?>
+</table>
+<?php endif; ?>
+
+

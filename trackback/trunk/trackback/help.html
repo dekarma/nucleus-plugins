@@ -1,0 +1,111 @@
+<h2>Help</h2>
+
+
+<h3>Skin variables</h3>
+
+<p>
+	<code>&lt;%TrackBack(list)%&gt;</code>
+</p>
+<p>
+	Show a list of trackbacks for the current page. Optionally it is also possible to
+	add an additional parameter, the story id number, which makes it possible to
+	show a list of trackbacks from a different page. The output of this variable is
+	fully configurable in the plugin options.
+</p>
+
+<p>
+	<code>&lt;%TrackBack(code)%&gt;</code>
+</p>
+<p>
+	Inserts a small piece of invisible RDF code in the page, which is used by other
+	weblogs to auto-detect the trackback URL. If you do not include this variable in
+	your skin for item pages, other weblogs will not be able to auto-detect that your
+	weblog is able to accept trackbacks.
+</p>
+
+<p>
+	<code>&lt;%TrackBack(form)%&gt;</code>
+</p>
+<p>
+	Insert the URL to a manual ping form. Using this form authors of other weblogs
+	can add trackbacks to your stories, even when their software does not support
+	trackbacks, such as Blogger. A link to this form is included in the footer of
+	the trackback list by default. If you want to place this link somewhere else 
+	on your page, simply remove the <code>&lt;%form%&gt;</code> variable from the 
+	<em>Footer</em> field in the plugin settings and add the skinvar somewhere on
+	your webpage.
+</p>
+
+<p>
+	<code>&lt;%TrackBack(url)%&gt;</code>
+</p>
+<p>
+	Insert the Trackback Ping URL. A this URL is also included in the footer of
+	the trackback list by default. If you want to place this link somewhere else 
+	on your page, simply remove the <code>&lt;%action%&gt;</code> variable from the 
+	<em>Footer</em> field in the plugin settings and add the skinvar somewhere on
+	your webpage.
+</p>
+	
+<h3>Template variables</h3>
+
+<p>
+	All the skin variables documented above are also available as template variables.
+</p>
+
+<p>
+	<code>&lt;%TrackBack(count)%&gt;</code>
+</p>
+<p>
+	If you want to include an indication of how many trackbacks are present for each
+	page you can use this variable. By default this variable will show: "No Trackbacks", 
+	"1 Trackback", "2 Trackbacks", etc. This is however also fully configurable in
+	the plugin options.
+</p>
+
+
+<h3>Changing the output</h3>
+
+<p>
+	It is possible to fully change the output of this plugin. You can manually change
+	the XHTML code in the plugin options, but you can also use CSS to style the default
+	output to your liking. Below you will find an example of what a little snippet of
+	CSS can do.
+</p>
+
+<pre>div.tb {
+	border: 1px solid #000; background: #FFF;
+}
+div.tb div.head {
+	padding: 4px;
+	background: #000; color: #FFF;
+	font-weight: bold; text-transform: lowercase; letter-spacing: 0.6em;
+}
+div.tb div.empty {
+	padding: 4px;
+	font-size: 95%;
+}
+div.tb div.item {
+	padding: 4px;
+}
+div.tb div.item div.name {
+	margin-bottom: 8px;
+	font-size: 120%; font-weight: bold;
+}
+div.tb div.item div.body {
+	font-size: 95%;
+}
+div.tb div.item div.body a {
+	font-weight: bold;
+}
+div.tb div.item div.date {
+	margin-bottom: 8px;
+	color: #888;
+	font-size: 85%; text-align: right;
+}
+div.tb div.info {
+	padding: 4px;
+	color: #FFF; background: #888;
+	font-size: 85%; font-style: italic;
+}</pre>
+

@@ -1,0 +1,49 @@
+
+<h2>Manually ping another weblog</h2>
+
+<form method="post" action="<?php echo $CONF['PluginURL'];?>trackback/index.php">
+
+	<input type="hidden" name="action" value="sendping" />
+	<input type="hidden" name="next" value="ping" />
+	
+	<table>
+		<tr>
+			<th colspan='2'>Manually Ping</th>
+		</tr>
+		<tr>
+			<td>Your URL</td>
+			<td>
+				<input type="text" name="url" size="60" value="<?php echo htmlentities($CONF['IndexURL']);?>" />
+			</td>
+		</tr>
+		<tr>
+			<td>Your Title</td>
+			<td>
+				<input type="text" value="" name="title" size="60" />
+			</td>
+		</tr>
+		<tr>
+			<td>Your Excerpt</td>
+			<td>
+					<textarea name="excerpt" cols="40" rows="5"></textarea>
+			</td>
+		</tr>
+		<tr>
+			<td>Your Blog Name</td>
+			<td>
+				<input type="text" name="blog_name" size="60" value="<?php echo htmlentities($CONF['SiteName']);?>" />
+			</td>
+		</tr>
+		<tr>
+			<td>External Ping URL</td>
+			<td>
+				<input type="text" value="" name="ping_url" size="60" />
+			</td>
+		</tr>
+		<tr>
+			<td>Send Ping</td>
+			<td><input type="submit" value="Send Ping" /></td>
+		</tr>
+	</table>
+
+</form>

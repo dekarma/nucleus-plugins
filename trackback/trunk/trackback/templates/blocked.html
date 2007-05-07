@@ -1,0 +1,112 @@
+<h2>
+	Blocked trackbacks
+	<?php if ($count > $amount): ?>
+		(Page <?php echo ceil($start / $amount) + 1;?> of <?php echo ceil($count / $amount);?>)
+	<?php endif; ?>
+</h2>
+
+<?php if(count($items)): ?>
+<?php if ($count > $amount): ?>
+<table class="navigation">
+	<tr>
+		<td style='padding: 0;'>
+			<?php if ($start > 0): ?>
+			<form method="post" action="<?php echo $CONF['PluginURL'];?>trackback/index.php">
+				<div>
+					<input type="submit" value="&lt;&lt; Previous" />	
+					<input type="hidden" name="action" value="blocked" />
+					<input type="hidden" name="start" value="<?php echo max(0,$start - $amount);?>" />
+				</div>
+			</form>
+			<?php endif; ?>
+		</td>
+		<td style='padding: 0; text-align: right;'>	
+			<?php if ($start + $amount < $count): ?>
+			<form method="post" action="<?php echo $CONF['PluginURL'];?>trackback/index.php">
+				<div>
+					<input type="submit" value="Next &gt; &gt;" />
+					<input type="hidden" name="action" value="blocked" />
+					<input type="hidden" name="start" value="<?php echo ($start + $amount);?>" />
+				</div>
+			</form>
+			<?php endif; ?>
+		</td>
+	</tr>
+</table>
+<?php endif; ?>
+
+<table>
+	<thead>
+		<tr>
+			<th>Story</th>
+			<th>Title, Blog and Excerpt</th>
+			<th>Spam?</th>
+			<th>Link?</th>
+			<th colspan='3'>Actions</th>
+		</tr>
+	</thead>
+	<tbody>
+		<?php while (list(,$item) = each ($items)): ?>
+		<tr onmouseover='focusRow(this);' onmouseout='blurRow(this);'>
+			<td>
+				<?php echo $item['story'];?>
+			</td>
+			<td>
+				<strong><?php echo $item['title'];?></strong> 
+				<em>(<?php echo $item['blog_name'];?>)</em><br />
+				<?php echo $item['excerpt'];?>
+			</td>
+			<td>
+				<?php echo $item['spam'] ? 
+					'<span style="color: darkred;">Yes</span>' : 
+					'<span style="color: darkgreen;">No</span>';?>
+			</td>
+			<td>
+				<?php echo $item['link'] ? 
+					'<span style="color: darkgreen;">Yes</span>' : 
+					'<span style="color: darkred;">No</span>';?>
+			</td>
+			<td>
+				<a href='<?php echo $item['url'];?>'>Visit</a>
+			</td>
+			<td>
+				<a href='<?php echo $CONF['PluginURL'];?>trackback/index.php?action=unblock&amp;tb=<?php echo $item['id'];?>&amp;next=blocked&amp;start=<?php echo $start;?>'>Unblock</a>
+			</td>
+			<td>
+				<a href='<?php echo $CONF['PluginURL'];?>trackback/index.php?action=delete&amp;tb=<?php echo $item['id'];?>&amp;next=blocked&amp;start=<?php echo $start;?>'>Delete</a>
+			</td>
+		</tr>
+		<?php endwhile; ?>
+	</tbody>
+</table>
+
+<?php if ($count > $amount): ?>
+<table class="navigation">
+	<tr>
+		<td style='padding: 0;'>
+			<?php if ($start > 0): ?>
+			<form method="post" action="<?php echo $CONF['PluginURL'];?>trackback/index.php">
+				<div>
+					<input type="submit" value="&lt;&lt; Previous" />	
+					<input type="hidden" name="action" value="blocked" />
+					<input type="hidden" name="start" value="<?php echo max(0,$start - $amount);?>" />
+				</div>
+			</form>
+			<?php endif; ?>
+		</td>
+		<td style='padding: 0; text-align: right;'>	
+			<?php if ($start + $amount < $count): ?>
+			<form method="post" action="<?php echo $CONF['PluginURL'];?>trackback/index.php">
+				<div>
+					<input type="submit" value="Next &gt; &gt;" />
+					<input type="hidden" name="action" value="blocked" />
+					<input type="hidden" name="start" value="<?php echo ($start + $amount);?>" />
+				</div>
+			</form>
+			<?php endif; ?>
+		</td>
+	</tr>
+</table>
+<?php endif; ?>
+<?php endif; ?>
+
