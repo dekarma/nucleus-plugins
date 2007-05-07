@@ -228,6 +228,22 @@ default setting set for that that field type in the type settings form.</p>
         <li>&lt;a href=&quot;skype://%DATA%&quot; title=&quot;Call %MEMBER% using Skype&quot;&gt;%DATA%&lt;/a&gt; would give a link to a users skype name</li>
         <li>&lt;div class=&quot;biography&quot;&gt;&lt;h2&gt;%LABEL%&lt;/h2&gt;%DATA%&lt;/div&gt; would put the contents of the field into a div of class biography and under a header of the field label.</li>
         </ul>
+    <li>For mail type fields. Some additional format variables are available as shown below. New in 2.16.</li>
+        <br /><b>Additional Mail Format Variables:</b>
+        <ul>
+        <li><b>%ADDRESS%</b> - The full email address. Usually same as %DATA% variable.</li>
+        <li><b>%ADDRESS(R)%</b> - The full email address with the &quot;@&quot; sign replaced by &quot; [at] &quot; and &quot;.&quot; repalced by &quot; [dot] &quot;. You can set different values for the @ and . replacements by appending this to end of format option: &quot;###{<i>at_replacement</i>}{<i>dot_replacement</i>}&quot;</li>
+        <li><b>%USERNAME%</b> - The username part of email address. Part before the &quot;@&quot;.</li>
+        <li><b>%SITENAME%</b> - The site name part of email address. Part after the &quot;@&quot; but before the last &quot;.&quot;.</li>
+        <li><b>%TLD%</b> - The top-level domain part of email address. Part after the last &quot;.&quot;.</li>
+        </ul>
+        <b>Examples:</b>
+        <ul>
+        <li>&lt;a href=&quot;mailto:%ADDRESS%&quot;&gt;%ADDRESS(R)%&lt;/a&gt; would give mailto link with displayed address being of form username [at] somesite [dot] com</li>
+        <li>&lt;a href=&quot;mailto:%ADDRESS%&quot;&gt;%ADDRESS(R)%&lt;/a&gt;###{ whose site is }{ [speck] } would give mailto link with displayed address being of form username whose site is somesite [speck] com</li>
+        <li>%ADDRESS(R)% would display the address of form username [at] somesite [dot] com</li>
+        <li>%ADDRESS(R)%###{ [+] }{ | } would display the address of form username [+] somesite | com</li>
+        </ul>
 	<li>For date type fields. Format should consist of the letters M, D, and Y, separated by a character like -, or /. The order of the letters M, D, and Y will also dictate the order of input. Optionally, for more detailed formatting, a date format string can be added here by appending ?<i>format</i> to this field where <i>format</i> is a valid <a href="http://us3.php.net/manual/en/function.date.php" title="PHP Date Function">php date() format</a>.For Example, if the date to display is 04 February 2007, </li>
 		<ul>
 		<li><i>D-M-Y</i> will display the date like 04-02-2007.</li>
@@ -308,6 +324,22 @@ default setting set for that that field type in the type settings form.</p>
         <ul>
         <li>&lt;a href=&quot;skype://%DATA%&quot; title=&quot;Call %MEMBER% using Skype&quot;&gt;%DATA%&lt;/a&gt; would give a link to a users skype name</li>
         <li>&lt;div class=&quot;biography&quot;&gt;&lt;h2&gt;%LABEL%&lt;/h2&gt;%DATA%&lt;/div&gt; would put the contents of the field into a div of class biography and under a header of the field label.</li>
+        </ul>
+    <li>For mail type fields. Some additional format variables are available as shown below. New in 2.16.</li>
+        <br /><b>Additional Mail Format Variables:</b>
+        <ul>
+        <li><b>%ADDRESS%</b> - The full email address. Usually same as %DATA% variable.</li>
+        <li><b>%ADDRESS(R)%</b> - The full email address with the &quot;@&quot; sign replaced by &quot; [at] &quot; and &quot;.&quot; repalced by &quot; [dot] &quot;. You can set different values for the @ and . replacements by appending this to end of format option: &quot;###{<i>at_replacement</i>}{<i>dot_replacement</i>}&quot;</li>
+        <li><b>%USERNAME%</b> - The username part of email address. Part before the &quot;@&quot;.</li>
+        <li><b>%SITENAME%</b> - The site name part of email address. Part after the &quot;@&quot; but before the last &quot;.&quot;.</li>
+        <li><b>%TLD%</b> - The top-level domain part of email address. Part after the last &quot;.&quot;.</li>
+        </ul>
+        <b>Examples:</b>
+        <ul>
+        <li>&lt;a href=&quot;mailto:%ADDRESS%&quot;&gt;%ADDRESS(R)%&lt;/a&gt; would give mailto link with displayed address being of form username [at] somesite [dot] com</li>
+        <li>&lt;a href=&quot;mailto:%ADDRESS%&quot;&gt;%ADDRESS(R)%&lt;/a&gt;###{ whose site is }{ [speck] } would give mailto link with displayed address being of form username whose site is somesite [speck] com</li>
+        <li>%ADDRESS(R)% would display the address of form username [at] somesite [dot] com</li>
+        <li>%ADDRESS(R)%###{ [+] }{ | } would display the address of form username [+] somesite | com</li>
         </ul>
 	<li>For date type fields. Format should consist of the letters M, D, and Y, separated by a character like -, or /. The order of the letters M, D, and Y will also dictate the order of input. Optionally, for more detailed formatting, a date format string can be added here by appending ?<i>format</i> to this field where <i>format</i> is a valid <a href="http://us3.php.net/manual/en/function.date.php" title="PHP Date Function">php date() format</a>.For Example, if the date to display is 04 February 2007, </li>
 		<ul>

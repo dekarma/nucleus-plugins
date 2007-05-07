@@ -117,7 +117,8 @@ History:
     * add option for deny message when user can't view email address (2.16.a03)
 	* add formatting options to mail type to allow custom formatting of actual address. 4 new format vars
 	  for mail types: %ADDRESS% (full address), %USERNAME% (part of address to left of @), %TLD% (Top-Level Domain, part right of last .),
-	  and %SITENAME% (the middle part of the address, after the @ and before the last .) (2.16.a04) [NEED TO ADD TO HELP FILE]
+	  and %SITENAME% (the middle part of the address, after the @ and before the last .) (2.16.a04)
+    * add formatting option to mail type to allow customized @ and . replacements in mail address. %ADDRESS(R)%. see help for format. (2.16.a05)
 [FUTURE]
   [v2.20 -- future release to require upgrade procedure (uninstall/reinstall)]
     * rename fvalidate column to fformatnull. See all occurences of fvalidate in this file and in profile/index.php.
@@ -145,7 +146,7 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://www.iai.com/';	}
 
-	function getVersion() {	return '2.16.a04'; }
+	function getVersion() {	return '2.16.a05'; }
 
 	function getDescription() {
         if (!$this->_optionExists('email_public_deny') && $this->_optionExists('email_public')) {
@@ -964,7 +965,7 @@ password
                             if ($value == '') {
                                 $formatnull = $this->getFieldAttribute($param1,'fvalidate');
                                 $label = $this->getFieldAttribute($param1,'flabel');
-                                $safe_add = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%','%ADDRESS%','%USERNAME%','%SITENAME%','%TLD%'), array($value,$label,$value,$param1,$pname,$pmid,$safe_add,$safe_add_arr['username'],$safe_add_arr['sitename'],$safe_add_arr['tld']), $formatnull);
+                                $safe_add = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%','%ADDRESS%','%USERNAME%','%SITENAME%','%TLD%','%ADDRESS(R)%'), array($value,$label,$value,$param1,$pname,$pmid,$safe_add,$safe_add_arr['username'],$safe_add_arr['sitename'],$safe_add_arr['tld'],$safe_add_arr['address_r']), $formatnull);
                             }
 							elseif ($param3 == 'raw') {
 								$fstart = '';
@@ -975,10 +976,20 @@ password
                                 $fend = '" title="Member '.$pmid.'">'.$safe_add.'</a>';
                             }
 							else {
-                                $format = $this->getFieldAttribute($param1,'fformat');
+                                $formatarr = explode("###",$this->getFieldAttribute($param1,'fformat'));
+                                $format = $formatarr[0];
                                 if (trim($format) !== '' && $value !== '') {
                                     $label = $this->getFieldAttribute($param1,'flabel');
-                                    $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%','%ADDRESS%','%USERNAME%','%SITENAME%','%TLD%'), array($value,$label,$value,$param1,$pname,$pmid,$safe_add,$safe_add_arr['username'],$safe_add_arr['sitename'],$safe_add_arr['tld']), $format);
+                                    $at_rep = ' [at] ';
+                                    $dot_rep = ' [dot] ';
+                                    if (trim($formatarr[1]) != '') {
+                                        if (preg_match_all( "#\{(.*?)\}\{(.*?)\}#", trim($formatarr[1]), $rep_matches)) {
+                                            $at_rep = $rep_matches[1][0];
+                                            $dot_rep = $rep_matches[2][0];
+                                        }
+                                    }
+                                    $safe_add_arr['address_r'] = str_replace(array('@','&#64;','.','&#46;'), array($at_rep,$at_rep,$dot_rep,$dot_rep),$safe_add_arr['address']);
+                                    $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%','%ADDRESS%','%USERNAME%','%SITENAME%','%TLD%','%ADDRESS(R)%'), array($value,$label,$value,$param1,$pname,$pmid,$safe_add,$safe_add_arr['username'],$safe_add_arr['sitename'],$safe_add_arr['tld'],$safe_add_arr['address_r']), $format);
                                     $safe_add = $fvalue;
                                     $fstart = '';
                                     $fend = '';
@@ -1268,7 +1279,7 @@ password
 								if ($value == '') {
                                     $formatnull = $this->getFieldAttribute($param1,'fvalidate');
                                     $label = $this->getFieldAttribute($param1,'flabel');
-                                    $safe_add = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%','%ADDRESS%','%USERNAME%','%SITENAME%','%TLD%'), array($value,$label,$value,$param1,$pname,$pmid,$safe_add,$safe_add_arr['username'],$safe_add_arr['sitename'],$safe_add_arr['tld']), $formatnull);
+                                    $safe_add = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%','%ADDRESS%','%USERNAME%','%SITENAME%','%TLD%','%ADDRESS(R)%'), array($value,$label,$value,$param1,$pname,$pmid,$safe_add,$safe_add_arr['username'],$safe_add_arr['sitename'],$safe_add_arr['tld'],$safe_add_arr['address_r']), $formatnull);
 								}
                                 elseif ($param3 == 'raw') {
 									$fstart = '';
@@ -1279,10 +1290,20 @@ password
 									$fend = '" title="Member '.$pmid.'">'.$safe_add.'</a>';
                                 }
 								else {
-                                    $format = $this->getFieldAttribute($param1,'fformat');
+                                    $formatarr = explode("###",$this->getFieldAttribute($param1,'fformat'));
+                                    $format = $formatarr[0];
                                     if (trim($format) !== '' && $value !== '') {
                                         $label = $this->getFieldAttribute($param1,'flabel');
-                                        $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%','%ADDRESS%','%USERNAME%','%SITENAME%','%TLD%'), array($value,$label,$value,$param1,$pname,$pmid,$safe_add,$safe_add_arr['username'],$safe_add_arr['sitename'],$safe_add_arr['tld']), $format);
+                                        $at_rep = ' [at] ';
+                                        $dot_rep = ' [dot] ';
+                                        if (trim($formatarr[1]) != '') {
+                                            if (preg_match_all( "#\{(.*?)\}\{(.*?)\}#", trim($formatarr[1]), $rep_matches)) {
+                                                $at_rep = $rep_matches[1][0];
+                                                $dot_rep = $rep_matches[2][0];
+                                            }
+                                        }
+                                        $safe_add_arr['address_r'] = str_replace(array('@','&#64;','.','&#46;'), array($at_rep,$at_rep,$dot_rep,$dot_rep),$safe_add_arr['address']);
+                                        $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%','%ADDRESS%','%USERNAME%','%SITENAME%','%TLD%','%ADDRESS(R)%'), array($value,$label,$value,$param1,$pname,$pmid,$safe_add,$safe_add_arr['username'],$safe_add_arr['sitename'],$safe_add_arr['tld'],$safe_add_arr['address_r']), $format);
 										$safe_add = $fvalue;
                                         $fstart = '';
                                         $fend = '';
