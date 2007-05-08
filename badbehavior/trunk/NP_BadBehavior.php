@@ -25,6 +25,7 @@
 
 /*
     Version history:
+    * v 0.22 - fix bug on log tab of admin page.
     * v 0.21 - fix bug in logs on initial page load. Scrub input a bit more in log queries.
     * v 0.2 - add Logs tab to admin page
     * v 0.1b - initial beta release.
@@ -35,7 +36,7 @@ class NP_BadBehavior extends NucleusPlugin {
 	function getName() {	return 'BadBehavior'; 	}
 	function getAuthor()  { return 'Frank Truscott'; 	}
 	function getURL() { return 'http://www.iai.com/'; }
-	function getVersion() {	return '0.21'; }
+	function getVersion() {	return '0.22'; }
 	function getDescription() {
 		return 'Give admin area for bad behavior spam fighting script';
 	}

@@ -119,6 +119,7 @@ History:
 	  for mail types: %ADDRESS% (full address), %USERNAME% (part of address to left of @), %TLD% (Top-Level Domain, part right of last .),
 	  and %SITENAME% (the middle part of the address, after the @ and before the last .) (2.16.a04)
     * add formatting option to mail type to allow customized @ and . replacements in mail address. %ADDRESS(R)%. see help for format. (2.16.a05)
+    * add ticket functions to comply with nucleuscms v3.3 JP (2.16.a06)
 [FUTURE]
   [v2.20 -- future release to require upgrade procedure (uninstall/reinstall)]
     * rename fvalidate column to fformatnull. See all occurences of fvalidate in this file and in profile/index.php.
@@ -146,7 +147,7 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://www.iai.com/';	}
 
-	function getVersion() {	return '2.16.a05'; }
+	function getVersion() {	return '2.16.a06'; }
 
 	function getDescription() {
         if (!$this->_optionExists('email_public_deny') && $this->_optionExists('email_public')) {
@@ -1694,14 +1695,14 @@ password
 	} // end doSkinVar()
 
 	function doAction($actionType) {
-		global $CONF, $_POST, $_FILES, $member, $DIR_MEDIA, $HTTP_REFERER;
+		global $CONF, $_POST, $_FILES, $member, $DIR_MEDIA, $HTTP_REFERER, $manager;
 		$key = array_keys($_POST);
 		$actiontype = postVar('type');
 		$destURL = '';
 
 		switch($actiontype) {
 		case 'updatefield':
-			if (!$member->isAdmin()) doError(_PROFILE_ACTION_DENY);
+			if (!$member->isAdmin() || !$manager->checkTicket()) doError(_PROFILE_ACTION_DENY);
 			$ofname = postVar('ofname');
 			$fname = postVar('fname');
 			if ($fname == '') doError(_PROFILE_ACTION_NO_FIELD);
@@ -1741,7 +1742,7 @@ password
 			header('Location: ' . $destURL);
 			break;
 		case 'addfield':
-			if (!$member->isAdmin()) doError(_PROFILE_ACTION_DENY);
+			if (!$member->isAdmin() || !$manager->checkTicket()) doError(_PROFILE_ACTION_DENY);
 			$destURL = $CONF['PluginURL'] . "profile/index.php?showlist=fields&safe=true&status=1";
 			$fname = postVar('fname');
 			if ($fname == '') doError(_PROFILE_ACTION_NO_FIELD);
@@ -1776,7 +1777,7 @@ password
 			header('Location: ' . $destURL);
 			break;
 		case 'deletefield':
-			if (!$member->isAdmin()) doError(_PROFILE_ACTION_DENY);
+			if (!$member->isAdmin() || !$manager->checkTicket()) doError(_PROFILE_ACTION_DENY);
 			$destURL = $CONF['PluginURL'] . "profile/index.php?showlist=fields&safe=true&status=3";
 			$fname = postVar('fname');
 			if ($fname == '') doError(_PROFILE_ACTION_NO_FIELD);
@@ -1789,7 +1790,7 @@ password
 			header('Location: ' . $destURL);
 			break;
 		case 'updateconfig':
-			if (!$member->isAdmin()) doError(_PROFILE_ACTION_DENY);
+			if (!$member->isAdmin() || !$manager->checkTicket()) doError(_PROFILE_ACTION_DENY);
 			$destURL = $CONF['PluginURL'] . "profile/index.php?showlist=config&safe=true&status=2";
 			$epvalue = postVar('editprofile');
 			$this->updateConfig($epvalue);
@@ -1797,7 +1798,7 @@ password
 			header('Location: ' . $destURL);
 			break;
 		case 'updatetype':
-			if (!$member->isAdmin()) doError(_PROFILE_ACTION_DENY);
+			if (!$member->isAdmin() || !$manager->checkTicket()) doError(_PROFILE_ACTION_DENY);
 			$otype = postVar('odtype');
 			$type = postVar('dtype');
 			if ($type == '') doError(_PROFILE_ACTION_NO_TYPE);

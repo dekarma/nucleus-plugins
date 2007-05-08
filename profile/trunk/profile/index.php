@@ -21,12 +21,15 @@ PARTICULAR PURPOSE. See the GNU General Public License for more details.
 	$plugname = "NP_Profile";
 
 	include($strRel . 'config.php');
+    global $CONF,$manager,$member;
 	if (!$member->isAdmin())
 		doError("You cannot access this area.");
 
+    $manager->checkTicket();
+
 	include($DIR_LIBS . 'PLUGINADMIN.php');
 
-	global $CONF,$manager;
+
 
 	$disFieldCols = array('fvalidate','forder');
 	$disTypeCols = array('fvalidate');
@@ -232,6 +235,7 @@ border-bottom: 1px solid #778;
         echo '<input type="hidden" name="action" value="plugin" />'."\n";
         echo '<input type="hidden" name="name" value="Profile" />'."\n";
         echo '<input type="hidden" name="ofname" value="'.$ofname.'" />'."\n";
+        $manager->addTicketHidden();
 		echo '<table border="0" cellpadding="3" width="600">'."\n";
 		echo "<tr class=\"h\">\n";
 		echo "<th>".ucfirst(_PROFILE_PARAMETER)."</th><th>".ucfirst(_PROFILE_VALUE)."</th><th>".ucfirst(_PROFILE_HELP)."</th></tr>\n";
@@ -305,6 +309,7 @@ border-bottom: 1px solid #778;
         echo '<input type="hidden" name="name" value="Profile" />'."\n";
         echo '<input type="hidden" name="fname" value="'.$fname.'" />'."\n";
 		echo '<input type="hidden" name="type" value="'.$acttype.'" />'."\n";
+        $manager->addTicketHidden();
 		echo _PROFILE_ADMIN_DELETE_OPEN." - '$fname'<br /><br />";
 		echo _PROFILE_ADMIN_DELETE_BODY1."<br />\n";
 		echo _PROFILE_ADMIN_DELETE_BODY2."<br /><br />\n";
@@ -399,6 +404,7 @@ border-bottom: 1px solid #778;
 			echo '<input type="hidden" name="type" value="'.$acttype.'" />'."\n";
 			echo '<input type="hidden" name="odtype" value="'.$odtype.'" />'."\n";
 			echo '<input type="hidden" name="dtype" value="'.$dtype.'" />'."\n";
+            $manager->addTicketHidden();
 
 			echo '<table border="0" cellpadding="3" width="600">'."\n";
 		echo "<tr class=\"h\">\n";
@@ -462,6 +468,7 @@ border-bottom: 1px solid #778;
 		echo '<input type="hidden" name="action" value="plugin" />'."\n";
 		echo '<input type="hidden" name="name" value="Profile" />'."\n";
 		echo '<input type="hidden" name="type" value="'.$acttype.'" />'."\n";
+        $manager->addTicketHidden();
 		echo '<table border="0" cellpadding="3" width="600">'."\n";
 		echo '<tr><td class="e">editprofile</td><td class="v"><textarea name="editprofile" cols="30" rows="20">' . $profplug->getConfigValue('editprofile') . '</textarea>' . "</td></tr>\n";
 		echo '<tr><td class="e"></td><td class="v"><input type="submit" value="'._PROFILE_SUBMIT.'" />'."</td></tr>\n";

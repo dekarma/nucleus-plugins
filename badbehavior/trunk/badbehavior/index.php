@@ -32,7 +32,7 @@
     $fname = stringStripTags(trim(requestVar('fname')));
 	$oname = stringStripTags(trim(requestVar('oname')));
 	$iname = stringStripTags(trim(requestVar('iname')));
-	$iname = preg_replace('|[^a-z0-9.,_/]|i', ' ', $iname);
+	$iname = preg_replace('|[^a-z0-9.,_/-]|i', '_', $iname);
 
 $newhead = '
 <style>
@@ -183,7 +183,7 @@ border-bottom: 1px solid #778;
         if ($tname) {
             $fsql = "SHOW COLUMNS FROM ".addslashes($tname);
             $fresult = mysql_query($fsql);
-            echo '<form method="post" action="">'."\n";
+            echo '<form method="post" action="'.$thispage.'?showlist=logs">'."\n";
             echo '<input type="hidden" name="tname" value="'.$tname.'" />'."\n";
             echo add_field_select_field($fresult,$fname,0);
             $opers = array('like'=>'LIKE', '!LIKE'=>'NOT LIKE', 'eq'=>'=', '!eq'=>'!=', 'lt'=>'<', 'lteq'=>'<=', 'gt'=>'>', 'gteq'=>'>=');
