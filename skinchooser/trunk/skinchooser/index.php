@@ -12,13 +12,14 @@
 		doError('You do not have admin rights for any blogs.');
 
     global $CONF,$manager;
+
     $thispage = $CONF['PluginURL'] . "skinchooser/index.php";
 
 	$oPluginAdmin = new PluginAdmin('SkinChooser');
     $oPluginAdmin->start($newhead);
     $plugin =& $oPluginAdmin->plugin;
     if ($plugin->siRights()) {
-        if (postVar('action') == 'update') {
+        if (postVar('action') == 'update' && $manager->checkTicket()) {
             $valuearr = postVar('sid');
             if (!is_array($valuearr)) $valuearr = array($valuearr);
             $plugin->setAvailableSkins($valuearr);
@@ -31,6 +32,7 @@
 			echo "<p>Select the skins you want to be available to the chooser.</p>\n";
             echo '<form method="post" action="'.$thispage.'">'."\n";
             echo '<input type="hidden" name="action" value="update" />'."\n";
+            $manager->addTicketHidden;
 			echo "<table>\n";
             $menu = '';
             foreach ($allskins as $key=>$value) {

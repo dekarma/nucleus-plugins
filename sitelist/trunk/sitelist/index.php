@@ -22,6 +22,7 @@
 	include($DIR_LIBS . 'PLUGINADMIN.php');
 
 	global $CONF,$manager;
+    // $manager->checkTicket();
 	$showlist = trim(strtolower(requestVar('showlist')));
 	$safe = trim(strtolower(requestVar('safe')));
 	$siteurl = requestVar('surl');
