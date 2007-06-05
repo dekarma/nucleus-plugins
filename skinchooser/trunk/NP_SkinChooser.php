@@ -31,7 +31,7 @@ class NP_SkinChooser extends NucleusPlugin {
 	function getName() {	return 'SkinChooser'; 	}
 	function getAuthor()  { return 'Frank Truscott'; 	}
 	function getURL() { return 'http://www.iai.com/'; }
-	function getVersion() {	return '0.2'; }
+	function getVersion() {	return '0.2.a02'; }
 	function getDescription() {
 		return 'Let guests choose skins.';
 	}
@@ -53,17 +53,33 @@ class NP_SkinChooser extends NucleusPlugin {
         $this->createOption("del_uninstall", "Delete tables on uninstall?", "yesno", "no");
 		$this->createOption('quickmenu', 'Show Admin Area in quick menu?', 'yesno', 'yes');
         $this->createOption('accesslevel', 'Who should have access to SkinChooser admin', 'select', 'Site Admins', 'Site Admins|8|Blog Admins|4|Team Members|2|All Logged-In Users|1');
-        $this->createOption('randomdef', 'Select random skin from list as default when no skin chosen?', 'yesno', 'no');
+        //$this->createOption('randomdef', 'Select random skin from list as default when no skin chosen?', 'yesno', 'no');
 
         // Create tables needed
         $query = "CREATE TABLE IF NOT EXISTS `".sql_table('plug_skinchooser')."` (
                   `skinid` int(11) NOT NULL,
                   `skinname` varchar(250) default NULL,
+                  `blogid` int(11) NOT NULL,
                   PRIMARY KEY  (`skinid`),
                   KEY `skinname` (`skinname`)
                   ) TYPE=MyISAM PACK_KEYS=0;";
         sql_query($query);
 
+        $query = "CREATE TABLE IF NOT EXISTS `".sql_table('plug_skinchooser_config')."` (
+                  `blogid` int(11) NOT NULL,
+                  `configname` varchar(250) default NULL,
+                  `configvalue` varchar(250) default NULL,
+                  PRIMARY KEY  (`blogid`),
+                  KEY `skinname` (`configname`)
+                  ) TYPE=MyISAM PACK_KEYS=0;";
+        sql_query($query);
+
+        // this is for upgrading from the beta release
+        $hasblogid = mysql_num_rows(sql_query("SHOW COLUMNS FROM `".sql_table('plug_skinchooser')."` LIKE 'blogid'"));
+        if (!$hasblogid) {
+            sql_query("ALTER TABLE ".sql_table('plug_skinchooser')." ADD `blogid` int(11) NOT NULL default '0' AFTER `skinname`");
+	  		sql_query("UPDATE ".sql_table('plug_skinchooser')." SET `blogid` = '0'");
+        }
     }
 
 	function unInstall() {
@@ -91,52 +107,59 @@ class NP_SkinChooser extends NucleusPlugin {
 	function event_InitSkinParse(&$data) {
         global $blogid;
 
-        $newskinid = intval(cookieVar('nucleus_skinchooser_skin_'.$blogid));
-        $avail_skins = $this->getAvailableSkins();
-        $use_random = $this->getOption('randomdef');
-        if ($use_random == '') {
-            $this->createOption('randomdef', 'Select random skin from list as default when no skin chosen?', 'yesno', 'no');
-            $use_random = 'no';
+        $blogid = intval($blogid);
+        if (!intval(quickQuery("SELECT `configvalue` as result FROM `".sql_table('plug_skinchooser_config')."` WHERE `blogid`=$blogid AND `configname` = 'disabled'"))) {
+            $newskinid = intval(cookieVar('nucleus_skinchooser_skin_'.$blogid));
+            // 999999999 is skinid of random
+            $avail_skins = $this->getAvailableSkins($blogid);
+            $use_random = 0;
+            if (intval(quickQuery("SELECT `configvalue` as result FROM `".sql_table('plug_skinchooser_config')."` WHERE `blogid`=$blogid AND `configname` = 'random'"))) {
+                $use_random = 1;
+            }
+
+            if (($newskinid == 0 || $newskinid == 999999999) && $use_random == 'yes') {
+                srand((float) microtime() * 10000000);
+                $newskinid = intval($avail_skins[array_rand($avail_skins)]);
+            }
+            if ($newskinid > 0 && array_key_exists($newskinid,$avail_skins) && $newskinid != 999999999) {
+                //doError($newskinid);
+                global $skinid;
+                $newskinname = SKIN::getNameFromId($newskinid);
+                $newskin = SKIN::createFromName($newskinname);
+                $data['skin']->id = $newskin->id;
+                $data['skin']->name = $newskin->name;
+                $data['skin']->description= $newskin->description;
+                $data['skin']->contentType = $newskin->contentType;
+                $data['skin']->includeMode = $newskin->includeMode;
+                $data['skin']->includePrefix = $newskin->includePrefix;
+                $skinid = $newskin->id;
+            }
         }
-        if ($newskinid == 0 && $use_random == 'yes') {
-            srand((float) microtime() * 10000000);
-            $newskinid = intval($avail_skins[array_rand($avail_skins)]);
-        }
-		if ($newskinid > 0 && array_key_exists($newskinid,$avail_skins)) {
-			//doError($newskinid);
-			global $skinid;
-			$newskinname = SKIN::getNameFromId($newskinid);
-			$newskin = SKIN::createFromName($newskinname);
-			$data['skin']->id = $newskin->id;
-			$data['skin']->name = $newskin->name;
-			$data['skin']->description= $newskin->description;
-			$data['skin']->contentType = $newskin->contentType;
-			$data['skin']->includeMode = $newskin->includeMode;
-			$data['skin']->includePrefix = $newskin->includePrefix;
-			$skinid = $newskin->id;
-		}
 	}
 
 	function doSkinVar($skinType) {
         global $CONF,$skinid,$blogid;
 
-        $skin_array = $this->getAvailableSkins();
-        echo '<form method="post" action="'.$CONF['ActionURL'].'">'."\n";
-        echo "<input type=\"hidden\" name=\"action\" value=\"plugin\" />\n";        echo "<input type=\"hidden\" name=\"name\" value=\"SkinChooser\" />\n";        echo "<input type=\"hidden\" name=\"type\" value=\"set_cookie\" />\n";
-        echo "<input type=\"hidden\" name=\"bid\" value=\"$blogid\" />\n";
-        echo '<select name="sid">'."\n";
-        $menu = '';
-        foreach ($skin_array as $key=>$value) {
-			if ($key == $skinid) {
-				$menu .= '<option value="'.$key.'" selected="selected">'.$value."</option>\n";
-			}
-			else {
-				$menu .= '<option value="'.$key.'">'.$value."</option>\n";
-			}
-		}
-		$menu .= "</select>\n";
-		echo $menu;
-        echo '<input type="submit" value="Set" class="formbutton" /></form>'."\n";        echo "</form>\n";
+        $blogid = intval($blogid);
+        if (!intval(quickQuery("SELECT `configvalue` as result FROM `".sql_table('plug_skinchooser_config')."` WHERE `blogid`=$blogid AND `configname` = 'disabled'"))) {
+            $skin_array = $this->getAvailableSkins($blogid);
+            echo '<form method="post" action="'.$CONF['ActionURL'].'">'."\n";
+            echo "<input type=\"hidden\" name=\"action\" value=\"plugin\" />\n";            echo "<input type=\"hidden\" name=\"name\" value=\"SkinChooser\" />\n";            echo "<input type=\"hidden\" name=\"type\" value=\"set_cookie\" />\n";
+            echo "<input type=\"hidden\" name=\"bid\" value=\"$blogid\" />\n";
+            echo '<select name="sid">'."\n";
+            $menu = '';
+            foreach ($skin_array as $key=>$value) {
+                if ($key == $skinid) {
+                    $menu .= '<option value="'.$key.'" selected="selected">'.$value."</option>\n";
+                }
+                else {
+                    $menu .= '<option value="'.$key.'">'.$value."</option>\n";
+                }
+            }
+            $menu .= "</select>\n";
+            echo $menu;
+            echo '<input type="submit" value="Set" class="formbutton" /></form>'."\n";            echo "</form>\n";
+        }
 	}
 
 	function doAction($type) {
@@ -168,10 +191,11 @@ class NP_SkinChooser extends NucleusPlugin {
                 $r[$row['sdnumber']] = $row['sdname'];
             }
         }
+        $r[999999999] = 'random skin';
         return $r;
     }
 
-    function getAvailableSkins() {
+    function getAvailableSkins($bid = 0) {
         $r = array();
         $query = "SELECT skinid, skinname FROM ".sql_table('plug_skinchooser');
         $result = sql_query($query);
@@ -183,18 +207,46 @@ class NP_SkinChooser extends NucleusPlugin {
         return $r;
     }
 
-    function setAvailableSkins($valuearr = '') {
+    function setAvailableSkins($valuearr = '', $bid = '') {
         if (!is_array($valuearr)) return;
+        if ($bid == '') return;
         if (!$this->siRights()) return;
-        sql_query("DELETE FROM ".sql_table('plug_skinchooser')." WHERE skinid > 0");
+        $bid = intval($bid);
+        global $member;
+        if ( ($bid == 0 && !$member->isAdmin()) || ($bid > 0 && !$member->blogAdminRights($bid)) ) return;
+        sql_query("DELETE FROM `".sql_table('plug_skinchooser')."` WHERE `skinid` > 0 AND `blogid`=$bid");
 
         foreach ($valuearr as $value) {
             $value = intval($value);
             if ($value > 0) {
-                $skinname = addslashes(quickQuery("SELECT sdname as result FROM ".sql_table('skin_desc')." WHERE sdnumber=$value"));
-                $query = "INSERT INTO ".sql_table('plug_skinchooser')." (skinid,skinname) VALUES($value,'$skinname')";
+                if ($value == 999999999) {
+                    $skinname = 'random skin';
+                }
+                else {
+                    $skinname = addslashes(quickQuery("SELECT `sdname` as result FROM `".sql_table('skin_desc')."` WHERE `sdnumber`=$value"));
+                }
+                $query = "INSERT INTO `".sql_table('plug_skinchooser')."` (`skinid`,`skinname`,`blogid`) VALUES($value,'$skinname',$bid)";
                 sql_query($query);
             }
+        }
+    }
+
+    function setConfigSettings($valuearr = '', $bid) {
+        if (!is_array($valuearr)) return;
+        if ($bid == '') return;
+        if (!$this->siRights()) return;
+        $bid = intval($bid);
+        global $member;
+        if ( ($bid == 0 && !$member->isAdmin()) || ($bid > 0 && !$member->blogAdminRights($bid)) ) return;
+
+        sql_query("DELETE FROM `".sql_table('plug_skinchooser_config')."` WHERE `blogid`=$bid");
+
+        foreach ($valuearr as $key=>$value) {
+            $key = addslashes($key);
+            $value = addslashes($value);
+
+            $query = "INSERT INTO `".sql_table('plug_skinchooser_config')."` (`blogid`,`configname`,`configvalue`) VALUES($bid,'$key','$value')";
+            sql_query($query);
         }
     }
 

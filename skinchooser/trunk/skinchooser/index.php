@@ -50,7 +50,7 @@
         }
     }
     else {
-        echo "You do not access to this page.";
+        echo "You cannot access this page.";
     }
 
     $oPluginAdmin->end();
