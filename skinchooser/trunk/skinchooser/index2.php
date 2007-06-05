@@ -33,10 +33,10 @@
 	//$action_url = $CONF['ActionURL'];
 	$adminpage = $CONF['AdminURL'];
 	$thispage = $CONF['PluginURL'] . "skinchooser/index.php";
-	$bshow = intval(requestVar('bshow'));
+	$bid = intval(requestVar('bid'));
 	//$showlist = trim(strtolower(requestVar('showlist')));
 	//if (!in_array($showlist, array('items','cats'))) $showlist = 'items';
-	$toplink = '<p class="center"><a href="'.$thispage.'?showlist='.$showlist.'&amp;bshow='.$bshow.'#sitop" alt="Return to Top of Page">-top-</a></p>'."\n";
+	$toplink = '<p class="center"><a href="'.$thispage.'?showlist='.$showlist.'&amp;bid='.$bid.'#sitop" alt="Return to Top of Page">-top-</a></p>'."\n";
 /*
 $newhead = '
 <style>
@@ -137,14 +137,14 @@ border-bottom: 1px solid #778;
 	echo '<div class="center">'."\n";
 	echo '<form method="post" action="'.$thispage.'">'."\n";
 	echo '<h3>Blog to Manage: &nbsp;&nbsp;';
-	echo '<select name="bshow">'."\n";
-	echo '<option value="0" '.($bshow == '0' ? ' selected>' :'>').'All</option>';
+	echo '<select name="bid">'."\n";
+	echo '<option value="0" '.($bid == '0' ? ' selected>' :'>').'All</option>';
 	$bres = sql_query("SELECT bnumber,bshortname FROM ".sql_table('blog'));
 	while ($data = mysql_fetch_assoc($bres))
 	{
 		if ($member->blogAdminRights(intval($data['bnumber']))) {
 			$menu .= '<option value="'.$data['bnumber'].'"';
-			$menu .= ($data['bnumber'] == $bshow ? ' selected>' :'>');
+			$menu .= ($data['bnumber'] == $bid ? ' selected>' :'>');
 			$menu .= $data['bshortname'].'</option>';
 		}
 	}
@@ -153,41 +153,80 @@ border-bottom: 1px solid #778;
 	echo '</h3></div>'."\n";
 
 /**************************************
- *	   function chooser links	   *
+ *	   the work                       *
  **************************************/
     if ($plugin->siRights()) {
         if (postVar('action') == 'update' && $manager->checkTicket()) {
             $valuearr = postVar('sid');
+            $bid = intPostVar('bid');
             if (!is_array($valuearr)) $valuearr = array($valuearr);
-            $plugin->setAvailableSkins($valuearr);
+            $plugin->setAvailableSkins($valuearr,$bid);
+        }
+        if (postVar('action') == 'updateconfig' && $manager->checkTicket()) {
+            $disabled = intPostVar('disabled');
+            $random = intPostVar('random');
+            $valuearr = array('disabled'=>$disabled, 'random'=>$random);
+            $bid = intPostVar('bid');
+            //if (!is_array($valuearr)) $valuearr = array($valuearr);
+            $plugin->setConfigSettings($valuearr,$bid);
         }
         $allskins = $plugin->getAllSkins();
-        $selectedskins = $plugin->getAvailableSkins();
-        if (count($allskins) > 1) {
-			echo "<div>\n";
-			echo "<h2>Skin Chooser</h2>\n";
-			echo "<p>Select the skins you want to be available to the chooser.</p>\n";
+        $selectedskins = $plugin->getAvailableSkins($bid);
+        if ( ($bid == 0 && !$member->isAdmin()) || ($bid > 0 && !$member->blogAdminRights($bid)) ) {
+            echo "No actions are available to you!<br />\n";
+        }
+        else {
+            echo "<div>\n";
+            echo "<h2>Skin Chooser</h2>\n";
+
+            $configarr = $plugin->getConfigSettings($bid);
+            $disabled = intval($configarr['disabled']);
+            $random = intval($configarr['random']);
+            if ($bid == 0) echo "<p>For blog 'All' these settings are global to all blogs. If you disable a setting here, it is disabled for all blogs. If the setting is enabled here, it can be overridden by any specific blog.</p>\n";
+            echo "<p>Configuration Settings.</p>\n";
             echo '<form method="post" action="'.$thispage.'">'."\n";
-            echo '<input type="hidden" name="action" value="update" />'."\n";
+            echo '<input type="hidden" name="action" value="updateconfig" />'."\n";
+            echo '<input type="hidden" name="bid" value="'.$bid.'" />'."\n";
             $manager->addTicketHidden;
-			echo "<table>\n";
-            $menu = '';
-            foreach ($allskins as $key=>$value) {
-                if (array_key_exists($key,$selectedskins)) {
-                    $menu .= '<tr><td><input name="sid[]" type="checkbox" checked="checked" value="'.$key.'">'.$value."</input></td></tr>\n";
-                }
-                else{
-                    $menu .= '<tr><td><input name="sid[]" type="checkbox" value="'.$key.'">'.$value."</input></td></tr>\n";
-                }
-            }
-            echo $menu;
-			echo "</table>\n";
+            echo "<table>\n";
+            echo "<tr><td>Do you want to disable SkinChooser for this blog?</td><td>\n";
+            echo '<input type="radio" name="disabled" value="1"'.($disabled > 0 ? ' checked="checked"' : '').'> Yes</input>' . "\n";
+            echo '<input type="radio" name="disabled" value="0"'.($disabled < 1 ? ' checked="checked"' : '').'> No</input>' . "\n";
+            echo "</td></tr>\n";
+            echo "<tr><td>Do you want to serve random skins to new users?</td><td>\n";
+            echo '<input type="radio" name="disabled" value="1"'.($random > 0 ? ' checked="checked"' : '').'> Yes</input>' . "\n";
+            echo '<input type="radio" name="disabled" value="0"'.($random < 1 ? ' checked="checked"' : '').'> No</input>' . "\n";
+            echo "</td></tr>\n";
+            echo "</table>\n";
             echo '<input type="submit" value="Update" class="formbutton" /></form>'."\n";
-			echo "</div>\n";
+
+            if (count($allskins) > 1) {
+                echo "<p>Select the skins you want to be available to the chooser.</p>\n";
+                if ($bid == 0) echo "<p>For blog 'All' you are selecting skins that are or are not available to the individual blogs. All SkinChooser-ready skins should be enabled here. Individual blog owners can choose to disable any unwanted skin for his own blog.</p>\n";
+                echo '<form method="post" action="'.$thispage.'">'."\n";
+                echo '<input type="hidden" name="action" value="update" />'."\n";
+                echo '<input type="hidden" name="bid" value="'.$bid.'" />'."\n";
+                $manager->addTicketHidden;
+                echo "<table>\n";
+                $menu = '';
+                foreach ($allskins as $key=>$value) {
+                    if (array_key_exists($key,$selectedskins)) {
+                        $menu .= '<tr><td><input name="sid[]" type="checkbox" checked="checked" value="'.$key.'">'.$value."</input></td></tr>\n";
+                    }
+                    else{
+                        $menu .= '<tr><td><input name="sid[]" type="checkbox" value="'.$key.'">'.$value."</input></td></tr>\n";
+                    }
+                }
+                echo $menu;
+                echo "</table>\n";
+                echo '<input type="submit" value="Update" class="formbutton" /></form>'."\n";
+
+            }
+            echo "</div>\n";
         }
     }
     else {
-        echo "You cannot access this page.";
+        echo "You cannot access this page.<br />\n";
     }
 
     $oPluginAdmin->end();

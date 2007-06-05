@@ -231,6 +231,18 @@ class NP_SkinChooser extends NucleusPlugin {
         }
     }
 
+    function getConfigSettings($bid = 0) {
+        $bid = intval($bid);
+        $r = array();
+        $result = sql_query("SELECT `configvalue`, `configname` FROM `".sql_table('plug_skinchooser_config')."` WHERE `blogid`=$bid");
+        if ($result) {
+            while ($row = mysql_fetch_assoc($result)) {
+                $r[$row['configname']] = $row['configvalue'];
+            }
+        }
+        return $r;
+    }
+
     function setConfigSettings($valuearr = '', $bid) {
         if (!is_array($valuearr)) return;
         if ($bid == '') return;
