@@ -60,8 +60,7 @@ class NP_SkinChooser extends NucleusPlugin {
                   `skinid` int(11) NOT NULL,
                   `skinname` varchar(250) default NULL,
                   `blogid` int(11) NOT NULL,
-                  PRIMARY KEY  (`skinid`),
-                  KEY `skinname` (`skinname`)
+                  KEY `blogid` (`blogid`)
                   ) TYPE=MyISAM PACK_KEYS=0;";
         sql_query($query);
 
@@ -69,8 +68,7 @@ class NP_SkinChooser extends NucleusPlugin {
                   `blogid` int(11) NOT NULL,
                   `configname` varchar(250) default NULL,
                   `configvalue` varchar(250) default NULL,
-                  PRIMARY KEY  (`blogid`),
-                  KEY `skinname` (`configname`)
+                  KEY `blogid` (`blogid`)
                   ) TYPE=MyISAM PACK_KEYS=0;";
         sql_query($query);
 
@@ -78,6 +76,9 @@ class NP_SkinChooser extends NucleusPlugin {
         $hasblogid = mysql_num_rows(sql_query("SHOW COLUMNS FROM `".sql_table('plug_skinchooser')."` LIKE 'blogid'"));
         if (!$hasblogid) {
             sql_query("ALTER TABLE ".sql_table('plug_skinchooser')." ADD `blogid` int(11) NOT NULL default '0' AFTER `skinname`");
+            sql_query("ALTER TABLE ".sql_table('plug_skinchooser')." DROP PRIMARY KEY");
+            sql_query("ALTER TABLE ".sql_table('plug_skinchooser')." DROP KEY `skinname`");
+            sql_query("ALTER TABLE ".sql_table('plug_skinchooser')." Add KEY `blogid` (`blogid`)");
 	  		sql_query("UPDATE ".sql_table('plug_skinchooser')." SET `blogid` = '0'");
         }
     }
@@ -108,21 +109,28 @@ class NP_SkinChooser extends NucleusPlugin {
         global $blogid;
 
         $blogid = intval($blogid);
-        if (!intval(quickQuery("SELECT `configvalue` as result FROM `".sql_table('plug_skinchooser_config')."` WHERE `blogid`=$blogid AND `configname` = 'disabled'"))) {
+        $configarr = $this->getConfigSettings($blogid);
+        $siteconfigarr = $this->getConfigSettings(0);
+        if (intval($siteconfigarr['disabled']) > 0 || intval($configarr['disabled']) > 0) {
+            // do nothing;
+        }
+        else {
             $newskinid = intval(cookieVar('nucleus_skinchooser_skin_'.$blogid));
             // 999999999 is skinid of random
             $avail_skins = $this->getAvailableSkins($blogid);
+            if (count($avail_skins) === 0) $avail_skins = $this->getAvailableSkins(0);
             $use_random = 0;
-            if (intval(quickQuery("SELECT `configvalue` as result FROM `".sql_table('plug_skinchooser_config')."` WHERE `blogid`=$blogid AND `configname` = 'random'"))) {
+            if (intval($siteconfigarr['random']) > 0 && intval($configarr['random']) > 0) {
                 $use_random = 1;
             }
 
-            if (($newskinid == 0 || $newskinid == 999999999) && $use_random == 'yes') {
+            if (($newskinid == 0 || $newskinid == 999999999) && $use_random > 0) {
                 srand((float) microtime() * 10000000);
-                $newskinid = intval($avail_skins[array_rand($avail_skins)]);
+                $rand_key = array_rand($avail_skins);
+                $newskinid = $rand_key;
             }
+
             if ($newskinid > 0 && array_key_exists($newskinid,$avail_skins) && $newskinid != 999999999) {
-                //doError($newskinid);
                 global $skinid;
                 $newskinname = SKIN::getNameFromId($newskinid);
                 $newskin = SKIN::createFromName($newskinname);
@@ -143,6 +151,7 @@ class NP_SkinChooser extends NucleusPlugin {
         $blogid = intval($blogid);
         if (!intval(quickQuery("SELECT `configvalue` as result FROM `".sql_table('plug_skinchooser_config')."` WHERE `blogid`=$blogid AND `configname` = 'disabled'"))) {
             $skin_array = $this->getAvailableSkins($blogid);
+            if (count($skin_array) === 0) $skin_array = $this->getAvailableSkins(0);
             echo '<form method="post" action="'.$CONF['ActionURL'].'">'."\n";
             echo "<input type=\"hidden\" name=\"action\" value=\"plugin\" />\n";            echo "<input type=\"hidden\" name=\"name\" value=\"SkinChooser\" />\n";            echo "<input type=\"hidden\" name=\"type\" value=\"set_cookie\" />\n";
             echo "<input type=\"hidden\" name=\"bid\" value=\"$blogid\" />\n";
@@ -196,8 +205,10 @@ class NP_SkinChooser extends NucleusPlugin {
     }
 
     function getAvailableSkins($bid = 0) {
+        $bid = intval($bid);
         $r = array();
-        $query = "SELECT skinid, skinname FROM ".sql_table('plug_skinchooser');
+        $query = "SELECT `skinid`, `skinname` FROM `".sql_table('plug_skinchooser')."` WHERE `blogid`=$bid";
+//echo "query= $query <br />";
         $result = sql_query($query);
         if ($result) {
             while ($row = mysql_fetch_assoc($result)) {
@@ -209,7 +220,7 @@ class NP_SkinChooser extends NucleusPlugin {
 
     function setAvailableSkins($valuearr = '', $bid = '') {
         if (!is_array($valuearr)) return;
-        if ($bid == '') return;
+        if ($bid === '') return;
         if (!$this->siRights()) return;
         $bid = intval($bid);
         global $member;
@@ -245,7 +256,7 @@ class NP_SkinChooser extends NucleusPlugin {
 
     function setConfigSettings($valuearr = '', $bid) {
         if (!is_array($valuearr)) return;
-        if ($bid == '') return;
+        if ($bid === '') return;
         if (!$this->siRights()) return;
         $bid = intval($bid);
         global $member;
