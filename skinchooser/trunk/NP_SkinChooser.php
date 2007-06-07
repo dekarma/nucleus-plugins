@@ -152,10 +152,10 @@ class NP_SkinChooser extends NucleusPlugin {
         if (!intval(quickQuery("SELECT `configvalue` as result FROM `".sql_table('plug_skinchooser_config')."` WHERE `blogid`=$blogid AND `configname` = 'disabled'"))) {
             $skin_array = $this->getAvailableSkins($blogid);
             if (count($skin_array) === 0) $skin_array = $this->getAvailableSkins(0);
-            echo '<form method="post" action="'.$CONF['ActionURL'].'">'."\n";
+            echo '<form name="scChooser" method="post" action="'.$CONF['ActionURL'].'">'."\n";
             echo "<input type=\"hidden\" name=\"action\" value=\"plugin\" />\n";            echo "<input type=\"hidden\" name=\"name\" value=\"SkinChooser\" />\n";            echo "<input type=\"hidden\" name=\"type\" value=\"set_cookie\" />\n";
             echo "<input type=\"hidden\" name=\"bid\" value=\"$blogid\" />\n";
-            echo '<select name="sid">'."\n";
+            echo '<select name="sid" onChange="document.scChooser.submit()">'."\n";
             $menu = '';
             foreach ($skin_array as $key=>$value) {
                 if ($key == $skinid) {
@@ -167,7 +167,7 @@ class NP_SkinChooser extends NucleusPlugin {
             }
             $menu .= "</select>\n";
             echo $menu;
-            echo '<input type="submit" value="Set" class="formbutton" /></form>'."\n";            echo "</form>\n";
+            echo '<noscript><input type="submit" value="Set" class="formbutton" /></noscript></form>'."\n";            echo "</form>\n";
         }
 	}
 

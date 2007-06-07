@@ -60,9 +60,9 @@
  *      Blog Selector Form            *
  **************************************/
 	echo '<div class="center">'."\n";
-	echo '<form method="post" action="'.$thispage.'">'."\n";
+	echo '<form name="scBlogChooser" method="post" action="'.$thispage.'">'."\n";
 	echo '<h3>Blog to Manage: &nbsp;&nbsp;';
-	echo '<select name="bid">'."\n";
+	echo '<select name="bid" onChange="document.scBlogChooser.submit()">'."\n";
 	echo '<option value="0" '.($bid == '0' ? ' selected>' :'>').'All</option>';
 	$bres = sql_query("SELECT bnumber,bshortname FROM ".sql_table('blog'));
 	while ($data = mysql_fetch_assoc($bres))
@@ -74,7 +74,7 @@
 		}
 	}
 	echo $menu."\n";
-	echo '</select><input type="submit" value="Go" class="formbutton" /></form>'."\n";
+	echo '</select><noscript><input type="submit" value="Go" class="formbutton" /></noscript></form>'."\n";
 	echo '</h3></div>'."\n";
 
 /**************************************
