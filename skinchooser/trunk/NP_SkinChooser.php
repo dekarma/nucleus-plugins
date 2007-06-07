@@ -21,9 +21,10 @@
 /*
     Version history:
     * v 0.1b - initial beta release.
-    * v 0.2 - 2nd release
+    * v 1.0 - 2nd release
       * set cookies per blog, for multi-blog sites that don't share skins
-      * option to choose random default skin !!!(may need to remove, requires the per blog skin list)!!!
+      * allow per blog skin lists with master list and options set for all blogs
+      * option to choose random skin
 */
 
 class NP_SkinChooser extends NucleusPlugin {
@@ -31,7 +32,7 @@ class NP_SkinChooser extends NucleusPlugin {
 	function getName() {	return 'SkinChooser'; 	}
 	function getAuthor()  { return 'Frank Truscott'; 	}
 	function getURL() { return 'http://www.iai.com/'; }
-	function getVersion() {	return '0.2.a02'; }
+	function getVersion() {	return '1.0'; }
 	function getDescription() {
 		return 'Let guests choose skins.';
 	}
@@ -193,7 +194,7 @@ class NP_SkinChooser extends NucleusPlugin {
 	 */
     function getAllSkins() {
         $r = array();
-        $query = "SELECT sdnumber, sdname FROM ".sql_table('skin_desc')." WHERE sdname NOT LIKE '%feeds%' AND sdname NOT LIKE '%xml%'";
+        $query = "SELECT sdnumber, sdname FROM ".sql_table('skin_desc')." WHERE sdname NOT LIKE '%feeds%' AND sdname NOT LIKE '%xml%' ORDER BY `sdname` ASC";
         $result = sql_query($query);
         if ($result) {
             while ($row = mysql_fetch_assoc($result)) {
@@ -207,7 +208,7 @@ class NP_SkinChooser extends NucleusPlugin {
     function getAvailableSkins($bid = 0) {
         $bid = intval($bid);
         $r = array();
-        $query = "SELECT `skinid`, `skinname` FROM `".sql_table('plug_skinchooser')."` WHERE `blogid`=$bid";
+        $query = "SELECT `skinid`, `skinname` FROM `".sql_table('plug_skinchooser')."` WHERE `blogid`=$bid ORDER BY `skinname` ASC";
 //echo "query= $query <br />";
         $result = sql_query($query);
         if ($result) {
