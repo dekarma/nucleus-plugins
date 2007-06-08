@@ -54,33 +54,44 @@
  *	   Header	        			  *
  **************************************/
 	//$helplink = ' <a href="'.$adminpage.'?action=pluginhelp&amp;plugid='.$sipid.'"><img src="'.$CONF['PluginURL'].'ordered/help.jpg" alt="help" title="help" /></a>';
-	echo '<h2 style="padding-top:10px;">NP_SkinChoser'.$helplink.'</h2>'."\n";
+	echo '<h2 style="padding-top:10px;">NP_SkinChooser'.$helplink.'</h2>'."\n";
 
 /**************************************
  *      Blog Selector Form            *
  **************************************/
-	echo '<div class="center">'."\n";
-	echo '<form name="scBlogChooser" method="post" action="'.$thispage.'">'."\n";
-	echo '<h3>Blog to Manage: &nbsp;&nbsp;';
-	echo '<select name="bid" onChange="document.scBlogChooser.submit()">'."\n";
-	echo '<option value="0" '.($bid == '0' ? ' selected>' :'>').'All</option>';
-	$bres = sql_query("SELECT bnumber,bshortname FROM ".sql_table('blog'));
-	while ($data = mysql_fetch_assoc($bres))
-	{
-		if ($member->blogAdminRights(intval($data['bnumber']))) {
-			$menu .= '<option value="'.$data['bnumber'].'"';
-			$menu .= ($data['bnumber'] == $bid ? ' selected>' :'>');
-			$menu .= $data['bshortname'].'</option>';
-		}
-	}
-	echo $menu."\n";
-	echo '</select><noscript><input type="submit" value="Go" class="formbutton" /></noscript></form>'."\n";
-	echo '</h3></div>'."\n";
+    if ($plugin->scIsBlogAdmin()) {
+        echo '<div class="center">'."\n";
+        echo '<form name="scBlogChooser" method="post" action="'.$thispage.'">'."\n";
+        echo '<h3>Blog to Manage: &nbsp;&nbsp;';
+        echo '<select name="bid" onChange="document.scBlogChooser.submit()">'."\n";
+        if ($member->isAdmin())	echo '<option value="0" '.($bid == '0' ? ' selected>' :'>').'All</option>';
+        $bres = sql_query("SELECT bnumber,bshortname FROM ".sql_table('blog'));
+        while ($data = mysql_fetch_assoc($bres))
+        {
+            $numbs = 0;
+            if ($member->blogAdminRights(intval($data['bnumber']))) {
+                if ($bid == 0 && $numbs == 0 && !$member->isAdmin()) {
+                    $bid = $data['bnumber'];
+                    $numbs = 1;
+                }
+                $menu .= '<option value="'.$data['bnumber'].'"';
+                $menu .= ($data['bnumber'] == $bid ? ' selected>' :'>');
+                $menu .= $data['bshortname'].'</option>';
+
+            }
+        }
+        echo $menu."\n";
+        echo '</select><noscript><input type="submit" value="Go" class="formbutton" /></noscript></form>'."\n";
+        echo '</h3></div>'."\n";
+    }
+    else {
+        echo "You do not permission to administer this plugin.<br />\n";
+    }
 
 /**************************************
  *	   the work                       *
  **************************************/
-    if ($plugin->siRights()) {
+    if ($plugin->scRights($bid)) {
         if (postVar('action') == 'update' && $manager->checkTicket()) {
             $valuearr = postVar('sid');
             $bid = intPostVar('bid');

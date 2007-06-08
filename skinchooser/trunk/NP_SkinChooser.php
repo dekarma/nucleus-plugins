@@ -28,7 +28,6 @@
 */
 
 class NP_SkinChooser extends NucleusPlugin {
-    var $def_skin = '';
 	function getName() {	return 'SkinChooser'; 	}
 	function getAuthor()  { return 'Frank Truscott'; 	}
 	function getURL() { return 'http://www.iai.com/'; }
@@ -53,8 +52,6 @@ class NP_SkinChooser extends NucleusPlugin {
 	function install() {
         $this->createOption("del_uninstall", "Delete tables on uninstall?", "yesno", "no");
 		$this->createOption('quickmenu', 'Show Admin Area in quick menu?', 'yesno', 'yes');
-        $this->createOption('accesslevel', 'Who should have access to SkinChooser admin', 'select', 'Site Admins', 'Site Admins|8|Blog Admins|4|Team Members|2|All Logged-In Users|1');
-        //$this->createOption('randomdef', 'Select random skin from list as default when no skin chosen?', 'yesno', 'no');
 
         // Create tables needed
         $query = "CREATE TABLE IF NOT EXISTS `".sql_table('plug_skinchooser')."` (
@@ -82,6 +79,9 @@ class NP_SkinChooser extends NucleusPlugin {
             sql_query("ALTER TABLE ".sql_table('plug_skinchooser')." Add KEY `blogid` (`blogid`)");
 	  		sql_query("UPDATE ".sql_table('plug_skinchooser')." SET `blogid` = '0'");
         }
+        if ($this->getOption('accesslevel') != '') {
+            $this->deleteOption('accesslevel');
+        }
     }
 
 	function unInstall() {
@@ -98,8 +98,7 @@ class NP_SkinChooser extends NucleusPlugin {
 	function event_QuickMenu(&$data) {
     	// only show when option enabled
     	if ($this->getOption('quickmenu') != 'yes') return;
-    	global $member;
-    	if (!($member->isLoggedIn())) return;
+    	if (!$this->scIsBlogAdmin()) return;
     	array_push($data['options'],
       		array('title' => 'SkinChooser',
         	'url' => $this->getAdminURL(),
@@ -121,11 +120,11 @@ class NP_SkinChooser extends NucleusPlugin {
             $avail_skins = $this->getAvailableSkins($blogid);
             if (count($avail_skins) === 0) $avail_skins = $this->getAvailableSkins(0);
             $use_random = 0;
-            if (intval($siteconfigarr['random']) > 0 && intval($configarr['random']) > 0) {
+            if ($newskinid == 0 && intval($siteconfigarr['random']) > 0 && intval($configarr['random']) > 0) {
                 $use_random = 1;
             }
 
-            if (($newskinid == 0 || $newskinid == 999999999) && $use_random > 0) {
+            if (($newskinid == 0 && $use_random > 0) || ($newskinid == 999999999 && array_key_exists(999999999,$avail_skins))) {
                 srand((float) microtime() * 10000000);
                 $rand_key = array_rand($avail_skins);
                 $newskinid = $rand_key;
@@ -150,7 +149,9 @@ class NP_SkinChooser extends NucleusPlugin {
         global $CONF,$skinid,$blogid;
 
         $blogid = intval($blogid);
-        if (!intval(quickQuery("SELECT `configvalue` as result FROM `".sql_table('plug_skinchooser_config')."` WHERE `blogid`=$blogid AND `configname` = 'disabled'"))) {
+        $configarr = $this->getConfigSettings($blogid);
+        $siteconfigarr = $this->getConfigSettings(0);
+        if (!(intval($siteconfigarr['disabled']) > 0 && intval($configarr['disabled']) > 0)) {
             $skin_array = $this->getAvailableSkins($blogid);
             if (count($skin_array) === 0) $skin_array = $this->getAvailableSkins(0);
             echo '<form name="scChooser" method="post" action="'.$CONF['ActionURL'].'">'."\n";
@@ -169,6 +170,9 @@ class NP_SkinChooser extends NucleusPlugin {
             $menu .= "</select>\n";
             echo $menu;
             echo '<noscript><input type="submit" value="Set" class="formbutton" /></noscript></form>'."\n";            echo "</form>\n";
+        }
+        else {
+            //do nothing;
         }
 	}
 
@@ -222,10 +226,8 @@ class NP_SkinChooser extends NucleusPlugin {
     function setAvailableSkins($valuearr = '', $bid = '') {
         if (!is_array($valuearr)) return;
         if ($bid === '') return;
-        if (!$this->siRights()) return;
         $bid = intval($bid);
-        global $member;
-        if ( ($bid == 0 && !$member->isAdmin()) || ($bid > 0 && !$member->blogAdminRights($bid)) ) return;
+        if ( !$this->scRights($bid) ) return;
         sql_query("DELETE FROM `".sql_table('plug_skinchooser')."` WHERE `skinid` > 0 AND `blogid`=$bid");
 
         foreach ($valuearr as $value) {
@@ -258,10 +260,8 @@ class NP_SkinChooser extends NucleusPlugin {
     function setConfigSettings($valuearr = '', $bid) {
         if (!is_array($valuearr)) return;
         if ($bid === '') return;
-        if (!$this->siRights()) return;
         $bid = intval($bid);
-        global $member;
-        if ( ($bid == 0 && !$member->isAdmin()) || ($bid > 0 && !$member->blogAdminRights($bid)) ) return;
+        if ( !$this->scRights($bid) ) return;
 
         sql_query("DELETE FROM `".sql_table('plug_skinchooser_config')."` WHERE `blogid`=$bid");
 
@@ -274,45 +274,24 @@ class NP_SkinChooser extends NucleusPlugin {
         }
     }
 
-    function siIsAdmin() {
+    function scRights($bid) {
         global $member;
-        if ($member->isAdmin()) return 8;
-        else return 0;
-    }
-
-    function siIsBlogAdmin() {
-        global $member;
-		$query = 'SELECT tadmin FROM '.sql_table('team').' WHERE'
-		       . ' tmember='. $member->getID();
-		$res = sql_query($query);
-		if (mysql_num_rows($res) == 0)
-			return 0;
-		else
-			return 4;
-	}
-
-	function siIsTeamMember() {
-        global $member;
-		$query = 'SELECT * FROM '.sql_table('team').' WHERE'
-		       . ' tmember='. $member->getID();
-		$res = sql_query($query);
-		if (mysql_num_rows($res) == 0)
-			return 0;
-		else
-			return 2;
-	}
-
-    function siRights() {
-        global $member;
-        $r = false;
-        if ($member->isLoggedIn() && $member->canLogin()) $admin = 1;
-        $admin = $admin + intval($this->siIsAdmin()) + intval($this->siIsBlogAdmin()) + intval($this->siIsTeamMember());
-        $minaccess = intval($this->getOption('accesslevel'));
-        if (!$minaccess || $minaccess == 0) $minaccess = 8;
-
-        if ($admin >= $minaccess) return true;
+        $bid = intval($bid);
+        if (!$member->isLoggedIn() || !$member->canLogin()) return false;
+        if (($bid < 1 && $member->isAdmin()) || ($bid > 0 && $member->blogAdminRights($bid))) return true;
         else return false;
     }
+
+    function scIsBlogAdmin() {
+        global $member;
+		$query = "SELECT tadmin FROM ".sql_table('team')." WHERE"
+		       . " tmember=". $member->getID() ." AND tadmin > 0";
+		$res = sql_query($query);
+		if (mysql_num_rows($res) < 1)
+			return false;
+		else
+			return true;
+	}
 
     function get_formatted_microtime() {
         list($usec, $sec) = explode(' ', microtime());
