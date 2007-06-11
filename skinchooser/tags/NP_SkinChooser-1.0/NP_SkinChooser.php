@@ -25,7 +25,6 @@
       * set cookies per blog, for multi-blog sites that don't share skins
       * allow per blog skin lists with master list and options set for all blogs
       * option to choose random skin
-      *
 */
 
 class NP_SkinChooser extends NucleusPlugin {
