@@ -20,6 +20,7 @@
 
 /*
     Version history:
+    - 1.13 (2007-06-??): fix access control for blog admins, add some js into table select form (1.13.a.01)
     - 1.12 (2007-05-10): fix mysql data lookup bug when field not selected
     - 1.11 (): added NOT LIKE to data lookup options
 	- 1.1 (2006-08-31): added display of plugin event subscriptions, added find
@@ -32,7 +33,7 @@ class NP_SystemInfo extends NucleusPlugin {
 	function getName() {	return 'SystemInfo'; 	}
 	function getAuthor()  { return 'Frank Truscott'; 	}
 	function getURL() { return 'http://www.iai.com/'; }
-	function getVersion() {	return '1.12'; }
+	function getVersion() {	return '1.13.a01'; }
 	function getDescription() {
 		return 'Plugin to give ready access to system information for use in troubleshooting';
 	}
@@ -94,7 +95,7 @@ class NP_SystemInfo extends NucleusPlugin {
     function siIsBlogAdmin() {
         global $member;
 		$query = 'SELECT tadmin FROM '.sql_table('team').' WHERE'
-		       . ' tmember='. $member->getID();
+		       . ' tmember='. $member->getID().' AND tadmin > 0';
 		$res = sql_query($query);
 		if (mysql_num_rows($res) == 0)
 			return 0;

@@ -513,10 +513,10 @@ border-bottom: 1px solid #778;
 			echo "<h2>Field Details</h2>\n";
 			echo "<p>Select a table to view the tables configuration. Select all to see entire database schema.</p>\n";
 
-			echo '<form method="post" action="">'."\n";
+			echo '<form name="siTblChooser" method="post" action="">'."\n";
             $manager->addTicketHidden();
 			echo add_table_select_field($result,$tname,1);
-			echo '</select><input type="submit" value="Set" class="formbutton" /></form>'."\n";
+			echo '</select><noscript><input type="submit" value="Set" class="formbutton" /></noscript></form>'."\n";
 
 			echo '<div class="center">'."\n";
 			echo '<table border="0" cellpadding="3" width="600">'."\n";
@@ -563,10 +563,10 @@ border-bottom: 1px solid #778;
 			echo "<h2>Table Details</h2>\n";
 			echo "<p>Select a table to view the table's details.</p>\n";
 
-			echo '<form method="post" action="">'."\n";
+			echo '<form name="siTblChooser" method="post" action="">'."\n";
             $manager->addTicketHidden();
 			echo add_table_select_field($result,$tname,0);
-			echo '</select><input type="submit" value="Set" class="formbutton" /></form>'."\n";
+			echo '</select><noscript><input type="submit" value="Set" class="formbutton" /></noscript></form>'."\n";
 
 			if ($tname) {
 				echo '<div class="center">'."\n";
@@ -631,10 +631,10 @@ border-bottom: 1px solid #778;
 
 			$sql = "SHOW TABLES from $MYSQL_DATABASE";
 			$result = mysql_query($sql);
-			echo '<form method="post" action="">'."\n";
+			echo '<form name="siTblChooser" method="post" action="">'."\n";
             $manager->addTicketHidden();
 			echo add_table_select_field($result,$tname,0);
-			echo '</select><input type="submit" value="Set" class="formbutton" /></form>'."\n";
+			echo '</select><noscript><input type="submit" value="Set" class="formbutton" /></noscript></form>'."\n";
 
 			if ($tname) {
 				$fsql = "SHOW COLUMNS FROM $tname";
@@ -724,7 +724,7 @@ border-bottom: 1px solid #778;
 
 	function add_table_select_field($result, $tname = 'all', $hasAll = 1) {
 
-		echo '<select name="tname">'."\n";
+		echo '<select name="tname" onChange="document.siTblChooser.submit()">'."\n";
 		if ($hasAll) $menu = '<option value="all"'.($tname == 'all' ? ' selected>' : '>')."all</option>\n";
 
 		while ($row = mysql_fetch_row($result)) {

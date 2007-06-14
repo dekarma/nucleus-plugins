@@ -49,6 +49,8 @@
 
 /* History:
  *
+ * 1.24 - 06/12/2007 -
+ *  * fix _generateForm() method to output valid HTML for 3.3 release
  * 1.23 - 05/22/2007 -
  *  * add option to show param (for blog and setnavigation skinvars) to allow for custom sorting for unordered items. by time and title (documented) and author, authorname, and category (undocumented).
  *  * add option to show param (for categorylist skinvar) to allow for custom sorting for unordered categories. by name and desc (description).
@@ -93,7 +95,7 @@ class NP_Ordered extends NucleusPlugin {
 
 	// version of the plugin
 	function getVersion() {
-		return '1.23';
+		return '1.24';
 	}
 
 	// a description to be shown on the installed plugins listing
@@ -509,7 +511,7 @@ class NP_Ordered extends NucleusPlugin {
 		$blogid = getBlogIDFromItemID($itemid);
 
 		if ($member->blogAdminRights($blogid)) {
-			printf('<p>Item Order: <input name="plug_ob_order" type="text" size="60" maxlength="256" value="%s"></p>', $keywordstring);
+			printf('<p>Item Order: <input name="plug_ob_order" type="text" size="60" maxlength="256" value="%s" /></p>', $keywordstring);
 		}
 		else {
 			printf('<p>Item Order: %s</p>', $keywordstring);

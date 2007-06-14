@@ -130,9 +130,9 @@ border-bottom: 1px solid #778;
  *      Blog Selector Form            *
  **************************************/
 	echo '<div class="center">'."\n";
-	echo '<form method="post" action="'.$thispage.'">'."\n";
+	echo '<form name="ordChooser" method="post" action="'.$thispage.'">'."\n";
 	echo '<h3>Blog to Manage: &nbsp;&nbsp;';
-	echo '<select name="bshow">'."\n";
+	echo '<select name="bshow" onChange="document.ordChooser.submit()">'."\n";
 	echo '<option value="0" '.($bshow == '0' ? ' selected>' :'>').'Select a Blog</option>';
 	$bres = sql_query("SELECT bnumber,bshortname FROM ".sql_table('blog'));
 	while ($data = mysql_fetch_assoc($bres))
@@ -144,7 +144,7 @@ border-bottom: 1px solid #778;
 		}
 	}
 	echo $menu."\n";
-	echo '</select><input type="submit" value="Go" class="formbutton" /></form>'."\n";
+	echo '</select><noscript><input type="submit" value="Go" class="formbutton" /></noscript></form>'."\n";
 	echo '</h3></div>'."\n";
 
 /**************************************

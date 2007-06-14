@@ -68,14 +68,14 @@
 
 <h3><a name="skinvars">SkinVars</a></h3>
 
-<p>The Profile skin variable is valid in the following skin types: 'member','archive','archivelist','item','index','template'. When a member is viewing his own member page, the fields are displayed as form input fields to allow the member to update his own profile.</p>
+<p>The Profile skin variable is valid in all skin types. When a member is viewing his own member page, the fields are displayed as form input fields to allow the member to update his own profile.</p>
 
 <p>It has the general form of </p>
 
 &lt;%Profile(<i>fieldname</i>,<i>special</i>,<i>showas</i>,<i>memberid</i>)%&gt;
 where
 <ul>
-<li><i>fieldname</i> is the name of the field to display. By default, the valid values are h<b>nick, realname, mail,
+<li><i>fieldname</i> is the name of the field to display. By default, the valid values are <b>nick, realname, mail,
 notes, url</b>, msn, sex, birthdate, avatar, location, hobbies, secret, icq, favoritesite, bio, resume, privacylevel.
 The ones in bold are Nucleus member fields and represent data kept by the Nucleus Core. More details about these special Nucleus fields will be given later. It can also be one of a number of special values such as startform, endform, password, editlink, editprofile, or status, as described later.</li>
 <li><i>special</i> is one of label or show as described below (can be left blank, the default behavior):
@@ -118,7 +118,7 @@ On an item page or in a template (see TemplateVar below) will show the real name
 
 <h3><a name="templatevars">TemplateVars</a></h3>
 
-<p>The skinvars described above can be used in the Item Body part of any template. However, the special types of password, startform, endform, editlink, editprofile, and status, are not available.</p>
+<p>The skinvars described above can be used in the Item Body fields and Comment Body fields of any template. However, the special types of password, startform, endform, editlink, editprofile, and status, are not available.</p>
 
 <h3><a name="fieldnames">Field Names</a></h3>
 

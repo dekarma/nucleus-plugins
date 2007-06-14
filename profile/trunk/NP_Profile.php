@@ -122,6 +122,9 @@ History:
     * add ticket functions to comply with nucleuscms v3.3 JP
   v2.17 -- 13th release of version 2 adds the following to 2.16 version
     * add option to edit profile from admin area member page
+  v2.18 -- 14th release of version 2 adds the following to 2.17 version
+    * fix to form on admin area member page to work with 3.3
+    * now can work in all skin types including error and search
 [FUTURE]
   [v2.20 -- future release to require upgrade procedure (uninstall/reinstall)]
     * rename fvalidate column to fformatnull. See all occurences of fvalidate in this file and in profile/index.php.
@@ -150,7 +153,7 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://www.iai.com/';	}
 
-	function getVersion() {	return '2.17'; }
+	function getVersion() {	return '2.18'; }
 
 	function getDescription() {
         if (!$this->_optionExists('email_public_deny') && $this->_optionExists('email_public')) {
@@ -792,7 +795,7 @@ password
             echo "<table>\n";
             echo '<tr><th colspan="2">Edit Extended Profile</th>'."</tr>\n";
             echo "<tr><td>Edit Extended Profile:</td><td>";
-            $this->doSkinVar('adminmember','endform','','',$memberinfo->getID());
+            $this->doSkinVar('adminmember','submitbutton','','',$memberinfo->getID());
             echo "</td></tr>\n";
             foreach ($fieldsarr as $field) {
                 if (!in_array($field,$this->nufields)) {
@@ -805,9 +808,9 @@ password
             }
 
             echo "<tr><td>Edit Extended Profile:</td><td>";
-            $this->doSkinVar('adminmember','endform','','',$memberinfo->getID());
             echo "</td></tr>\n";
             echo "</table>\n";
+            $this->doSkinVar('adminmember','endform','','',$memberinfo->getID());
         }
     }
 
@@ -839,7 +842,8 @@ password
 
         $formfieldprefix = '';
 		//if (in_array($skinType, array('member','archive','archivelist','item','index','template','comment'))) {
-        if (!in_array($skinType, array('error','search'))) {
+        //if (!in_array($skinType, array('error','search'))) {
+        if (!in_array($skinType, array())) {
 			if (in_array($param1,$this->specialfields) || $this->getFieldAttribute($param1,'enabled')) {
 				$pmid = 0;
                 $forceEdit = 0;
