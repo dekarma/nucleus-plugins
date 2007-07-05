@@ -2,6 +2,8 @@
 
 /**
  * Versions:
+ *   0.6  2007-06-24
+ *      - fix use createItemLink()
  *   0.5a 2007-05-07
  *      - use sql_query()
  *   0.5 2005-09-29
@@ -61,14 +63,6 @@
  *
  */
 
-// patch for non-XE editions
-if (!is_callable('fancyLink')){
-  function fancyLink($id){
-    global $CONF;
-    return $CONF['IndexURL'].createItemLink($id);
-  }
-}
-
 class NP_CommentControl extends NucleusPlugin {
 
    function NP_CommentControl() {
@@ -78,7 +72,7 @@ class NP_CommentControl extends NucleusPlugin {
    function getName()    { return 'CommentControl'; }
    function getAuthor()     { return 'karma, mod by Radek Hulaan, Edmond Hui (admun), Red Dalek'; }
    function getURL()     { return 'http://demuynck.org/'; }
-   function getVersion()    { return '0.5a'; }
+   function getVersion()    { return '0.6'; }
    function getDescription() { return 'Tools to handle trolls and comment spam. RSS feed of pending comments now included.'; }
 
    function supportsFeature($what) {
@@ -214,7 +208,7 @@ class NP_CommentControl extends NucleusPlugin {
             else
                $url .= '&pending=1';
          } else {
-            $url = fancyLink($itemid);
+            $url = createItemLink($itemid);
          }
 
          header('Expires: 0');
@@ -384,7 +378,7 @@ class NP_CommentControl extends NucleusPlugin {
       }
       echo "<item>\n";
       echo "<title>".$this->encode_xml($comment->title)."</title>\n";
-      $link = fancyLink($comment->item);
+      $link = createItemLink($comment->item);
       echo "<link>".$this->encode_xml($link)."#cmt".strval($comment->commentid)."</link>\n";
       $urlallow = $CONF['ActionURL'] . '?action=plugin&amp;name=CommentControl&amp;type=allow&amp;id=' . intval($comment->item);
       $urldeny = $CONF['ActionURL'] . '?action=plugin&amp;name=CommentControl&amp;type=deny&amp;id=' . intval($comment->item);
@@ -489,7 +483,7 @@ class NP_CommentControl extends NucleusPlugin {
          if ($itemid != -1)
          {
             if ($actionType == 'allow')
-               $url = fancyLink($itemid);
+               $url = createItemLink($itemid);
             else
                $url = $CONF['IndexURL'].'nucleus/plugins/commentcontrol/';
             header('Location: ' . $url);         
@@ -507,7 +501,7 @@ class NP_CommentControl extends NucleusPlugin {
          if ($itemid != -1)
          {
             if ($actionType == 'deny')
-               $url = fancyLink($itemid);
+               $url = createItemLink($itemid);
             else
                $url = $CONF['IndexURL'].'nucleus/plugins/commentcontrol/';
             header('Location: ' . $url);         
