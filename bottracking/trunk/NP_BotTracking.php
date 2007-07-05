@@ -10,10 +10,11 @@
        - add bot display ignore list
        - move list of bots to file
   v0.5 - limited subscriber info for the past 24 hours 
+       - add pager for stats in admin menu
+       - detect new bot that report "subscriber" info
+       - optimize admin menu
  
   admun todo:
-  - add pager for stats in admin menu
-  - detect new bot via "subscriber" in the agent name
   - add db cleanup code
   - resolve ip to hostname on display
   - add template
@@ -148,8 +149,18 @@ class NP_BotTracking extends NucleusPlugin {
         $query = "INSERT INTO $this->table_name (bots, agent, hostname, url, blog) VALUES ('$b', '$botname', '$hostname', '$url', '$blogid')";
         sql_query($query);
         $this->updated = true;
+        $this->updated = true;
         return;
       }
+    }
+
+    $matches = array();
+    preg_match("/\d.subscriber/", $botname, $matches);
+    if ($matches[0] != "") {
+        $query = "INSERT INTO $this->table_name (bots, agent, hostname, url, blog) VALUES ('newbot', '$botname', '$hostname', '$url', '$blogid')";
+        sql_query($query);
+        $this->updated = true;
+        return;
     }
   }
  
