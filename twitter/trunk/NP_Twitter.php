@@ -13,13 +13,37 @@
  *   - fix GMT timestamp bug
  *   - tweet on new post
  * v0.3
- *   - add icon formatting override
+ *   - added icon formatting override
+ *   - fixed draft post tweet (which should not)
+ *   - changed page=xx to tpage=
+ *   - fix timezone bug 
+ *   - tweetlet
+ * v0.4
+ *   - fix date under flow caused by < GMT timezone
+ *   - handle time/date overflow caused by > GMT timezone
+ *   - fix htmlspecialchars_decode support for PHP4
+ *   - curl_setopt_array php4 support
+ *   - no tweet on future post
+ * v0.5
+ *   - fixed future post tweet SQL check
+ *   - fixed update tweet login check.
+ *   - added title, excerpt in auto tweet (%t, %e)
  *
 admun TODO
-- counter on update box
-- tweetlet -> like tweetthis with "reading:", "looking at:", "listening to:", "laughing at:", "at:", "waiting for:", "looking forward to:", etc
-- show badge for login member
+
+- add date sepecrator in tweets archive
+- fixed &quot;
+- link to @who
+- add delete tweet
+- add archive (only my tweet), and replies (search for @admun)
+- use JustPost event for 3.3
+
+javascript:location.href='http://edmondhui.homeip.net/blog/action.php?action=plugin&name=Twitter&op=tweetlet&url='+encodeURIComponent(location.href)+'&text='+encodeURIComponent(document.title)
+
+- char counter on update box
 - how long ago, highlight recent tweets (via CSS)
+- multiple-tweet template
+- show badge for login member
 - email, sms, wap
 
 - per member accounts... or via member options?
@@ -28,8 +52,27 @@ admun TODO
 - daily tweets digest
 - direct message
 - make XML parser classes
-
  */
+
+if (!function_exists('curl_setopt_array')) {
+   function curl_setopt_array(&$ch, $curl_options)
+   {
+       foreach ($curl_options as $option => $value) {
+           if (!curl_setopt($ch, $option, $value)) {
+               return false;
+           }
+       }
+       return true;
+   }
+}
+
+if ( !function_exists('htmlspecialchars_decode') )
+{
+    function htmlspecialchars_decode($text)
+    {
+        return strtr($text, array_flip(get_html_translation_table(HTML_SPECIALCHARS)));
+    }
+}
 
 if (!function_exists('sql_table')) {
 	function sql_table($name){
@@ -190,7 +233,7 @@ class NP_Twitter extends NucleusPlugin {
 	}
 
 	function getVersion() {
-		return '0.3';
+		return '0.5';
 	}
 
 	function getDescription() {
@@ -314,7 +357,7 @@ class NP_Twitter extends NucleusPlugin {
 		$this->createOption('Item','Tweets formating (%%TWITTERT%% - twitter name in text, %%TWITTERI%% - twitter name as image, %%TWEET%% - tweet, %%TDATE%% - date)','text','<li>%%TWITTERT%%: %%TWEET%%</li>');
 		$this->createOption('Footer','Tweets footer formating','text','</ul>');
 		$this->createOption('TweetOnNewPost','Tweet on new item posted?','yesno','no');
-		$this->createOption('NewPostTexts','Text to tweet on new post (one per line, will be randomly pick, %l == item url)','textarea',"Just posted to my blog, see %l\nSee what I just wrote @ %l\nMy blog is updated (%l)\n");
+		$this->createOption('NewPostTexts','Text to tweet on new post (one per line, will be randomly pick, %l == item url, %t == title, %e == excerpt)','textarea',"Just posted to my blog, see \"%t\" (%l)\nSee what I just wrote \"%t\" @ %l\nMy blog has updated \"%t\" (%l)\n");
 
 		$this->createOption('Cleanup','Delete tweets cache on uninstall','yesno','no');
 
@@ -377,19 +420,19 @@ class NP_Twitter extends NucleusPlugin {
 			$tweet = str_replace('%%TWITTERI%%',$fromi,$tweet);
 			$tweet = str_replace('%%TDATE%%',$date,$tweet);
 			$tweet = str_replace('%%TWEET%%',$msg,$tweet);
-			$tweet = html_entity_decode($tweet);
-			echo htmlspecialchars_decode($tweet, ENT_QUOTES);
+			$tweet = htmlspecialchars_decode($tweet);
+			echo $tweet;
 		}
 		echo $this->getOption('Footer');
 		
 		if ($page > 1) {
 			$pre = $page - 1;
-			echo "<div class=\"prev\"><a href=\"?page=" . $pre . "\">&lt;&lt; previous</a></div>";
+			echo "<div class=\"prev\"><a href=\"?tpage=" . $pre . "\">&lt;&lt; previous</a></div>";
 		}
 
 		if ($page >= 1 && mysql_num_rows($query) == $num) {
 			$next = $page + 1;
-			echo "<div class=\"next\"><a href=\"?page=" . $next . "\">next &gt;&gt;</a></div>";
+			echo "<div class=\"next\"><a href=\"?tpage=" . $next . "\">next &gt;&gt;</a></div>";
 		}
 		echo "</div>";
 	}
@@ -420,7 +463,8 @@ class NP_Twitter extends NucleusPlugin {
 		 
 		    function TWgetMyHTML() {
 		 
-			  var serverPage = '<?php echo $CONF['IndexURL']; ?>action.php?action=plugin&name=Twitter&op=update&uid=<?php echo $uid?>&num=<?php echo $num; ?>&page=<?php echo $page; ?>';
+			  var serverPage = '<?php echo $CONF['IndexURL'];
+			  ?>action.php?action=plugin&name=Twitter&op=update&uid=<?php echo $uid?>&num=<?php echo $num; ?>&tpage=<?php echo $page; ?>';
 			  var objTW = document.getElementById('twitter');
 			  ajaxTW.open("GET", serverPage);
 			  ajaxTW.onreadystatechange = function() {
@@ -499,7 +543,8 @@ class NP_Twitter extends NucleusPlugin {
               			. "<div class=\"Twitter\">\n"
 				. "<input type=\"hidden\" name=\"action\" value=\"plugin\" />\n"
 				. "<input type=\"hidden\" name=\"name\" value=\"Twitter\" /> \n"
-				. "<input type=\"hidden\" name=\"redirecturl\" value=\"" . serverVar('REQUEST_URI') . "\" /> \n"
+				. "<input type=\"hidden\" name=\"redirecturl\" value=\"" 
+				. serverVar('REQUEST_URI') . "\" /> \n"
 				. "<input type=\"hidden\" name=\"op\" value=\"tweet\" /> \n"
 				. "<textarea name=\"text\" rows=\"3\" cols=\"22\" /></textarea>\n"
 				. "<input type=\"submit\" class=\"button\" value=\"Tweet!\" />"
@@ -513,7 +558,7 @@ class NP_Twitter extends NucleusPlugin {
 			$this->doTwitthis($style);
 		}
 
-		$page = intRequestVar('page');
+		$page = intRequestVar('tpage');
 
 		$mem = MEMBER::createFromName($memb);
 		$authorid = $mem->getID();
@@ -595,11 +640,24 @@ class NP_Twitter extends NucleusPlugin {
 		for ($x=1;$status = array_pop($parsed_arr);$x++) {
 			$date_arr = explode(' ', $status->created);
 			$time = explode(":",$date_arr[3]);
-			$time['0'] = abs($time['0'] + $offset);
+			$time['0'] = $time['0'] + $offset;
+
+			// current timezone is < GMT and caused a underflow, time+date need adjust
+			if ($time['0'] < 0) {
+				$time['0'] = 24 + $time['0'];
+				$date_arr[2] -= 1;
+			}
+
+			// current timezone is > GMT and caused a overflow, time+date need adjust
+			if ($time['0'] > 23) {
+				$time['0'] = 24 - $time['0'];
+				$date_arr[2] += 1;
+			}
+
 			$created_at = $date_arr[5] . "-" . $month[$date_arr[1]] . "-" . $date_arr[2] . " " . implode(":",$time);
 
 			echo $x . ": " . $status->text . " ("
-			. $status->screen_name .  ", " . $status->name . ", " . $created_at . ")<br/>";
+			. $status->screen_name .  ", " . $status->name . ", " . $created_at . " [" . $status->created . "]" . ")<br/>";
 
 			sql_query('INSERT INTO ' . $this->tweets_tab 
 				. ' (text,created_at,tid,uid,fid,sname,name,purl) VALUES (\''
@@ -774,13 +832,24 @@ class NP_Twitter extends NucleusPlugin {
 
 		}
 
+		if ($action == "update") {
+			$uid = RequestVar('uid');
+			$num = RequestVar('num');
+			$page = RequestVar('tpage');
+
+			$this->doTweets($uid, $num, $page);
+		}
+
 		if ($action == "tweet") {
 			global $member;
 			if (!$member->isLoggedIn()) doError('You\'re not logged in.');
-
 			$redirect=RequestVar('redirecturl');
 			$text = RequestVar('text');
 			$text = substr($text,0,140);
+			$tweetas =  RequestVar('tweetas');
+			if ($tweetas != '') {
+				$text = $tweetas . " " . $text;
+			}
 
 			$user = $this->getOption('TwitterUser');
 			$password = $this->getOption('TwitterPassword');
@@ -790,19 +859,40 @@ class NP_Twitter extends NucleusPlugin {
 			header('Location: ' . $redirect);
 		}
 
-		if ($action == "update") {
-			$uid = RequestVar('uid');
-			$num = RequestVar('num');
-			$page = RequestVar('page');
+		if ($action == "tweetlet") {
+			global $member;
+			if (!$member->isLoggedIn()) doError('You\'re not logged in.');
+			global $CONF;
+			$url =  RequestVar('url');
 
-			$this->doTweets($uid, $num, $page);
+			echo "<h1>Tweetlet</h1><form method=\"post\" action=\"".$CONF['ActionURL']."\">\n"
+              			. "<div class=\"Twitter\">\n"
+				. "<input type=\"hidden\" name=\"action\" value=\"plugin\" />\n"
+				. "<input type=\"hidden\" name=\"name\" value=\"Twitter\" />\n"
+				. "<input type=\"hidden\" name=\"redirecturl\" value=\"" . $url . "\" />\n"
+				. "<input type=\"hidden\" name=\"op\" value=\"tweet\" />\n"
+				. "<select name=\"tweetas\">
+					<option selected>Reading:
+					<option>Looking at:
+					<option>Listening to:
+					<option>Laughing at:
+					<option>at:
+					<option>Waiting for:
+					<option>Looking forward to:
+					</select><br/>"
+				. "<textarea name=\"text\" rows=\"3\" cols=\"50\" />" . RequestVar('text') . " (" . RequestVar('url') . ")</textarea><br/>\n"
+				. "<input type=\"submit\" class=\"button\" value=\"Tweet!\" />"
+				. "</div>"
+				. "</form>\n";
 		}
 	}
 
 	function event_PostAddItem($data) {
 		if ($this->getOption('TweetOnNewPost') == 'yes') {
 			$itemid = $data['itemid'];
-			$query=sql_query('SELECT iauthor FROM ' . sql_table('item') . ' WHERE inumber=' . $itemid);
+			$query=sql_query('SELECT iauthor FROM ' . sql_table('item') . ' WHERE inumber=' . $itemid . ' AND idraft=0 AND itime <= NOW()');
+			if (mysql_num_rows($query) == 0) return;
+
 			$row=mysql_fetch_object($query);
 			$authorId=$row->iauthor;
 
@@ -813,6 +903,12 @@ class NP_Twitter extends NucleusPlugin {
 
 			$text = $pre_arr[rand(0,count($pre_arr))];
 			$text = str_replace("%l",$url,$text);
+
+			global $manager;
+			$item = &$manager->getItem($itemid, 0, 0);
+			$text = str_replace("%t",$item['title'],$text);
+			$text =
+			str_replace("%e",strip_tags(substr($item['body'], 0, 30)). "...",$text);
 
       			$this->sendTweet($user, $password, $text);
 		}
