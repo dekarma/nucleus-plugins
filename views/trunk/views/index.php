@@ -14,7 +14,7 @@
 	$oPluginAdmin = new PluginAdmin('Views');
 	$oPluginAdmin->start();
 
-	global $CONF;
+	global $CONF, $manager;
 
 	echo '<h2>NP_Views Counter Management</h2>';
 
@@ -82,9 +82,10 @@
         echo "<tr><th><a href=\"" . $viewsURL . "?sort=id" . $param ."\">ItemID " . $idir . "</a></th><th><a href =\"" . $viewsURL .  "?sort=views" . $param . "\">View Count " . $vdir . "</a></th><th>Action</th></tr>";
 
 	while($row = mysql_fetch_object($rows)) {
+		$item = $manager->getItem($row->id, 0, 0);
                 $delurl = $CONF['ActionURL'] . '?action=plugin&name=Views&type=resetview&id=' . $row->id . "&order=" . $orderby . "&sort=" . $sortby; 
 		echo "<tr>";
-		echo "<td><a href=\"" . $CONF['IndexURL'] . createItemLink($row->id) . "\">" . $row->id . "</a></td>";
+		echo "<td><a href=\"" . $CONF['IndexURL'] . createItemLink($row->id) . "\">" . $item['title'] . "</a></td>";
 		echo "<td>" . $row->views . "</td>";
 		echo "<td>" . "<a href=\"" . $delurl . "\">Reset count</a>" . "</td>";
 		echo "</tr>";

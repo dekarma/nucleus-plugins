@@ -31,10 +31,8 @@
       - use sql_query
     V1.8
       - Admin page enhancement to preserve order and sort info
-
-  admun todo:
-    - add blogid??
-    - show post title in admin menu
+    v1.9
+      - Added item title in admin menu
 */
 class NP_Views extends NucleusPlugin {
 
@@ -56,7 +54,7 @@ class NP_Views extends NucleusPlugin {
       return 'http://www.tipos.com.br';
    }
    function getVersion() {
-      return '1.8';
+      return '1.9';
    }
    function getDescription() {
       return 'This plugin counts how many times an entry has been displayed.';
