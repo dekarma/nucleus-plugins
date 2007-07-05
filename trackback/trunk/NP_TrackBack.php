@@ -19,6 +19,7 @@
 	* http://www.gnu.org/licenses/gpl.html
 	* ==========================================================================================
         * admun TODO:
+	*   - delete blocked tb older than x days
 	*   - clear tb lookup cache
 	*   - tb url auto discovery via rel="trackback" (like in Wordpress)
 	*/
@@ -85,6 +86,21 @@
 					$this->showList($tb_id);
 					break;
 				
+				// show the most recent 5 tb
+				case 'latest':
+					$query  = "SELECT tb_id, url, title, blog_name ";
+					$query .= "FROM ".sql_table('plugin_tb')." WHERE block = 0 ORDER BY timestamp DESC LIMIT 0,5";
+					$result = sql_query($query);
+					   
+					echo "<ul>";
+					while ($row = mysql_fetch_object($result)) {
+						$url = createItemLink($row->tb_id,'');
+						echo "<li><b><a href='".$url."'>".$row->title."</a></b>";
+						echo "<br />from <a href='".$row->url."'>".$row->blog_name."</a></li>";
+					}
+					echo "</ul>";
+				break;
+
 				default:
 					return;
 			}
@@ -1864,9 +1880,9 @@
 		/* Plugin API calls, for installation, configuration and setup                        */
 	
 		function getName()   	  { 		return 'TrackBack';   }
-		function getAuthor() 	  { 		return 'rakaz, mod by admun (Edmond Hui)'; }
+		function getAuthor() 	  { 		return 'rakaz, mod by admun (Edmond Hui), and others'; }
 		function getURL()    	  { 		return 'http://edmondhui.homeip.net/nudn'; }
-		function getVersion()	  { 		return '2.1.0'; }
+		function getVersion()	  { 		return '2.1.1'; }
 		function getDescription() { 		return 'Send trackbacks to other weblogs and receive tracbacks from others.'; }
 	
 		function getTableList()   { 		

@@ -129,3 +129,5 @@
 		-  re-instate ping form for item to allow user to manually
 		   ping another post (which url, etc are automactically
 		   filled)
+        2.1.1 (admun)
+		- Add <%TrackBack(latest)%> (thanks faceh for the code)
