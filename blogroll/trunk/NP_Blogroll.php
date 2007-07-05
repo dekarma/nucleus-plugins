@@ -13,13 +13,11 @@
  *
  * admun TODO: 
  *  - tag auto complete
- *  - XFN http://gmpg.org/xfn/intro
+ *  - per blog blogroll group <%Blogroll(group)%>
  *  - add tag(s) to a group
  *
- *  - show related tags and multi tags
+ *  - XFN http://gmpg.org/xfn/intro
  *  - tags relationship chart to see how tags on each link related
- *  - add search function
- *    select l.id,l.text,l.desc,l.url from nucleus_plug_blogroll_links as l where l.url like "%script%" or l.text like "%script%" or l.desc like "%script%" and l.group='pending';
  *
  *  - check _GET/_POST and how to fix action processing once and for all?? maybe rewrite the admin menu.....
  *  - tagcloud/searchresult for all groups
@@ -28,6 +26,14 @@
  *  - share blogroll group (gorup 0)
  *  - tagcloud per user
  */
+
+if ( !function_exists('htmlspecialchars_decode') )
+{
+    function htmlspecialchars_decode($text)
+    {
+        return strtr($text, array_flip(get_html_translation_table(HTML_SPECIALCHARS)));
+    }
+}
  
 if (!function_exists('sql_table')) {
   function sql_table($name) {
@@ -40,7 +46,7 @@ class NP_Blogroll extends NucleusPlugin {
   function getName() { return 'Blogroll';  }
   function getAuthor() { return 'Joel Pan, mod by Edmond Hui (admun)'; }
   function getURL() { return 'http://wakka.xiffy.nl/Blogroll'; }
-  function getVersion() { return '0.39';  }
+  function getVersion() { return '0.40';  }
 
   function getDescription() { return 'This plugin lets you manage a database of links from your admin area and maintains a count of how many times each link has been clicked on by reader. Click on "help" for more information.'; }
 
@@ -67,12 +73,16 @@ class NP_Blogroll extends NucleusPlugin {
     $this->createOption('tplFooter','Footer','textarea',"</div>");
 
     $this->createOption("resultTitle", "Tag search result title", "text","<h1>Blogroll for tag <%tag%></h1><hr/>");
+    $this->createOption("SresultTitle", "Keyword search result title", "text","<h1>Search result for <%key%></h1><hr/>");
     $this->createOption("selectText", "Initialize text for search page", "text","Please select a tag from the right");
 
     $this->createOption("tcListHeader", "Header for tagcloud link", "textarea","");
     $this->createOption("tcListItem", "Item link for tagcloud link", "textarea","<a href=\"<%linkurl%>\" title=\"<%linkcomment%>\"><%linktitle%></a><%sep%><%linkdesc%><%linkedit%><br/>");
     $this->createOption("tcListFooter", "Footer for tagcloud link", "textarea","");
     $this->createOption("PlusToSpace", "Display \"+\" as \" \" in tagcloud?", "yesno", "no");
+
+    $this->createOption("relatedTagHeader", "Header for related tags", "text","<h2>related tags: </h2>");
+    $this->createOption("relatedTagFooter", "Footer for related tags", "text","<br/>");
 
     $this->createOption('DelIcioUs','Add link to del.icio.us? (need to set login & password from member setting)','yesno','no');
     $this->createMemberOption('DeliciousUser','del.icio.us login','text','');
@@ -124,8 +134,89 @@ class NP_Blogroll extends NucleusPlugin {
     }
     
     switch($type) {
+      case 'relatedtags':
+        $result=sql_query("SELECT id FROM `".sql_table('plug_blogroll_groups')."` WHERE `name`=\"".$id."\"");
+        $group=mysql_fetch_object($result);
+        $groupid = $group->id;
+
+	$tag_add_plus = "no";
+	if ($this->getOption('PlusToSpace') == "yes") {
+	  $tag_add_plus = "yes";
+	}
+	
+	$rtag = '';
+        $tag = str_replace(' ','+',RequestVar('tag'));
+        if (function_exists('mb_convert_encoding')) {
+          $tag = mb_convert_encoding($tag, _CHARSET, _CHARSET);
+          $tag = rawurldecode($tag);
+	  $tag = htmlspecialchars_decode($tag);
+        }
+        else {
+          // This will not work for UTF-8 tag....  . not something 
+          // we can fix unless we bundle mb_convert_encoding()
+          $tag = urlencode($tag);
+	  $tag = htmlspecialchars_decode($tag);
+        }
+
+	$query = "SELECT id FROM ". sql_table('plug_blogroll_tags') ." WHERE tag='".$tag."'";
+	$result = sql_query($query);
+	if (mysql_num_rows($result) == 0) break;
+
+	$query2 = "SELECT  DISTINCT t.tag FROM " . sql_table('plug_blogroll_tags') ." as t WHERE ";
+	while ($r = mysql_fetch_assoc($result)) {
+	  $query2 .= " t.id='".$r['id']."' AND t.tag!='".$tag."' OR ";
+	}
+	$query2 = substr($query2, 0, -3);
+
+	$result2 = sql_query($query2);
+	while ($r = mysql_fetch_assoc($result2)) {
+	  if ($tag_add_plus == "yes")
+	  {
+	    $disp_tag = str_replace('+','&nbsp;',$r['tag']);
+	  }
+	  else {
+	    $disp_tag = $r['tag'];
+	  }
+
+	  $rtag .= "<a href=\"./blogroll.php?tag=".$r['tag']."&amp;group=$groupid\">".$disp_tag."</a> + ";
+	}
+	$rtag = substr($rtag, 0, -3);
+
+	if ($rtag != '') {
+	  echo $this->getOption('relatedTagHeader');
+	  echo $rtag;
+	  echo $this->getOption('relatedTagFooter');
+	}
+
+        break;
+
       case 'tagcloudresult':
         global $member;
+        $searchp = RequestVar('searchp');
+        $group = urlencode(RequestVar('group'));
+
+	if ($searchp != '') {
+	  echo str_replace('<%key%>', $searchp, $this->getOption('SresultTitle'));
+          $query = "SELECT l.* FROM ".sql_table('plug_blogroll_links')." AS l WHERE l.url LIKE \"%".$searchp
+	          ."%\" OR l.text LIKE \"%".$searchp."%\" OR l.desc like \"%".$searchp."%\"";
+	  if ($group != '') { $query .= " AND l.group=".$group; }
+          $result=sql_query($query);
+        
+          echo $this->getOption('tcListHeader');
+	  while ($r = mysql_fetch_assoc($result)) {
+	    $out = $this->_makeCloudLink($r, $this->getOption('redirect'));
+	    if ($member->isLoggedIn() && $member->getID() == $r['owner']) {
+	      // ED$ how do I include &group=x in the redirection link properly?
+	      $edit = " [<a href=\"".$CONF['PluginURL']."/blogroll/index.php?page=managetag&tag=".$tag."&action=editlink&id=".$r['id']
+		      ."&redirect=http://".serverVar("HTTP_HOST").serverVar('REQUEST_URI')."\">edit</a>]";
+	    } else {
+	      $edit = '';
+	    }
+	    echo str_replace('%e',$edit,$out);
+	  }
+          echo $this->getOption('tcListFooter');
+	  break;
+	}
 
         $tag = str_replace(' ','+',RequestVar('tag'));
         if (function_exists('mb_convert_encoding')) {
@@ -140,7 +231,6 @@ class NP_Blogroll extends NucleusPlugin {
 	  $tag = htmlspecialchars_decode($tag);
         }
 
-        $group = urlencode(RequestVar('group'));
         if ($tag != "") {
           if ($this->getOption('PlusToSpace') == "yes") {
             $disp_tag = str_replace('+','&nbsp;',$tag);
@@ -155,13 +245,20 @@ class NP_Blogroll extends NucleusPlugin {
           return;
         }
 
-        $result=sql_query("SELECT l.* FROM ".sql_table('plug_blogroll_links')." as l, ".sql_table('plug_blogroll_tags')." as t, ".sql_table('plug_blogroll_groups')." as g WHERE t.tag=\"".$tag."\" and l.id=t.id and l.group=g.id and l.group=".$group);
+        $query="SELECT l.* FROM ".sql_table('plug_blogroll_links')." as l, ".sql_table('plug_blogroll_tags')." as t,
+	".sql_table('plug_blogroll_groups')." as g WHERE t.tag=\"".$tag."\" and l.id=t.id and l.group=g.id";
+	
+	if ($group != '') { $query .= " and l.group=".$group; }
+
+        $result=sql_query($query);
         
         echo $this->getOption('tcListHeader');
         while ($r = mysql_fetch_assoc($result)) {
           $out = $this->_makeCloudLink($r, $this->getOption('redirect'));
           if ($member->isLoggedIn() && $member->getID() == $r['owner']) {
-            $edit = " [<a href=\"".$CONF['PluginURL']."/blogroll/index.php?page=managetag&tag=".$tag."&action=editlink&id=".$r['id']."\">edit</a>]";
+	    // ED$ how do I include &group=x in the redirection link properly?
+            $edit = " [<a href=\"".$CONF['PluginURL']."/blogroll/index.php?page=managetag&tag=".$tag."&action=editlink&id=".$r['id']
+	            ."&redirect=http://".serverVar("HTTP_HOST").serverVar('REQUEST_URI')."\">edit</a>]";
           } else {
             $edit = '';
           }
@@ -329,6 +426,16 @@ class NP_Blogroll extends NucleusPlugin {
         // Output footers
         echo TEMPLATE::fill($this->getOption('tplListFooter'), $groupVars);
         echo TEMPLATE::fill($this->getOption('tplFooter'), $groupVars);
+        break;
+
+      case 'searchbox':
+             echo "<form method=\"post\" action=\"http://".$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']."\">\n"
+             . "<div class=\"Blogroll\">\n"
+             . "<input type=\"text\" name=\"searchp\"/>\n"
+             . "<input type=\"submit\" class=\"button\" value=\"Search\" />"
+             . "</div>"
+             . "</form>\n";
+
         break;
     }
   }

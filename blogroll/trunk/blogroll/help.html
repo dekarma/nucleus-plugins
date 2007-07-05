@@ -87,6 +87,9 @@ Since v0.36, user can send blogroll links to del.icoc.us. To enable this functio
   <li>User set their del.icoc.us user and password in member setting</li>
 </ol>
 
+<h3>Keyword search function</h3>
+Since v0.40, a keyword search is also search in the blogroll page. New Skinvar <%Blogroll(searchbox, [group])%> can be used to add the search box.
+
 <h3>Support and Bug reports</h3>
 
 <p>For additional support and/or bug reports please use this forum thread:
@@ -96,11 +99,19 @@ http://forum.nucleuscms.org/viewtopic.php?t=9219</a></p>
 <h3>Version History</h3>
 
 <ul>
-<li>0.39    (May 2007) admun (Edmond Hui)
+<li>0.40    (Jul 2007) admun (Edmond Hui)
+  <ul>
+    <li>htmlspecialchars_decode PHP4 support</li>
+    <li>add search function</li>
+    <li>add related tag function in tagcloud</li>
+  </ul>
+</li>
+<li>0.39    (May 9 2007) admun (Edmond Hui)
   <ul>
     <li>Fixed PluginAdmin inclusion in bookmarklet and links.php</li>
     <li>Fixed " in query Mysql update error</li>
     <li>Seperate CSS decoration with NP_TechnoratiTags</li>
+    <li>Add redirection after edit link from blogroll page</li>
   </ul>
 </li>
 <li>0.38    (12 April 2007) admun (Edmond Hui)

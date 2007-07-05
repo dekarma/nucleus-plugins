@@ -26,7 +26,7 @@
       $body .= "\nFrom \"". $row2->desc . "\":\n<ul>\n";
     }
 
-    $body .= "<li><a href=\"" . htmlspecialchars($row->url) ."\">" . $row->text . "</a>";
+    $body .= "<li><a href=\"" . htmlentities($row->url) ."\">" . $row->text . "</a>";
 
     if ($row->desc != "")
     {
@@ -44,6 +44,8 @@
   if ($group != 0) {
     $body .= "</ul>\n";
   }
+
+  //$body = htmlspecialchars_decode($body);
 
   echo $body;
 
@@ -81,7 +83,7 @@
     $category = $blog->getCategoryIdFromName("Blogroll digest");
 
     $blog->setConvertBreaks(0);
-    $blog->additem($category, $title, $body, "", $blogid, $mem->getID(), $timestamp, 0, 0);
+    $itemid = $blog->additem($category, $title, $body, "", $blogid, $mem->getID(), $timestamp, 0, 0);
 
     echo "Digest posted<br/>";
   }

@@ -310,7 +310,12 @@
 				break;
       case "editlink":
 			  $error = _editLink($_POST['id'], $_POST['url'], $_POST['text'], $_POST['desc'], $_POST['comment'], $_POST['tag'], $_POST['counter']);
-				  echo $error[1];
+
+			        if ($_GET['redirect'] != '') {
+				  header('Location: ' . $_GET['redirect']);
+				}
+
+				echo $error[1];
                                 if ($_GET['page'] != "managetag") {
 			  	  _listLinks($_GET['groupid'], $memberid);
 				  _makeLinkForm("add", "");
