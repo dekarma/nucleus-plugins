@@ -10,10 +10,8 @@
   0.6 - fix file_get_contents
   0.6a - set auto link to disable by default
   0.7 - add alt='redface', instead of 'emoticon'
+  0.8 - add user-defined smiley pack infra-structure, to allow easy adding new smileys set
 
-  admun TODO:
-    - add static mode (add icon to post before saving to DB) 
-    - add user configible smiley
     - template for the smiley box
 
   Note: icons are taken from phpbb
@@ -42,15 +40,16 @@ class NP_Smiley extends NucleusPlugin {
    function getName() { return 'Smiley'; } 
    function getAuthor()  { return 'Lama Himself | Edmond Hui (admun)'; }
    function getURL()  { return 'http://www.gaming-side.com/lama/'; } 
-   function getVersion() { return '0.7'; }
+   function getVersion() { return '1.0'; }
    function getDescription() { 
-     return 'This plugin provides phpbb emoticons support, also create link for URL and email address.'; 
+     return 'This plugin provides emoticons (also known as smileys) support, also create link for URL and email address.'; 
    } 
 
    function install() { 
      $this->createOption('ItemEnable','Use Smiley in the items ?','yesno','yes'); 
      $this->createOption('CommentEnable','Use Smiley in the comment ?','yesno','yes'); 
      $this->createOption('LinkEnable','Auto create link with internet adresses ?','yesno','no'); 
+     $this->createOption('IconTheme','Smiley set to use','text','default'); 
    } 
     
    function supportsFeature($what) {
@@ -67,39 +66,12 @@ class NP_Smiley extends NucleusPlugin {
    } 
     
    function Treatment($_text) { 
-     global $CONF, $blog;
-     $emoticons = array(
-		  ':wink:' => 'icon_wink.gif',
-		  ':lol:' => 'icon_lol.gif',
-		  ':cry:' => 'icon_cry.gif',
-		  ':evil:' => 'icon_evil.gif',
-		  ':twisted:' => 'icon_twisted.gif',
-		  ':roll:' => 'icon_rolleyes.gif',
-		  ':idea:' => 'icon_idea.gif',
-		  ':arrow:' => 'icon_arrow.gif',
-		  ':mrgreen:' => 'icon_mrgreen.gif',
-		  ':-)' => 'icon_smile.gif',
-		  ':)' => 'icon_smile.gif',
-		  ':-(' => 'icon_sad.gif',
-		  ':(' => 'icon_sad.gif',
-		  ';-)' => 'icon_wink.gif',
-		  ';)' => 'icon_wink.gif',
-		  ':!:' => 'icon_exclaim.gif',
-		  ':?:' => 'icon_question.gif',
-		  ':oops:' => 'icon_redface.gif',
-		  ':o' => 'icon_surprised.gif',
-		  ':-D' => 'icon_biggrin.gif',
-		  ':D' => 'icon_biggrin.gif',
-		  '8O' => 'icon_eek.gif',
-		  '8)' => 'icon_cool.gif',
-		  ':?' => 'icon_confused.gif',
-		  ':x' => 'icon_mad.gif',
-		  ':P' => 'icon_razz.gif',
-		  ':|' => 'icon_neutral.gif'
-                );
+     global $CONF, $blog, $DIR_PLUGINS;
+     $theme = $this->getOption('IconTheme');
+     include($DIR_PLUGINS."/emoticons/".$theme."/mapping.inc");
 
      foreach ($emoticons as $smile => $img) {
-       $_text = str_replace($smile, ' <img src="'.$CONF['AdminURL']."plugins/emoticons/".$img.'" alt="'.rtrim(substr($img,5), '.gif').'" /> ', $_text);
+       $_text = str_replace($smile, ' <img src="'.$CONF['AdminURL'].'plugins/emoticons/'.$theme.'/'.$img.'" alt="'.rtrim(substr($img,5), '.gif').'" /> ', $_text);
      }
 
      if ($this->getOption('LinkEnable') == 'yes') { 
@@ -127,9 +99,11 @@ class NP_Smiley extends NucleusPlugin {
    } 
 
    function doSkinVar($skinType, $param) {
+     $theme = $this->getOption('IconTheme');
+
      if ($param == 'panel') {
        global $DIR_PLUGINS, $CONF;
-       $in = file_get_contents($DIR_PLUGINS.'emoticons/smiley_panel.template');
+       $in = file_get_contents($DIR_PLUGINS.'emoticons/'.$theme.'/smiley_panel.template');
        $in = str_replace('##URL##',$CONF['PluginURL'],$in);
        echo $in;
      } elseif ($param == 'script') {
