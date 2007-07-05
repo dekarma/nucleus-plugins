@@ -70,6 +70,8 @@
  *  - Don't display tags if count($args) == 1 && $args[0]==''
  
  * admun TODO:
+ *  - no del.icio.us tag add for draft and future post, use JustPost
+ *  - split outbound del.icio.us support to a new plugin, to share with NP_Blogroll
  *  - delete/rename tags for multiple items, need admin menu....
  *  - show post using NP_ShowBlogs for a tag
  *  - add pagination for search result
@@ -336,12 +338,12 @@ EOD;
                 if ($this->getOption('DelIcioUs') == "yes") {
                         global $manager, $CONF;
                         // need to reset the ItemURL so createItemLink work properly
+                        $item = &$manager->getItem($itemid, 0, 0);
                         $blog =& $manager->getBlog(getBlogIDFromItemID($itemid));
                         $CONF['ItemURL'] = preg_replace('/\/$/', '', $blog->getURL());
                         $url = createItemLink($itemid);
 
                         // get item info
-                        $item = &$manager->getItem($itemid, 0, 0);
                         $title = $data['title'] != '' ? $data['title'] : $item['title'];
 
                         $authorid = $item['authorid'];
