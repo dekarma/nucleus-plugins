@@ -1,0 +1,9 @@
+<div class="Mailfrienditem">
+%##EXTRA##%
+
+<h2>%##TITLE##%</h2>
+%##TEXT##%
+<br/>
+<br/>
+URL: %##URL##%
+</div>
