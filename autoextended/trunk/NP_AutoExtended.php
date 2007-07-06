@@ -4,17 +4,14 @@
      v0.1, May 5, 2004 - Initial version
      v0.2, May 6, 2004 - Fixed URL spliting
      v0.3, May 6, 2004 - Re-implement event_PreAddItem to deal with HTML properly
-
-   admun TODO:
-     - add pagebreak tag <pagebreak>
-     - add split by paragraph mode
+     v0.4, Jul 5, 2007 - code inprovement
 */
 class NP_AutoExtended extends NucleusPlugin {
 
    function getName() { return 'AutoExtended'; }
    function getAuthor()  { return 'Edmond Hui (admun)'; }
    function getURL() { return ''; }
-   function getVersion() { return 'v0.3'; }
+   function getVersion() { return 'v0.4'; }
    function getDescription() {
       return 'This plugin splits the item body into extended text if it is longer than a certain size';
    }
@@ -41,6 +38,8 @@ class NP_AutoExtended extends NucleusPlugin {
      $wordcount = 0;
      $tempbody = '';
      $tempext ='';
+     $count = $this->getOption('split_word_count');
+
      for ($i=0; $i < strlen($data['body']); $i++) {
        switch ($data['body'][$i]) {
          case '<':
@@ -57,13 +56,13 @@ class NP_AutoExtended extends NucleusPlugin {
            break;
        }
 
-       if ($wordcount < $this->getOption('split_word_count'))
+       if ($wordcount < $count)
          $tempbody = $tempbody . $data['body'][$i];
        else
          $tempext = $tempext . $data['body'][$i];
      }
 
-     if ($wordcount < $this->getOption('split_word_count')) return;
+     if ($wordcount < $count) return;
 
      $data['body'] = $tempbody . "... ";
      $data['more'] = "..." . $tempext . "\n" . $data['more'];
