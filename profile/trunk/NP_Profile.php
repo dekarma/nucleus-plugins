@@ -128,6 +128,10 @@ History:
     * use $CONF['ActionURL'] to set form action url
     * adds closeform to special field types, and moves all hidden fields to the startform special field.
     * fix bug on entry form where date fields displaying extra input fields when date value is blank.
+  v2.19 -- 15th release of version 2 adds the following to 2.18 version
+    * modify PostRegister event and doAction method to recognize more generic registration methods beyond creataccount.html (testing for NP_NewAccount) (2.19.a01)
+    * modify output of radio fields to use labels for xhtml compliance (2.19.a01)
+    * some syntax improvement to help.html for xhtml compliance (2.19.a01)
 [FUTURE]
   [v2.20 -- future release to require upgrade procedure (uninstall/reinstall)]
     * rename fvalidate column to fformatnull. See all occurences of fvalidate in this file and in profile/index.php.
@@ -156,7 +160,7 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://www.iai.com/';	}
 
-	function getVersion() {	return '2.18'; }
+	function getVersion() {	return '2.19.a01'; }
 
 	function getDescription() {
         if (!$this->_optionExists('email_public_deny') && $this->_optionExists('email_public')) {
@@ -781,7 +785,7 @@ password
         global $_POST,$member,$memberid;
         $member = $data['member'];
         $memberid = $member->id;
-        $this->doAction('update');
+        $this->doAction('update',1);
     }
 
     function event_MemberSettingsFormExtras(&$data) {
@@ -1515,10 +1519,10 @@ password
 									$opt = explode("|", $ropt);
 									if (count($opt) == 1) $opt[1] = trim($opt[0]);
 									if (trim($opt[1]) == $value) {
-										echo '<input type="radio" name="' . $param1 . '" value="' . $value . '" checked="checked"> ' . trim($opt[0]) . '</input>' . "\n";
+										echo '<input type="radio" name="' . $param1 . '" value="' . $value . '" checked="checked" id="' . $param1 . trim($opt[1]) . '" /> <label for="' . $param1 . trim($opt[1]) . '">' . trim($opt[0]) . '</label>'. "\n";
 									}
 									else {
-										echo '<input type="radio" name="' . $param1 . '" value="' . trim($opt[1]) . '"> ' . trim($opt[0]) . '</input>' . "\n";
+										echo '<input type="radio" name="' . $param1 . '" value="' . trim($opt[1]) . '" id="' . $param1 . trim($opt[1]) . '" /> <label for="' . $param1 . trim($opt[1]) . '">' . trim($opt[0]) . '</label>'. "\n";
 									}
 								}
 							}
@@ -1761,7 +1765,7 @@ password
 		} // end if skintype is one of supported
 	} // end doSkinVar()
 
-	function doAction($actionType) {
+	function doAction($actionType,$registering = 0) {
 		global $CONF, $_POST, $_FILES, $member, $DIR_MEDIA, $HTTP_REFERER, $manager;
 		$key = array_keys($_POST);
         if (!$actionType) {
@@ -1902,11 +1906,12 @@ password
 			header('Location: ' . $manager->addTicketToUrl($destURL));
 			break;
 		case 'update':
-			/* Actions for members go here (type='update')*/
-			// Check if the POST is done by the right member
+			/* Actions for members go here (type='update')
+			 * Check if the POST is done by the right member*/
 			$destURL = serverVar('HTTP_REFERER');
             global $memberid;
-            if (postVar('action') != 'createaccount') $memberid = intPostVar('memberid');
+            //if (postVar('action') != 'createaccount') $memberid = intPostVar('memberid');
+            if (!$registering) $memberid = intPostVar('memberid');
 			if (intval($member->id) > 0 && ($member->id == $memberid || $member->isAdmin())) {
 				//$memberid = $member->id;
                 if ($member->id != $memberid && $member->isAdmin()) {
@@ -2013,6 +2018,7 @@ password
 									}
 									break;
 								case 'password':
+                                    if ($registering) $value = '';
 									if ($value != '') {
 										if ($memberobj->checkPassword($opass)) {
 											if ($value == $vpass) {

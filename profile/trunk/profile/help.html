@@ -78,12 +78,12 @@ where
 <li><i>fieldname</i> is the name of the field to display. By default, the valid values are <b>nick, realname, mail,
 notes, url</b>, msn, sex, birthdate, avatar, location, hobbies, secret, icq, favoritesite, bio, resume, privacylevel.
 The ones in bold are Nucleus member fields and represent data kept by the Nucleus Core. More details about these special Nucleus fields will be given later. It can also be one of a number of special values such as startform, endform, submitbutton, password, editlink, editprofile, or status, as described later.</li>
-<li><i>special</i> is one of label or show as described below (can be left blank, the default behavior):
+<li><i>special</i> is one of label or show as described below (can be left blank, the default behavior):</li>
    <ul>
    <li>label - Valid for all fields. Shows the label for the named field..</li>
    <li>show - Valid for all fields. Directs NP_Profile to display the field value in all cases (so wont show input field to member on his own page, so useful to show fields outside of member form). Will be formatted according to <i>showas</i> type, where applicable.</li>
    </ul>
-<li><i>showas</i> is one of image, link, or raw, as described below (can be left blank, the default behavior):
+<li><i>showas</i> is one of image, link, or raw, as described below (can be left blank, the default behavior):</li>
    <ul>
    <li>image - Valid for fields of type file. Shows the file as an image for the named field. Default for file type.</li>
    <li>link - Valid for fields of type file, url, mail, list. Shows value of named field as a link. Default for url and mail types.</li>
@@ -114,7 +114,7 @@ On an item page or in a template (see TemplateVar below) will show the real name
 <li><b>&lt;%Profile(editlink)%&gt;</b> will add the html needed to display a link to the profile edit form, but only if a member is viewing his own member page. Otherwise, it displays nothing. Should be used on Member Details skin part if members will be allowed to edit their own profiles.</li>
 <li><b>&lt;%Profile(editprofile)%&gt;</b> will add the html needed to display a link to the profile edit page, but only if a member is viewing his own member page. Otherwise, it displays nothing. Should be used on Member Details skin part if members will be allowed to edit their own profiles.</li>
 </ul>
-<p>For some ideas see the <a href="#tips">Tips and Tricks</a> section below.
+<p>For some ideas see the <a href="#tips">Tips and Tricks</a> section below.</p>
 
 <h3><a name="templatevars">TemplateVars</a></h3>
 
@@ -379,7 +379,7 @@ default setting set for that that field type in the type settings form.</p>
 
 <h4>Edit Form Configuration Settings Form</h4>
 
-<p>This page allows the setting of miscelleneous profile configuration settings. This is new to version 2.1 and presently has three configuration setting &emdash; editprofile, membersettings, and registration.</p>
+<p>This page allows the setting of miscelleneous profile configuration settings. This is new to version 2.1 and presently has three configuration setting &mdash; editprofile, membersettings, and registration.</p>
 
 <p><b>editprofile</b> controls the format of the editprofile page which is a new page for the member settings form. Previously this form had to be part of the member details page. The formatting of the page is flexible and can be divided into up to 10 tabs. If this field is left blank, the editprofile page will display a form with all enabled fields listed alphabetically. The formatting options are detailed below.</p>
 
