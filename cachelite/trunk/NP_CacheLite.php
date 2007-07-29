@@ -45,7 +45,7 @@ class NP_CacheLite extends NucleusPlugin
 
 	function getVersion()
 	{
-		return '0.1';
+		return '0.2';
 	}
 
 	function getDescription()
@@ -112,6 +112,13 @@ class NP_CacheLite extends NucleusPlugin
 		global $DIR_PLUGINS;
 
 		if($data['type'] == 'error' || isset($_REQUEST['results'])) return;
+
+		// Feeds are not cached, should review this (index page and feed share cache file name)
+		if($currentSkinName == 'feeds/rss20' ) return;
+		if($currentSkinName == 'feeds/atom' ) return;
+		if($currentSkinName == 'xml/rsd' ) return;
+		// seach results are not cached
+		if($data['type'] == 'search' ) return;
 
 		$this->setCacheId($data['type']);
 
@@ -206,14 +213,51 @@ class NP_CacheLite extends NucleusPlugin
 
 		// set cache group
 		$this->setBlogId();
-		$this->page_cache_group = 'blog' . $this->blog_id;
 
 		if($catid)
 		{
-			$this->page_cache_id = 'cat' . $catid;
+                        $this->page_cache_group = 'cat' . $catid;
+                        // Special cases
+                        switch($skin_type)
+                        {
+				case 'index':
+					$page = '1';
+					if(isset($_REQUEST['page']))
+					{
+						$page = $_REQUEST['page'];
+					}
+					elseif(isset($_REQUEST['pagina']))
+					{
+						$page = $_REQUEST['pagina'];
+					}
+					$this->page_cache_id = $page;
+					break;
+				case 'item':
+					// ID: itemX -> X = itemid
+					global $itemid;
+					$this->page_cache_id = 'item' . $itemid;
+					break;
+				case 'archivelist':
+					$this->page_cache_id = 'archivelist';
+					break;
+				case 'archive':
+					global $archive;
+					// ID: archiveX -> X = date
+					$this->page_cache_id = 'archive' . $archive;
+					break;
+				case 'member':
+					// ID: memberX -> X = memberid
+					global $memberid;
+					$this->page_cache_id = $memberid;
+					break;
+				default:
+					$this->page_cache_options = null;
+			}
+
 		}
 		else
 		{
+			$this->page_cache_group = 'blog' . $this->blog_id;
 			switch($skin_type)
 			{
 				case 'index':
