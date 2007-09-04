@@ -52,7 +52,7 @@ class NP_ShowComments extends NucleusPlugin {
 
 	// version of the plugin
 	function getVersion() {
-		return '1.1';
+		return '1.11';
 	}
 
 	// a description to be shown on the installed plugins listing
@@ -74,7 +74,7 @@ class NP_ShowComments extends NucleusPlugin {
         if (strtolower($pages) == 'yes') {
             $pages = 1;
             $start = intval(requestVar('scbegin'));
-            if ($start == 0) $start = 1;
+            // if ($start == 0) $start = 1;
             if ($NumToShow < 1) $NumToShow = 20;
         }
         else {
@@ -124,6 +124,28 @@ class NP_ShowComments extends NucleusPlugin {
 		$parser =& new PARSER($actions->getDefinedActions(),$actions);
 		$actions->setTemplate($template);
 		$actions->setParser($parser);
+
+		if ($start == 0 && $NumToShow > 0) {
+			$totalcomments = intval(quickQuery('SELECT COUNT(*) as result FROM ' . sql_table('comment') . ' WHERE c.citem=' . $comments->itemid));
+
+			switch ($sord) {
+				case 'ASC':
+					if ($totalcomments <= $NumToShow) $start = 1;
+					else {
+						$lastpage = intval($totalcomments / $NumToShow);
+						$start = $lastpage * $NumToShow;
+						if ($totalcomments == $start) $start = $start - $NumToShow;
+						$start = $start + 1;
+					}
+				break;
+				case 'DESC':
+					$start = 1;
+				break;
+				default:
+					$start = 1;
+				break;
+			}
+		}
 
 		if ($maxToShow == 0) {
 			$comments->commentcount = $comments->amountComments();
