@@ -2,6 +2,8 @@
 
 /**
  * Versions:
+ *   0.6a 2007-07-09
+ *      - fix missing file_get_contents
  *   0.6  2007-06-24
  *      - fix use createItemLink()
  *   0.5a 2007-05-07
@@ -63,6 +65,23 @@
  *
  */
 
+// Fix compatibility older PHP versions
+if (!function_exists('file_get_contents')) {
+  function file_get_contents($filename, $use_include_path = 0) {
+   $data = '';
+   $file = @fopen($filename, "rb", $use_include_path);
+   //set_socket_timeout($file,0);
+   if ($file) {
+     while (!feof($file)) $data .= fread($file, 1024);
+     fclose($file);
+   } else {
+     echo $this->getOption('time_outtext');
+     exit;
+   }
+   return $data;
+  }
+}
+
 class NP_CommentControl extends NucleusPlugin {
 
    function NP_CommentControl() {
@@ -72,7 +91,7 @@ class NP_CommentControl extends NucleusPlugin {
    function getName()    { return 'CommentControl'; }
    function getAuthor()     { return 'karma, mod by Radek Hulaan, Edmond Hui (admun), Red Dalek'; }
    function getURL()     { return 'http://demuynck.org/'; }
-   function getVersion()    { return '0.6'; }
+   function getVersion()    { return '0.6a'; }
    function getDescription() { return 'Tools to handle trolls and comment spam. RSS feed of pending comments now included.'; }
 
    function supportsFeature($what) {
