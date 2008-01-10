@@ -184,7 +184,7 @@ define('_PROFILE_ADMIN_HELP_FORMATNULL',		'What to display when the value of the
 define('_PROFILE_OPT_EMAIL_PUBLIC_DENY',		'Text to show when user not authorized to view email address');
 define('_PROFILE_OPT_EMAIL_PUBLIC_DENY_TEXT',		'<i>Not Authorized to View</i>');
 
-// new in 2.2
+// new in 2.18
 define('_PROFILE_ADMIN_CONFIG_MS_INTRO',		'Here you can list the fields (comma-separated) that you would like to make available on the Member Settings page of the Admin Area.
         If left blank all enabled fields will be listed alphabetically.');
 define('_PROFILE_ADMIN_CONFIG_REG_INTRO',		'Here you can list the fields (comma-separated) that you would like to make available on the Member Registration page (createaccount.html).
@@ -193,6 +193,10 @@ define('_PROFILE_ADMIN_CREATEACCOUNT_HEAD',     'Sample Code for createaccount.h
 define('_PROFILE_ADMIN_CREATEACCOUNT',     'createaccount.html');
 define('_PROFILE_ADMIN_CREATEACCOUNT_INTRO',    'If you would like new members to be able to complete certain profile fields during registration, you can list those fields in the &quot;registration&quot; field on the '._PROFILE_ADMIN_CONFIG.' tab.
         Then copy the html code below to a text file called createaccount.html and upload to your nucleus root directory. You must also enable member registration for your site.');
-
+// new in 2.19.01
+define('_PROFILE_ADMIN_CREATEACCOUNT33X_HEAD',     'Sample Code for createaccount.php File');
+define('_PROFILE_ADMIN_CREATEACCOUNT33X',     'createaccount.php');
+define('_PROFILE_ADMIN_CREATEACCOUNT33X_INTRO',    'If you would like new members to be able to complete certain profile fields during registration, you can list those fields in the &quot;registration&quot; field on the '._PROFILE_ADMIN_CONFIG.' tab.
+        Then copy the php code below to a text file called createaccount.php and upload to your nucleus root directory. Make a backup of the original createaccount.php file that ships with Nucleus CMS. You must also enable member registration for your site.');
 
 ?>

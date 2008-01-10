@@ -40,7 +40,7 @@ PARTICULAR PURPOSE. See the GNU General Public License for more details.
 	$admin = $member->isAdmin();
 	$thisquerystring = serverVar('QUERY_STRING');
 	$showlist = strtolower(trim(requestVar('showlist')));
-	if (!in_array($showlist, array('fields','editfield','types','edittype','example','deleteconfirm','config','createaccount'))) $showlist = 'fields';
+	if (!in_array($showlist, array('fields','editfield','types','edittype','example','deleteconfirm','config','createaccount','createaccount33x'))) $showlist = 'fields';
 	$status = intval(requestVar('status'));
 
 	$newhead = '
@@ -147,6 +147,7 @@ border-bottom: 1px solid #778;
 	echo ' <li><a class="'.($showlist == 'types' ? 'current' : '').'" href="'.$thispage.'?showlist=types&amp;safe=true">'._PROFILE_ADMIN_FIELD_TYPE.'</a></li>'."\n";
 	echo ' <li><a class="'.($showlist == 'config' ? 'current' : '').'" href="'.$thispage.'?showlist=config&amp;safe=true">'._PROFILE_ADMIN_CONFIG.'</a></li>'."\n";
 	echo ' <li><a class="'.($showlist == 'example' ? 'current' : '').'" href="'.$thispage.'?showlist=example&amp;safe=true">'._PROFILE_ADMIN_EXAMPLE.'</a></li>'."\n";
+	echo ' <li><a class="'.($showlist == 'createaccount33x' ? 'current' : '').'" href="'.$thispage.'?showlist=createaccount33x&amp;safe=true">'._PROFILE_ADMIN_CREATEACCOUNT33X.'</a></li>'."\n";
 	echo ' <li><a class="'.($showlist == 'createaccount' ? 'current' : '').'" href="'.$thispage.'?showlist=createaccount&amp;safe=true">'._PROFILE_ADMIN_CREATEACCOUNT.'</a></li>'."\n";
 	echo " </ul></div>\n";
 
@@ -526,8 +527,158 @@ border-bottom: 1px solid #778;
 
 		echo $toplink;
 	} // end types
+	
 /**************************************
- *	 Edit Field Defs			      *
+ *	 Show sample createaccount.php          *
+ **************************************/
+	if ($showlist == "createaccount33x")
+	{
+        echo '<div>'."\n";
+		echo "<h2>"._PROFILE_ADMIN_CREATEACCOUNT33X_HEAD."</h2>\n";
+		echo _PROFILE_ADMIN_CREATEACCOUNT33X_INTRO."<p />\n";
+		echo "<pre>\n";
+?>
+		
+		&lt;?php
+	include "./config.php";
+	include $DIR_LIBS."ACTION.php";
+	
+	if (isset ($_POST['showform'])&&$_POST['showform']==1) {
+		$showform = 1;
+	}
+	else {
+		$showform = 0;
+	}
+?&gt;
+&lt;!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"&gt;
+&lt;html&gt;
+&lt;head&gt;
+	&lt;title&gt;Create Member Account&lt;/title&gt;
+	&lt;style type="text/css"&gt;@import url(nucleus/styles/manual.css);&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+	&lt;h1&gt;Create Account&lt;/h1&gt;
+
+&lt;?php
+	// show form only if Visitors are allowed to create a Member Account
+	if ($CONF['AllowMemberCreate']==1) { 
+		// if the form is shown the first time no POST data 
+		// will be added as value for the input fields
+		if ($showform==0) {
+?&gt;
+
+	&lt;form method="post" action="createaccount.php"&gt;
+
+	&lt;div&gt;
+	&lt;input type="hidden" name="showform" value="1" /&gt;
+	&lt;input type="hidden" name="action" value="createaccount" /&gt;
+	
+		Login Name (required): 
+		&lt;br /&gt;
+		&lt;input name="name" size="20" /&gt; &lt;small&gt;(only a-z, 0-9)&lt;/small&gt;
+		&lt;br /&gt;
+		&lt;br /&gt;		
+		Real Name (required): 
+		&lt;br /&gt;
+		&lt;input name="realname" size="40" /&gt;
+		&lt;br /&gt;
+		&lt;br /&gt;		
+		Email (required):
+		&lt;br /&gt;
+		&lt;input name="email" size="40" /&gt; &lt;small&gt;(must be valid, because an activation link will be sent over there)&lt;/small&gt;
+		&lt;br /&gt;
+		&lt;br /&gt;		
+		URL: 
+		&lt;br /&gt;
+		&lt;input name="url" size="60" /&gt;
+		&lt;br /&gt;
+		&lt;?php
+		// add extra fields from NP_Profile
+		$manager-&gt;notify('RegistrationFormExtraFields', array('type' =&gt; 'createaccount.php', 'prelabel' =&gt; '', 'postlabel' =&gt; '&lt;br /&gt;', 'prefield' =&gt; '', 'postfield' =&gt; '&lt;br /&gt;&lt;br /&gt;'));
+		// add a Captcha challenge or something else
+		global $manager;
+		$manager-&gt;notify('FormExtra', array('type' =&gt; 'membermailform-notloggedin'));
+		?&gt;
+		&lt;br /&gt;
+		&lt;br /&gt;						
+		&lt;input type="submit" value="Create Account" /&gt;
+	&lt;/div&gt;
+
+	&lt;/form&gt;
+&lt;?php
+		} // close if showfrom ...
+		else {
+		// after the from is sent it will be validated
+		// POST data will be added as value to treat the user with care (;-))
+	
+		$a = new ACTION();
+
+		// if createAccount fails it returns an error message 
+		$message = $a-&gt;createAccount();
+
+		echo '&lt;span style="font-weight:bold; color:red;"&gt;'.$message.'&lt;/span&gt;&lt;br /&gt;&lt;br /&gt;'; 
+?&gt;
+	
+		&lt;form method="post" action="createaccount.php"&gt;
+
+	&lt;div&gt;
+	&lt;input type="hidden" name="showform" value="1" /&gt;
+	&lt;input type="hidden" name="action" value="createaccount" /&gt;
+	
+		Login Name (required): 
+		&lt;br /&gt;
+		&lt;input name="name" size="20" &lt;?php if(isset($_POST['name'])){echo 'value="'.$_POST['name'].'"';}?&gt;/&gt; &lt;small&gt;(only a-z, 0-9)&lt;/small&gt;
+		&lt;br /&gt;
+		&lt;br /&gt;		
+		Real Name (required): 
+		&lt;br /&gt;
+		&lt;input name="realname" size="40" &lt;?php if(isset($_POST['realname'])){echo 'value="'.$_POST['realname'].'"';}?&gt;/&gt;
+		&lt;br /&gt;
+		&lt;br /&gt;		
+		Email (required):
+		&lt;br /&gt;
+		&lt;input name="email" size="40" &lt;?php if(isset($_POST['email'])){echo 'value="'.$_POST['email'].'"';}?&gt;/&gt; &lt;small&gt;(must be valid, because an activation link will be sent over there)&lt;/small&gt;
+		&lt;br /&gt;
+		&lt;br /&gt;		
+		URL: 
+		&lt;br /&gt;
+		&lt;input name="url" size="60" &lt;?php if(isset($_POST['url'])){echo 'value="'.$_POST['url'].'"';}?&gt;/&gt;
+		&lt;br /&gt;
+		&lt;?php
+		// add extra fields from NP_Profile
+		$manager-&gt;notify('RegistrationFormExtraFields', array('type' =&gt; 'createaccount.php', 'prelabel' =&gt; '', 'postlabel' =&gt; '&lt;br /&gt;', 'prefield' =&gt; '', 'postfield' =&gt; '&lt;br /&gt;&lt;br /&gt;'));
+		// add a Captcha challenge or something else
+		global $manager;
+		$manager-&gt;notify('FormExtra', array('type' =&gt; 'membermailform-notloggedin'));
+		?&gt;
+		&lt;br /&gt;
+		&lt;br /&gt;
+		&lt;input type="submit" value="Create Account" /&gt;
+	&lt;/div&gt;
+
+	&lt;/form&gt;
+&lt;?php
+		}	// close else showform ...
+
+}
+else { 
+	echo 'Visitors are not allowed to create a Member Account.&lt;br /&gt;&lt;br /&gt;';
+	echo 'Please contact the website administrator for more information.';
+}
+?&gt;
+	
+	
+&lt;/body&gt;
+&lt;/html&gt;
+<?php
+        echo "</pre>\n";
+		echo "</div>\n";
+		echo $toplink;
+    }
+		
+/**************************************
+ *	 Show sample createaccount.html         *
  **************************************/
 	if ($showlist == "createaccount")
 	{
@@ -575,7 +726,7 @@ border-bottom: 1px solid #778;
                 echo $profplug->getFieldAttribute($rfield,'flabel').":\n";
                 echo '&lt;br /&gt;'."\n";
                 ob_start();
-                $profplug->doSkinVar('adminmember',$rfield,'','',99999999);
+                $profplug->doSkinVar('adminmember',$rfield,'','',9999999999);
                 $inputtext = ob_get_contents();
                 ob_end_clean();
                 echo str_replace(array('<','>'),array('&lt;','&gt;'),$inputtext);

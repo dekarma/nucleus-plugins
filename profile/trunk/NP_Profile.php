@@ -132,6 +132,9 @@ History:
     * modify PostRegister event and doAction method to recognize more generic registration methods beyond creataccount.html (testing for NP_NewAccount) 
     * modify output of radio fields to use labels for xhtml compliance 
     * some syntax improvement to help.html for xhtml compliance 
+  v2.19.01 -- 16th Release of version 2 adds the following to version 2.19
+    * fix headers already sent errors when user registering from createaccount.php in version 3.3x
+    * add tab on admin page for sample createaccount.php file for adding Profile fields to registration.
 [FUTURE]
   [v2.20 -- future release to require upgrade procedure (uninstall/reinstall)]
     * rename fvalidate column to fformatnull. See all occurences of fvalidate in this file and in profile/index.php.
@@ -183,7 +186,7 @@ class NP_Profile extends NucleusPlugin {
 	}
 
 	function getTableList() { return array(sql_table('plugin_profile'), sql_table('plugin_profile_fields'), sql_table('plugin_profile_types'), sql_table('plugin_profile_config')); }
-	function getEventList() { return array('QuickMenu','PostDeleteMember','MemberSettingsFormExtras','PostRegister'); }
+	function getEventList() { return array('QuickMenu','PostDeleteMember','MemberSettingsFormExtras','PostRegister','RegistrationFormExtraFields'); }
 
 	function install() {
 		global $CONF;
@@ -782,10 +785,12 @@ password
 	}
 
     function event_PostRegister(&$data) {
-        global $_POST,$member,$memberid;
+        global $_POST,$member,$memberid,$nucleus;
         $member = $data['member'];
         $memberid = $member->id;
-        $this->doAction('update',1);
+		$nucversion = preg_replace('/[^0-9]/','',$nucleus['version']);
+        if (intval($nucversion) < 330 ) $this->doAction('update',1,0);
+		else $this->doAction('update',1,1);
     }
 
     function event_MemberSettingsFormExtras(&$data) {
@@ -1765,7 +1770,7 @@ password
 		} // end if skintype is one of supported
 	} // end doSkinVar()
 
-	function doAction($actionType,$registering = 0) {
+	function doAction($actionType,$registering = 0,$noredirect = 0) {
 		global $CONF, $_POST, $_FILES, $member, $DIR_MEDIA, $HTTP_REFERER, $manager;
 		$key = array_keys($_POST);
         if (!$actionType) {
@@ -2333,7 +2338,7 @@ password
 				$destURL = $pgparts[0].'?'.$newparams;
 			} // end if postvar('memberid') == $member->id
 
-			header("Location: " . $destURL);
+			if (!$noredirect) header("Location: " . $destURL);
 			break;
 		default:
 			doError(_PROFILE_ACTION_UNKNOWN);
@@ -2495,6 +2500,9 @@ password
 			while ($valobj = mysql_fetch_object($result)) {
 				$value .= $valobj->value;
 			}
+		}
+		if ($value == '' && $memberid == 9999999999) {
+			$value = postVar($feild);
 		}
 		return $value;
 	}
@@ -2696,7 +2704,8 @@ password
 			else {
                 if ($member->isLoggedIn()) return 0;
                 else return 1;
-            }        }
+            }
+        }
 	}
 
 	function _mySubstr($str = '',$start = 0, $len = 1) {
@@ -2724,6 +2733,20 @@ password
         }
         return $enabledfields;
     }
-
+	
+	function event_RegistrationFormExtraFields(&$data) {
+		$field_array = explode(',',$this->getConfigValue('registration'));
+        foreach ($field_array as $rfield) {
+            $rfield = trim($rfield);
+            if (!in_array($rfield,array_merge($this->nufields,$this->specialfields)) && $this->getFieldAttribute($rfield,'enabled')) {
+                echo $data['prelabel']."\n";
+				echo $profplug->getFieldAttribute($rfield,'flabel').":\n";
+                echo $data['postlabel']."\n";
+				echo $data['prefield']."\n";
+                $this->doSkinVar('adminmember',$rfield,'','',9999999999);
+                echo $data['postfield']."\n";
+            }
+        }
+	}
 }
 ?>
