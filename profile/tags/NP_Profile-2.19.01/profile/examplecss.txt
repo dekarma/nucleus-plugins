@@ -1,0 +1,23 @@
+/* for member profile table */
+.profiletable {
+	width: 400px;
+	/*background-color: #eeeeee;*/
+	border: 1px solid black;
+}
+.profilecol1 {
+	width:100px;
+	background-color:#ddddee;
+	border:1px solid black;
+	vertical-align: top;
+	color: #333399;
+}
+.profilecol2 {
+	width:290px;
+	background-color:#ffffff;
+	border:1px solid black;
+}
+.profileeditlink {
+	background-color:#ddddee;
+	border: 1px outset #dddddd;
+	padding: 1px;
+}
