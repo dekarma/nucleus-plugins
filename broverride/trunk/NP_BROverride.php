@@ -5,6 +5,7 @@
      v0.2 - remove extra <br/> on edit when linebreak-br conversion turn on
      v0.2a - uses sql_query
      v0.3 - fix backup failure
+     v0.3a - fix missing ; in edit item
 
    Known Issue:
      - This plugin make a query to the database on add/edit
@@ -15,7 +16,7 @@ class NP_BROverride extends NucleusPlugin {
 	function getName() { return 'BROverride'; }
 	function getAuthor()  { return 'Edmond Hui (admun)'; }
 	function getURL() { return 'http://forum.nucleuscms.org/viewtopic.php?t=3974'; }
-	function getVersion() { return 'v0.3'; }
+	function getVersion() { return 'v0.3a'; }
 	function getDescription() {
 		return 'This plugin provides automatic linebreak-to-br conversion with a per item override. This is useful for making a HTMLized post that contains ol, ul, li and etc';
 	}
@@ -103,7 +104,7 @@ class NP_BROverride extends NucleusPlugin {
 			echo " checked=\"checked\"";
 		}
 	?>
-		/>Convert linebreak to &lt;br&gt; (will also remove extra existing &lt;br&gt)
+		/>Convert linebreak to &lt;br&gt; (will also remove extra existing &lt;br&gt;)
 		</p>
 	<?php
 	}
