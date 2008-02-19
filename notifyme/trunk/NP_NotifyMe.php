@@ -64,13 +64,18 @@
   v0.66 - removed ID column from INSERT, which is not needed and seem caused some problem to Window setup
         - remove subscription when item deleted
         - fix FancyURL link
+  v0.67 - fix <%image%> stripped text and URL
 
   admun TODO:
+  - re-work the delete menu, add "select all" 
+  - localization for admin area, using a language file mechanian
+  - pagination the admin menu (instead of show all)
+
+  - auto subscribe user to a post if someone comment on it (use an event and email provide in the form)
   - add/edit admin fucntion to add new subscriber (so we can remove notify subscriber function)
+  - do not send auth email and direct add the user to th elist if the email address already on the list
   - support multiple blogs (which has its own domain)
   - check invalid subscription id
-  - pagination the admin menu (instead of show all)
-  - localization for admin area, using a language file mechanian?
   - XHTML 1.0 strict
   - delete subscription return to admin menu
   - add
@@ -110,7 +115,7 @@ class NP_NotifyMe extends NucleusPlugin {
     function getName() {return 'Notify subscribers by mail';}
     function getAuthor() {return '-=Xiffy=- (Appie Verschoor), mod by Adeas, admun (Edmond Hui)';}
     function getURL() {return 'http://xiffy.nl/weblog/';}
-    function getVersion() {return '0.66';}
+    function getVersion() {return '0.67';}
 
     function getTableList () {
       return array(sql_table('plugin_notifyaddress'));
@@ -262,9 +267,9 @@ class NP_NotifyMe extends NucleusPlugin {
 	$sender = $this->getOption('updateSender'); 
 
 	// replace image/popup/media tags in body
-	$body = eregi_replace('<\%image\(.*>', '[image]', $body);
-	$body = eregi_replace('<\%popup\(.*>', '[image]', $body);
-	$body = eregi_replace('<\%media\(.*>', '[media]', $body);
+	$body = eregi_replace('<\%image\(.*\%>', '[image]', $body);
+	$body = eregi_replace('<\%popup\(.*\%>', '[image]', $body);
+	$body = eregi_replace('<\%media\(.*\%>', '[media]', $body);
 
 	// email notification 
 	$headers = "Content-type: text/html; charset=iso-8859-1\n"; 
@@ -439,6 +444,7 @@ class NP_NotifyMe extends NucleusPlugin {
       // Some user suggested this might help for those having problem sending email with this...
       $headers .= "\nReturn-Path: " . $CONF['AdminEmail'] . "\n";
 
+      ACTIONLOG::add(INFO, 'NotifyMe add comment');
       $return = @mail("$sender","$title","$body","$headers"); 
     }
 
@@ -603,6 +609,8 @@ class NP_NotifyMe extends NucleusPlugin {
         // Some user suggested this might help for those having problem sending email with this...
         $headers .= "\nReturn-Path: " . $CONF['AdminEmail'] . "\n";
 
+	//$s = ($sub == 0) ? 'subscription' : 'unsubscription';
+	//ACTIONLOG::add(INFO, 'NotifyMe ' . $subType . ' ' . $email . ' ' . $s . ' (' . $insertid . ')');
 	$return = @mail("$email","$title","$body","$headers");
 
 	// strip parameters from previous action...
@@ -644,7 +652,6 @@ class NP_NotifyMe extends NucleusPlugin {
         global $CONF, $itemid, $manager;
 
 
-	// echo "sub=" . $sub . " subType=" . $subType . " form=" . $form . "</br>";
 
 	  if ($form == 'itemSub') {
             $item =& $manager->getItem($itemid, 0, 0);
