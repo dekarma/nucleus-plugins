@@ -4,6 +4,9 @@
  *
  * Version 0.9.6 (admun)
  *  - optmize auto complete init
+ *  - change list of tag by date decrement
+ *  - fix tag cloud display of draft on search and cloud
+ *  - fix add/delete post incorrect URL... it's a $CONF['Self'] problem.... need to fix from core
  * Version 0.9.5 (admun)
  *  - fix tagsearch result double http link bug
  *  - error checking for missing blog object in doSkinVar()
@@ -70,8 +73,9 @@
  *  - Don't display tags if count($args) == 1 && $args[0]==''
  
  * admun TODO:
- *  - no del.icio.us tag add for draft and future post, use JustPost
- *  - split outbound del.icio.us support to a new plugin, to share with NP_Blogroll
+ *  - implement JustPost event to add new post to del.io.us.... need core hack
+ *  - rss for local tag
+ *  - split outbound del.icio.us support to a new plugin, to share with NP_Blogroll??
  *  - delete/rename tags for multiple items, need admin menu....
  *  - show post using NP_ShowBlogs for a tag
  *  - add pagination for search result
@@ -86,7 +90,7 @@
  *    for tags, etc. the get tags can just query for all rows
  *    with a tag for itemid, then combine the tags fields. (composite primary key)
  *  - if the above, add an upgrade (migrate) feature to strip out
- *		all the existing tags rows, (plit their fields by space, and
+ *		all the existing tags rows, (split their fields by space, and
  *		reimport them into a new table (NP_TechnoratiTags2 ?)
  *		with the unique tags per row.
  *
@@ -261,7 +265,7 @@ class NP_TechnoratiTags extends NucleusPlugin {
                 $query = "SELECT t.tags FROM ".$this->tablename . " as t";
                 
                 if ($blogid != 0) {
-                        $query .= ", ". sql_table('item') . " as i WHERE t.itemid = i.inumber and i.iblog = ". $blogid;
+                        $query .= ", ". sql_table('item') . " as i WHERE t.itemid = i.inumber and i.idraft != 1 and i.iblog = ". $blogid;
                 }
 
 		$result = sql_query($query);
@@ -291,6 +295,9 @@ class NP_TechnoratiTags extends NucleusPlugin {
 		return $tagcloud;
 	}
 
+	/**
+	 * Put up tags box in add form
+	 */
 	function event_AddItemFormExtras($data){
 		$output = <<<EOD
 		<h3>Technorati/del.icio.us Tags</h3>
@@ -303,6 +310,9 @@ EOD;
 		echo $output;
 	}
 
+	/**
+	 * Put up tags box in edit form
+	 */
 	function event_EditItemFormExtras($data){
 		$output = <<<EOD
 		<h3>Technorati/del.icio.us Tags</h3>
@@ -338,12 +348,12 @@ EOD;
                 if ($this->getOption('DelIcioUs') == "yes") {
                         global $manager, $CONF;
                         // need to reset the ItemURL so createItemLink work properly
-                        $item = &$manager->getItem($itemid, 0, 0);
                         $blog =& $manager->getBlog(getBlogIDFromItemID($itemid));
-                        $CONF['ItemURL'] = preg_replace('/\/$/', '', $blog->getURL());
                         $url = createItemLink($itemid);
 
                         // get item info
+
+                        $item = &$manager->getItem($itemid, 0, 0);
                         $title = $data['title'] != '' ? $data['title'] : $item['title'];
 
                         $authorid = $item['authorid'];
@@ -388,7 +398,6 @@ EOD;
                         global $manager, $CONF;
                         // need to reset the ItemUML so createItemLink work properly
                         $blog =& $manager->getBlog(getBlogIDFromItemID($itemid));
-                        $CONF['ItemURL'] = preg_replace('/\/$/', '', $blog->getURL());
                         $url = createItemLink($itemid);
 
                         // get item info
@@ -408,10 +417,7 @@ EOD;
 
         // need to get url and authorid before we delete the item....
         function event_PreDeleteItem($data) {
-                global $manager, $CONF;
-                // need to reset the ItemUML so createItemLink work properly
-                $blog =& $manager->getBlog(getBlogIDFromItemID($data['itemid']));
-                $CONF['ItemURL'] = preg_replace('/\/$/', '', $blog->getURL());
+                global $manager;
                 $this->delurl = createItemLink($data['itemid']);
                 $item = &$manager->getItem($data['itemid'], 0, 0);
                 $this->delaid = $item['authorid'];
@@ -432,6 +438,7 @@ EOD;
                         if ($user != '' && $password != '') {
                                 $oPhpDelicious = new PhpDelicious($user, $password);
                                 $oPhpDelicious->DeletePost($this->delurl);
+				ACTIONLOG::add(INFO, 'delurl:' . $this->delurl);
                         }
                 }
 	}
@@ -490,12 +497,29 @@ EOD;
 		}
 	}
 
-	/**
-	 * Restore orignal post content just to be on the safe side 
-	 */
-	function event_PostItem($data){
-		if ($this->originalPost != NULL){
+	function event_JustPosted($data) {
+		/*
+			NOTE: NEED to add item list passed via $data from core....
+
+		global $manager, $CONF;
+
+		// need to reset the ItemUML so createItemLink work properly
+		$blog =& $manager->getBlog(getBlogIDFromItemID($itemid));
+		$url = createItemLink($itemid);
+
+		// get item info
+		$item = &$manager->getItem($itemid, 0, 0);
+		$title = $data['title'] != '' ? $data['title'] : $item['title'];
+
+		$authorid = $item['authorid'];
+		$user = $this->getMemberOption($authorid,'DeliciousUser');
+		$password = $this->getMemberOption($authorid,'DeliciousPassword');
+
+		if ($user != '' && $password != '') {
+			$oPhpDelicious = new PhpDelicious($user, $password);
+			$oPhpDelicious->AddPost($url, $title, '', $tag_arr);
 		}
+*/
 	}
 
 	/**
@@ -649,7 +673,7 @@ EOD;
 
                         // **** need better than tags like %% ??? *****
                         $query = "select t.itemid, i.ititle from " . $this->tablename . " as t, ". sql_table('item')
-                                 . " as i where tags like \"%" . $tag . "%\" and t.itemid = i.inumber "; 
+                                 . " as i where tags like \"%" . $tag . "%\" and t.itemid = i.inumber and i.idraft != 1 "; 
                         if ($blogid == "current") {
                                 $query .= " and i.iblog = " . $blog->getID();
                         }
@@ -658,7 +682,7 @@ EOD;
                         }
                         // else for "all", which has not i.iblog=xyz
 
-                        $query .= " order by i.inumber";
+                        $query .= " order by i.itime desc";
 
                         // else for "all" or anything we will show tagged posts from all blogs.... 
                         // it's a feature, not a bug..... I could have choke it here...
