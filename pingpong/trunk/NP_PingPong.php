@@ -9,6 +9,7 @@
          - fix fatal error when running with NP_Postman (again...)
     v0.6 - increase timeout to 30 sec
     v0.7 - fix Technorati ping
+    v0.8 - use sql_*
  */
 
 class NP_PingPong extends NucleusPlugin {
@@ -17,7 +18,7 @@ class NP_PingPong extends NucleusPlugin {
 
 	function getAuthor() { return 'Anand | admun (Edmond Hui) | and others'; }
 	function getURL()    { return 'http://tamizhan.com/'; }
-	function getVersion() { return '0.7'; }
+	function getVersion() { return '0.8'; }
 
 	/* We're using PostUpdateItem event now, which is introduced in 3.22 */
 	function getMinNucleusVersion() { return '322'; }
@@ -35,14 +36,14 @@ class NP_PingPong extends NucleusPlugin {
 		   no need to do 2 queries here and PostUpdateItem below. 
 		   We can store the draft info from PrepareItemForEdit and
 		   check here to see if we need to ping. */
-		$result = mysql_query("SELECT idraft FROM ".sql_table('item')." WHERE inumber=".$data['itemid']);
+		$result = sql_query("SELECT idraft FROM ".sql_table('item')." WHERE inumber=".$data['itemid']);
 		$row = mysql_fetch_object($result);
 		$this->preDraft = $row->idraft;
 		$this->myBlogId    = $data['blog']->blogid;
 	}
 
 	function event_PostUpdateItem($data) {
-		$result = mysql_query("SELECT idraft FROM ".sql_table('item')." WHERE inumber=".$data['itemid']);
+		$result = sql_query("SELECT idraft FROM ".sql_table('item')." WHERE inumber=".$data['itemid']);
 		$row = mysql_fetch_object($result);
 		$postdraft = $row->idraft;
 		if ($this->preDraft == 1 && $postdraft == 0) {
