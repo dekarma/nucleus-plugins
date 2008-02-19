@@ -7,6 +7,7 @@
  * 0.6 - latest posts offset (to allow showing recent posts that is not on main page)
  *     - add header/footer formating
  * 0.7 - fix not displaying head/foot format bug
+ * 0.8 - use sql_query
  */
  
  
@@ -14,7 +15,7 @@ class NP_LatestPosts extends NucleusPlugin {
     function getName() { return 'LatestPosts'; }
     function getAuthor()  { return 'Curtis A. Weyant, mod by Edmond Hui (admun)'; }
     function getURL() {   return 'http://wakka.xiffy.nl/latestposts'; }
-    function getVersion() {   return '0.7'; }
+    function getVersion() {   return '0.8'; }
     function getMinNucleusVersion() { return 200; }
  
     function supportsFeature($f) {
@@ -52,9 +53,9 @@ class NP_LatestPosts extends NucleusPlugin {
  
  
      if ( $max == '' ) { $max = $this->getOption('max'); }
-
+ 
      $off = $this->getOption('off');
-
+ 
       if ( $max != 0 ) {
         $qlimit = "LIMIT $max OFFSET $off";
       }
@@ -81,7 +82,7 @@ class NP_LatestPosts extends NucleusPlugin {
  
  
           if ( settype($info,'float') < 4.1 ) {
-             $res = mysql_query("SELECT bnumber FROM ".sql_table('blog'));
+             $res = sql_query("SELECT bnumber FROM ".sql_table('blog'));
  
              while ( $row = mysql_fetch_assoc($res) ) {
                $this->_printLineFromQuery("SELECT inumber,iblog,iauthor,ititle,itime FROM $table $qwhere AND iblog=$row[bnumber] ORDER BY itime DESC LIMIT 1");
@@ -109,7 +110,7 @@ class NP_LatestPosts extends NucleusPlugin {
   function _printLineFromQuery ( $query ) {
       $search = array('[blog]','[author]','[date]','[title]','[url]');
  
-      $res = mysql_query($query);
+      $res = sql_query($query);
  
       echo $this->getOption('headformat');
  
