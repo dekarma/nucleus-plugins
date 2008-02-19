@@ -13,6 +13,7 @@
        - add pager for stats in admin menu
        - detect new bot that report "subscriber" info
        - optimize admin menu
+  v0.6 - use sql_*
  
   admun todo:
   - add db cleanup code
@@ -51,7 +52,7 @@ class NP_BotTracking extends NucleusPlugin {
   function getName() { return 'BotTracking'; }
   function getAuthor()  { return 'Edmond Hui (admun)'; }
   function getURL() { return 'http://http://edmondhui.homeip.net/nudn'; }
-  function getVersion() { return 'v0.5'; }
+  function getVersion() { return 'v0.6'; }
   function getDescription() {
     return 'This plugin reports when a searchbot last knock on your blog, also track how many subscribers to your RSS feed.';
   }
@@ -68,7 +69,7 @@ class NP_BotTracking extends NucleusPlugin {
   function install() {
     $this->createOption('numShow','Number of recently visit crawlers to should','text','10');
  
-    mysql_query ("CREATE TABLE $this->table_name
+    sql_query ("CREATE TABLE $this->table_name
                 ( 
                   `bots` VARCHAR(60) NOT NULL,
                   `agent` VARCHAR(256) NOT NULL,
@@ -81,7 +82,7 @@ class NP_BotTracking extends NucleusPlugin {
   }
  
   function unInstall() {
-    mysql_query ("DROP TABLE $this->table_name");
+    sql_query ("DROP TABLE $this->table_name");
   }
  
   function getTableList() {
