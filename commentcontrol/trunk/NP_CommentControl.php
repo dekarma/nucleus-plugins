@@ -2,6 +2,10 @@
 
 /**
  * Versions:
+ *   0.7  2007-10-12
+ *      - fix incorrect warning after comment pended in FURL2 mode
+ *      - language file
+ *      - add notification email
  *   0.6a 2007-07-09
  *      - fix missing file_get_contents
  *   0.6  2007-06-24
@@ -24,7 +28,6 @@
  *      - fix // in allow/deny re-direction link, FancyURL
  *   0.24 2004-09-23 karma
  *      - only show plugin admin area for admin users
-
  *   0.23 2004-07-29 admun
  *      - added Template text as as option
  *      - fixed PostAddComment not triggering after comment saved bug
@@ -58,9 +61,6 @@
  *   0.01   2003-12-02   karma
  *      - The "Bernard" Edition
  *
- *  admun TODO
- *    - add notification email w/ allow/deny link
- *
  * Note: <%CommentControl(rss)%> is no longer supported and might be removed in the future
  *
  */
@@ -91,8 +91,8 @@ class NP_CommentControl extends NucleusPlugin {
    function getName()    { return 'CommentControl'; }
    function getAuthor()     { return 'karma, mod by Radek Hulaan, Edmond Hui (admun), Red Dalek'; }
    function getURL()     { return 'http://demuynck.org/'; }
-   function getVersion()    { return '0.6a'; }
-   function getDescription() { return 'Tools to handle trolls and comment spam. RSS feed of pending comments now included.'; }
+   function getVersion()    { return '0.7'; }
+   function getDescription() { return _PLUGIN_DESC; }
 
    function supportsFeature($what) {
       switch($what)
@@ -105,16 +105,11 @@ class NP_CommentControl extends NucleusPlugin {
    }
 
    function install() {
-      $this->createOption('quickmenu', 'Show in quick menu', 'yesno', 'yes');
-      $this->createOption('names', 'Names of users that cannot place comments (separate with commas)', 'text', '');
-      $this->createOption('days', 'Always moderate comments older than x days', 'text', '30');
-      $this->createOption('text1', 'Comments to be approved', 'text', '<h2>Comments Awaiting Approval</h2>');
-      $this->createOption('text2', 'Comment saved, needs to be approved', 'text', '<blockquote id="pending"><p><strong>Your comment was saved. Thank you! We will review it ASAP.</strong></p></blockquote>');
-      $this->createOption('text3', 'Comment saved, needs to be approved', 'text', '<blockquote id="pending"><p><strong>Comments must be approved before being published. Thank you!</strong></p></blockquote>');
-      $this->createOption('text4', 'Text for RSS link', 'text', 'RSS 2.0 of pending comments');
-      $this->createOption('text5', 'Text for no pending comment', 'text', 'no comment pending<br />');
-      $this->createOption('text6', 'Text for comment pending', 'text', 'comment(s) pending');
-      $this->createOption('text7', 'Text for new comment indicator', 'text', '<span class=\'r\'>[New comment pending!]</span>');
+      $this->createOption('quickmenu', _OPT_SHOW_IN_QMENU, 'yesno', 'yes');
+      $this->createOption('names', _OPT_NAME_NO_COMMENT, 'text', '');
+      $this->createOption('days', _OPT_DAYS_MOD_COMMENT, 'text', '30');
+      $this->createOption('pendmember',_OPT_MOD_MEMBER,'yesno','no');
+
       // create the table that will keep track of notifications
       $query =  'CREATE TABLE '. $this->table_pending. '(';
       $query .= ' id int(11) NOT NULL auto_increment,';      // a unique id
@@ -131,10 +126,11 @@ class NP_CommentControl extends NucleusPlugin {
       $query .= ' PRIMARY KEY  (id)';
       $query .= ') TYPE=MyISAM;';
       sql_query($query);
+
       // options for RSS
-      $this->createOption('blogcode','Character encoding:','text','ISO-8859-1');
-      $this->createOption('blogpicture','Picture to display:','text','./skins/base/rsspending-new.png');
-      $this->createOption('pendmember','Should blog member\'s comment being controlled?','yesno','no');
+      $this->createOption('blogcode',_OPT_CHAR_ENCODING,'text','ISO-8859-1');
+      $this->createOption('blogpicture',_OPT_RSS_PIC_DISPLAY,'text','./skins/base/rsspending-new.png');
+      $this->createOption('email',_OPT_NOTIFY_EMAIL,'text','');
    }
 
    function unInstall() {
@@ -160,6 +156,13 @@ class NP_CommentControl extends NucleusPlugin {
       $this->strNames = rtrim($this->strNames, "\n");
       $this->aNames = explode(',', $this->strNames);
       $this->iDays = intval($this->getOption('days'));
+
+      $language = ereg_replace( '[\\|/]', '', getLanguageName());
+      if(file_exists($this->getDirectory().$language.'.php')) {
+              include_once($this->getDirectory().$language.'.php');
+      }else {
+              include_once($this->getDirectory().'english.php');
+      }
    }
    
    function hasAdminArea() {
@@ -183,13 +186,13 @@ class NP_CommentControl extends NucleusPlugin {
             array(
                'title' => 'Comment Control',
                'url' => $this->getAdminURL(),
-               'tooltip' => 'See the list of comments that have not yet been verified.'
+               'tooltip' => _OPT_Q_TOOL_TIPS
                  )
            );
    }
 
    function event_PreAddComment(&$data) {
-      global $member;
+      global $member, $DIR_PLUGINS, $CONF;
 
       // logged in members can always post
       if ($member->isLoggedIn())
@@ -218,6 +221,19 @@ class NP_CommentControl extends NucleusPlugin {
 
          sql_query($query);         
          
+         $to = $this->getOption('email');
+	 if ($to != "") {
+            $sender = $CONF['AdminEmail'];
+            $message = file_get_contents($DIR_PLUGINS."commentcontrol/notify.template");
+
+            $headers = "From: ".$sender."\n";
+            $headers .= "X-Mailer: PHP/" . phpversion() . "\n";
+            $headers .= "Return-Path: " . $sender . "\n";
+            $headers .= "Content-type: text/html; charset=utf-8\n";
+
+            $return = @mail("$to","Comment pending for approval","$body","$headers");
+	 }
+
          // redirect when adding comments succeeded
          $url = '';
          if (postVar('url')) {
@@ -265,7 +281,7 @@ class NP_CommentControl extends NucleusPlugin {
       if (!($member->isLoggedIn() && $member->canAlterItem($id))) return;
       $query = sql_query('SELECT count(*) as total FROM '.$this->table_pending.' WHERE citem='.$id);
       $row=mysql_fetch_object($query);
-      if ($row->total>0) echo $this->getOption('text7');
+      if ($row->total>0) echo _NEW_COMM_PENDING;
    }
 
    function getRSSLink() {
@@ -282,7 +298,7 @@ class NP_CommentControl extends NucleusPlugin {
          if (!$member->isAdmin())
             return;
          else
-            echo "<a href='".$this->getRSSLink()."' title='".$this->getOption('text4')."'><img src='".$this->getOption('blogpicture')."' alt='".$this->getOption('text4')."' /></a><br />";
+            echo "<a href='".$this->getRSSLink()."' title='"._WARNING_RSS_AWAIT."'><img src='".$this->getOption('blogpicture')."' alt='"._WARNING_RSS_AWAIT."' /></a><br />";
          return;
       }
 
@@ -298,9 +314,9 @@ class NP_CommentControl extends NucleusPlugin {
          $res = sql_query($query);
 
          if (mysql_num_rows($res) == 0)
-            echo $this->getOption('text5');
+            echo _NO_COMM_PENDING;
          else
-            echo "<a href=\"" . $blog->getURL() . "/nucleus/plugins/commentcontrol/\">" . mysql_num_rows($res) . " " . $this->getOption('text6') . "</a><br />";
+            echo "<a href=\"" . $blog->getURL() . "/nucleus/plugins/commentcontrol/\">" . mysql_num_rows($res) . " " . _COMMENT_PENDING . "</a><br />";
          return;
       }
 
@@ -319,15 +335,15 @@ class NP_CommentControl extends NucleusPlugin {
          while ($o = mysql_fetch_object($res))
          {
             if ($first){
-               echo $this->getOption('text1');
+               echo _WARNING_COMM_AWAIT;
                echo '<ul>';
                $first=false;
             }
             $urlallow = $CONF['ActionURL'] . '?action=plugin&name=CommentControl&type=allow&id=' . intval($o->id);
             $urldeny = $CONF['ActionURL'] . '?action=plugin&name=CommentControl&type=deny&id=' . intval($o->id);
             echo '<li>';
-            echo '<a href="'.htmlspecialchars($urlallow).'">[allow]</a>';
-            echo '<a href="'.htmlspecialchars($urldeny).'">[deny]</a>';
+            echo '<a href="'.htmlspecialchars($urlallow).'">'._ALLOW.'</a>';
+            echo '<a href="'.htmlspecialchars($urldeny).'">'._DENY.'</a>';
             echo ' <strong>',htmlspecialchars($o->cuser),'</strong>';
             echo ' ', $o->cbody;
             echo '</li>';
@@ -340,6 +356,7 @@ class NP_CommentControl extends NucleusPlugin {
          // Do not display warning if the item is closed
          if ($o->iclosed == '1') return;
 
+	 // no need to continue if logged in but we do not control member comment
          if ($this->getOption('pendmember') == 'yes')
             $pending = $member->isAdmin();
          else
@@ -348,17 +365,28 @@ class NP_CommentControl extends NucleusPlugin {
          if (!$member->isLoggedIn() || !$pending)
          {
             // submit order
-            if (intRequestVar('pending') == 1) {
-               echo $this->getOption('text2');
+            if ($CONF['URLMode'] == 'pathinfo') {
+               $tagpath = 'pending';
+               $uri  = serverVar('REQUEST_URI');
+               $temp = explode("?pending=", $uri, 2);
+	       $pended = $temp[1];
+	    } else {
+	       $pended = intRequestVar('pending');
+	    }
+
+            if ($pended == 1) {
+               echo _WARNING_COMM_SAVED;
                return;
             }
          }
+
          if ($member->isLoggedIn())
             $strName = $member->getDisplayName();
          else
             $strName = cookieVar('comment_user');      
+
          // warning
-         if ($this->needsVerification($itemid, $strName)) echo $this->getOption('text3');
+         if ($this->needsVerification($itemid, $strName)) echo _WARNING_COMM_PEND;
       }
    }
 
@@ -420,7 +448,7 @@ class NP_CommentControl extends NucleusPlugin {
 
    function doAction($actionType) {
       global $CONF, $member;
-      if (!$member->isLoggedIn()) return 'Sorry. not allowed';
+      if (!$member->isLoggedIn()) return _NOT_AUTH;
 
       if ($actionType == 'rss'){
          $this->putHeader();
@@ -453,7 +481,7 @@ class NP_CommentControl extends NucleusPlugin {
          $query = 'SELECT * FROM ' . sql_table('item') . ' WHERE inumber=' . $itemid . ' AND iauthor=' . $member->getID(); 
          $res = sql_query($query);
          if (mysql_num_rows($res) == 0) {
-            return 'Sorry. You do not have permission to moderate this comment';
+            return _NO_PERMISSION;
          }
       }
 
@@ -508,7 +536,7 @@ class NP_CommentControl extends NucleusPlugin {
             header('Location: ' . $url);         
             exit();
          } else {
-            echo 'allowed';
+            echo _ALLOWED;
          }
       }
 
@@ -526,7 +554,7 @@ class NP_CommentControl extends NucleusPlugin {
             header('Location: ' . $url);         
             exit();
          } else {
-            echo 'denied';
+            echo _DENIED;
          }
       }
    }
