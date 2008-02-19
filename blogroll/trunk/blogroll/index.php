@@ -9,6 +9,7 @@ include($strRel . 'config.php');
 if ($_GET['n'] == "") {
 
   if (!$member->isLoggedIn()) doError('You\'re not logged in.');
+  //$manager->checkTicket();
 
   include($DIR_LIBS . 'PLUGINADMIN.php');
 
@@ -52,6 +53,4 @@ else {
   if (!$robot) { $query = sql_query('UPDATE `'.sql_table('plug_blogroll_links').'` SET `clicked`=NOW(), `counter`='.++$result['counter'].' WHERE `id`='.$_GET['n']); }
   header('Location: '.$result['url']);
 }
-
-//phpinfo(INFO_VARIABLES);
 ?>

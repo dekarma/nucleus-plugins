@@ -54,6 +54,7 @@ Variables available for use in the item template are:
 <li><code>&lt;%linkedit%&gt;</code>: link to edit an item</li>
 <li><code>&lt;%linkclicked%&gt;</code>: date and time the link was last clicked  (not available if redirection is off)</li>
 <li><code>&lt;%linkcreated%&gt;</code>: when the link was created </li>
+<li><code>&lt;%xfn%&gt;</code>: XHTML Friend Network information</li>
 </ul>
 
 If the <code>&lt;%Blogroll%&gt;</code> skinvar is used to call a single link, the item template will be used to display the link.<br/>
@@ -88,7 +89,7 @@ Since v0.36, user can send blogroll links to del.icoc.us. To enable this functio
 </ol>
 
 <h3>Keyword search function</h3>
-Since v0.40, a keyword search is also search in the blogroll page. New Skinvar <%Blogroll(searchbox, [group])%> can be used to add the search box.
+Since v0.40, a keyword search is also search in the blogroll page. New Skinvar &lt;%Blogroll(searchbox, [group])%&gt; can be used to add the search box.
 
 <h3>Support and Bug reports</h3>
 
@@ -96,9 +97,30 @@ Since v0.40, a keyword search is also search in the blogroll page. New Skinvar <
 <a href="http://forum.nucleuscms.org/viewtopic.php?t=9219">
 http://forum.nucleuscms.org/viewtopic.php?t=9219</a></p>
 
+<h3>XFN support</h3>
+As of v0.42, XFN 1.1 support is added. To fully enable the XFN function, user should modify &lt;head&gt; to &lt;head profile="http://gmpg.org/xfn/11"&gt; in their skin. A new
+field of XFN is added in add/edit link and bookmarklet
+
 <h3>Version History</h3>
 
 <ul>
+<li>0.42    (2008) admun (Edmond Hui)
+  <ul>
+    <li>XFN 1.1 support</li>
+  </ul>
+</li>
+<li>0.41    (Jan 14, 2008) admun (Edmond Hui)
+  <ul>
+    <li>add ticket check in plugin admin menu as required for v3.3</li>
+    <li>edit link code re-factor</li>
+    <li>pagination for link/tag management</li>
+    <li>search box result should only return items from current group</li>
+    <li>fix related tag with proper group</li>
+    <li>fix edit link redirect URL</li>
+    <li>add tag auto completion</li>
+    <li>show tags on search result, with link to it</li>
+  </ul>
+</li>
 <li>0.40    (Jul 2007) admun (Edmond Hui)
   <ul>
     <li>htmlspecialchars_decode PHP4 support</li>

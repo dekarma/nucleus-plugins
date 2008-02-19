@@ -18,10 +18,11 @@
     if ($query) return(array(TRUE,"<p>Link has been moved to the group \"".$result['name']."\""));
   }
   
-  function _addLink($owner, $group, $url, $text, $desc, $comment, $tag, $counter) {
+  function _addLink($owner, $group, $url, $text, $desc, $comment, $tag, $counter, $xfn) {
     $query = sql_query("SELECT `id` FROM `".sql_table('plug_blogroll_links')."` WHERE `url`=\"$url\"");
     $result = mysql_fetch_assoc($query);
-    if ($result['id'] != "") return(array(FALSE,"<p>The link <code>$url</code> is a duplicate link."));
+    $id = $result['id'];
+    if ($result['id'] != "") return(array(FALSE,"<p>The link <code>$url</code> is a duplicate link. (id $id)"));
     else {
       //Determine the next order number for the new link
       $query = sql_query("SELECT MAX(`order`) AS `order` FROM `".sql_table('plug_blogroll_links')."` WHERE `group`=$group");
@@ -29,7 +30,7 @@
       $order = ++$result['order'];
 
       //Add the link to the database
-      $query = sql_query("INSERT INTO `".sql_table('plug_blogroll_links')."` VALUES (NULL,\"$order\",\"$owner\",\"$group\",\"$url\",\"".htmlspecialchars($text)."\",\"".htmlspecialchars($desc)."\",NOW(),NOW(),\"$counter\",\"".htmlspecialchars($comment)."\")");
+      $query = sql_query("INSERT INTO `".sql_table('plug_blogroll_links')."` VALUES (NULL,\"$order\",\"$owner\",\"$group\",\"$url\",\"".htmlspecialchars($text)."\",\"".htmlspecialchars($desc)."\",NOW(),NOW(),\"$counter\",\"".htmlspecialchars($comment)."\",\"".htmlspecialchars($xfn)."\")"); 
       $query = sql_query("SELECT `id` FROM `".sql_table('plug_blogroll_links')."` WHERE `url`=\"$url\"");
       $result = mysql_fetch_assoc($query);
       $id = mysql_insert_id();;
@@ -94,8 +95,8 @@
     }
   }
 
-  function _editLink($id, $url, $text, $desc, $comment, $tag, $counter) {
-    $query = sql_query("UPDATE `".sql_table('plug_blogroll_links')."` SET `url`=\"$url\", `text`=\"".htmlspecialchars($text)."\", `desc`=\"".htmlspecialchars($desc)."\", `comment`=\"".htmlspecialchars($comment)."\", `counter`=$counter WHERE `id`=$id");
+  function _editLink($id, $url, $text, $desc, $comment, $tag, $counter, $xfn) {
+    $query = sql_query("UPDATE `".sql_table('plug_blogroll_links')."` SET `url`=\"$url\", `text`=\"".htmlspecialchars($text)."\", `desc`=\"".htmlspecialchars($desc)."\", `comment`=\"".htmlspecialchars($comment)."\", `counter`=$counter, `xfn`=\"$xfn\" WHERE `id`=$id");
     if ($query) {
       sql_query("DELETE FROM ".sql_table('plug_blogroll_tags')." WHERE `id`=".$id);
       $tags = explode(" ", $tag);
@@ -181,6 +182,22 @@
         break;
       case "add":
       case "edit":
+         global $CONF;
+         $tag_array = Array();
+
+         $query = sql_query("SELECT DISTINCT tag FROM " . sql_table('plug_blogroll_tags'));
+         while ($row = mysql_fetch_object($query)) {
+            if ($row->tag == "") continue;
+            $tag_array[] = $row->tag;
+         }
+
+         $compl_tags = '';
+
+         foreach ($tag_array as $tag ) {
+            $compl_tags = $compl_tags ? $compl_tags . ',' . '"'.$tag.'"' : '"'.$tag.'"';
+         }
+
+         echo '<script type="text/javascript">var collection = new Array('.$compl_tags.');</script><script type="text/javascript" src="'.$CONF['AdminURL'].'plugins/blogroll/actb.js"></script><script type="text/javascript" src="'.$CONF['AdminURL'].'plugins/blogroll/common.js"></script><script type="text/javascript" src="'.$CONF['AdminURL'].'plugins/blogroll/xfn_creator.js"></script><style> #tat_table { width:250px; } </style> ';
         echo "<h3 style=\"padding-left: 0px\">";
         if ($type == "add") {
           echo "Add new link</h3>";
@@ -195,13 +212,14 @@
         else {
           echo "Edit link</h3>";
           echo "<form name=\"edit\"";
-          $query = sql_query('SELECT `url`, `text`, `desc`, `comment`, `counter` FROM `'.sql_table('plug_blogroll_links').'` WHERE `id`='.$id);
+          $query = sql_query('SELECT * FROM `'.sql_table('plug_blogroll_links').'` WHERE `id`='.$id);
           $result = mysql_fetch_assoc($query);
           $url = $result['url'];
           $text = $result['text'];
           $desc = $result['desc'];
           $comment = $result['comment'];
           $counter = $result['counter'];
+	  $xfn = $result['xfn'];
 
           // grab and construct tag.....
           $tag = '';
@@ -222,7 +240,12 @@
         echo "<tr onmouseover='focusRow(this);' onmouseout='blurRow(this);'>";
         echo "<td>Comment</td><td><input name=\"comment\" type=\"text\" id=\"comment\" value=\"$comment\" size=\"50\" maxlength=\"1024\"> (optional)</tr></td>";
         echo "<tr onmouseover='focusRow(this);' onmouseout='blurRow(this);'>";
-        echo "<td>Tag</td><td><input name=\"tag\" type=\"text\" id=\"tag\" value=\"$tag\" size=\"50\" maxlength=\"255\"> (optional)</tr></td>";
+        echo "<td>Tag</td><td><input name=\"tag\" type=\"text\" id=\"tag\" value=\"$tag\" size=\"50\" maxlength=\"255\" autocomplete=\"off\"> (optional)</tr></td><script>actb(document.getElementById('tag'), collection)</script>";
+        echo "<tr onmouseover='focusRow(this);' onmouseout='blurRow(this);'>";
+        echo "<td>XFN (see <a href=\"http://gmpg.org/xfn/11\">here</a>)</td><td><input name=\"xfn\" type=\"text\" id=\"xfn\" value=\"$xfn\" size=\"50\" maxlength=\"255\" autocomplete=\"off\"> (optional)<br/>";
+	?><div id="xfnR"> </div><?php
+	include("xfn_creator.inc");
+	echo "</tr></td>";
         echo "<tr onmouseover='focusRow(this);' onmouseout='blurRow(this);'>";
         echo "<td>Counter</td><td><input name=\"counter\" type=\"text\" id=\"counter\" value=\"$counter\" value=\"0\" size=\"5\" maxlength=\"10\"></td></tr>";
         echo "<tr onmouseover='focusRow(this);' onmouseout='blurRow(this);'><td>&nbsp;</td><td>";
@@ -238,15 +261,43 @@
   }
 
   function _listLinks ($group, $owner) {
+    $linkToList = 10;
+    $listGet = $linkToList +1;
     $zeroTagLink = 0;
+
+    $page = intRequestVar('offset');
+
+    if ($page == 0) {
+      $offset = 0;
+    } else {
+      $offset = $page*$linkToList;
+    }
 
     $query = sql_query("SELECT `desc` FROM `".sql_table('plug_blogroll_groups')."` WHERE `id`=$group");
     $result = mysql_fetch_assoc($query);
     $groupname = $result['desc'];
-    $query = sql_query("SELECT * FROM `".sql_table('plug_blogroll_links')."` WHERE `group`=$group AND `owner`=$owner ORDER BY `order`");
+
+    $query = sql_query("SELECT * FROM `".sql_table('plug_blogroll_links')."` WHERE `group`=$group AND `owner`=$owner ORDER BY `order` LIMIT $offset,$listGet");
+
+    $rowcount = mysql_num_rows($query);
+
     echo "<h3 style=\"padding-left: 0px\">Manage links &gt; $groupname</h3>";
-    echo '<table><thead><tr><th>ID</th><th>URL/Title</th><th>Description</th><th>Comment</th><th>Tag</th><th>Date Created</th><th>Last clicked</th><th>Counter</th><th>Action</th></tr></thead><tbody>';
-    while ($link = mysql_fetch_assoc($query)) {
+
+    if ($page > 0) {
+      $p = $page -1;
+      $prelink = $_SERVER['PHP_SELF']."?page=managelinks&groupid=".$group."&offset=".$p;
+      echo " <a href=\"".$prelink."\">[prev]</a>";
+    }
+
+    if ($rowcount > $linkToList) {
+      $p = $page +1;
+      $nextlink = $_SERVER['PHP_SELF']."?page=managelinks&groupid=".$group."&offset=".$p;
+      echo " <a href=\"".$nextlink."\">[next]</a>";
+    }
+
+    echo '<table><thead><tr><th>ID</th><th>URL/Title/Description</th><th>Comment</th><th>Tag</th><th>Created/Clicked</th><th>Counter</th><th>Action</th></tr></thead><tbody>';
+    for ($i = 0; $i < $linkToList; $i++) {
+      if (!($link = mysql_fetch_assoc($query))) break;
       if (strlen($link['url']) > 18) { $url = substr($link['url'],0,10).'...'; }
       else { $url = $link['url']; }
       $result = sql_query("SELECT `tag` FROM `".sql_table('plug_blogroll_tags')."` WHERE `id`=".$link['id']);
@@ -260,20 +311,36 @@
         $tag .= "<a href=\"" . $_SERVER['PHP_SELF']. "?page=managetag&tag=" . $t->tag . "\">" . $t->tag . "</a> ";
       }
       echo "<tr onmouseover='focusRow(this);' onmouseout='blurRow(this);'>";
-      echo '<td>'.$link['id'].'</td><td><a href="'.$link['url'].'" title="'.$link['url'].'"target="_blank"><code>'.$url.'</code></a><br
-      />'.$link['text'].'</td><td>'.$link['desc'].'</td><td>'.$link['comment'].'</td><td>'.$tag.'</td><td>'._formatDate($link['created']).'</td><td>';
-      if ($link['counter'] == 0) { echo '&nbsp;'; }
-      else { echo _formatDate($link['clicked']); }
+      echo '<td>'.$link['id'].'</td><td><a href="'.$link['url'].'" title="'.$link['url'].'"target="_blank"><code>'.$url.'</code></a><br/>'
+      .$link['text'].'<br/><br/>'.$link['desc'].'</td><td>'.$link['comment'].'</td><td>'.$tag.'</td><td>'._formatDate($link['created']);
+
+      if ($link['counter'] > 0) {
+        echo " (last clicked "._formatDate($link['clicked']).")"; 
+      }
+
       echo '</td><td>'.$link['counter'].'</td><td>';
+
       echo "<a href=\"".$_SERVER['PHP_SELF']."?page=managelinks&groupid=$group&action=changegroup&id=".$link['id']."\" title=\"Move this link to another group\">change group</a><br />";
-      echo "<a href=\"".$_SERVER['PHP_SELF']."?page=managelinks&groupid=$group&action=moveup&id=".$link['id']."\" title=\"Move this link up\">move up</a><br />";
-      echo "<a href=\"".$_SERVER['PHP_SELF']."?page=managelinks&groupid=$group&action=movedown&id=".$link['id']."\" title=\"Move this link down\">move down</a><br />";
-      echo "<a href=\"".$_SERVER['PHP_SELF']."?page=managelinks&groupid=$group&action=editlink&id=".$link['id']."\" title=\"Edit this link\">edit</a><br />";
+      echo "<a href=\"".$_SERVER['PHP_SELF']."?page=managelinks&groupid=$group&action=moveup&id=".$link['id']."&offset=".$page."\" title=\"Move this link up\">move up</a><br />";
+      echo "<a href=\"".$_SERVER['PHP_SELF']."?page=managelinks&groupid=$group&action=movedown&id=".$link['id']."&offset=".$page."\" title=\"Move this link down\">move down</a><br />";
+      echo "<a href=\"".$_SERVER['PHP_SELF']."?page=managelinks&groupid=$group&action=editlink&id=".$link['id']."&offset=".$page."\" title=\"Edit this link\">edit</a><br />";
       echo "<a href=\"".$_SERVER['PHP_SELF']."?page=managelinks&groupid=$group&action=dellink&id=".$link['id']."\" title=\"Delete this link\">delete</a>";
       echo '</td></tr>';
     }
     echo '</tbody></table>';
-    echo "Number of links with no tag: " . $zeroTagLink;
+    echo "Number of links with no tag: " . $zeroTagLink . "<br />";
+
+    if ($page > 0) {
+      $p = $page -1;
+      $prelink = $_SERVER['PHP_SELF']."?page=managelinks&groupid=".$group."&offset=".$p;
+      echo " <a href=\"".$prelink."\">[prev]</a>";
+    }
+
+    if ($rowcount > $linkToList) {
+      $p = $page +1;
+      $nextlink = $_SERVER['PHP_SELF']."?page=managelinks&groupid=".$group."&offset=".$p;
+      echo " <a href=\"".$nextlink."\">[next]</a>";
+    }
   }
   
   if ($_POST['action'] != "") {
@@ -289,7 +356,7 @@
                                 }
 				break;
       case "addlink": 
-			  $error = _addLink($memberid, $_POST['group'], $_POST['url'], $_POST['text'], $_POST['desc'], $_POST['comment'], $_POST['tag'], $_POST['counter']);
+			  $error = _addLink($memberid, $_POST['group'], $_POST['url'], $_POST['text'], $_POST['desc'], $_POST['comment'], $_POST['tag'], $_POST['counter'], $_POST['xfn']);
                                   echo $error[1];
                                 if ($_GET['page'] != "managetag") {
 				  _listLinks($_GET['groupid'], $memberid);
@@ -309,7 +376,7 @@
                                 }
 				break;
       case "editlink":
-			  $error = _editLink($_POST['id'], $_POST['url'], $_POST['text'], $_POST['desc'], $_POST['comment'], $_POST['tag'], $_POST['counter']);
+			  $error = _editLink($_POST['id'], $_POST['url'], $_POST['text'], $_POST['desc'], $_POST['comment'], $_POST['tag'], $_POST['counter'], $_POST['xfn']);
 
 			        if ($_GET['redirect'] != '') {
 				  header('Location: ' . $_GET['redirect']);
@@ -358,7 +425,7 @@
   /*
   Add link need group... can't really work like this
   elseif ($_GET['page'] == "managetag") {
-    _makeLinkForm("add", "");
-  }
-  */
+      _makeLinkForm("add", "");
+    }
+    */
 ?>

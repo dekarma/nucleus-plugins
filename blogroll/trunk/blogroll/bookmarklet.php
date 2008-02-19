@@ -33,13 +33,14 @@ else {
   $desc = $_POST['desc'] == "" ? stripslashes($_GET['desc']) : $_POST['desc'];
   $comment = $_POST['comment'] == "" ? stripslashes($_GET['comment']) : $_POST['comment'];
   $tag = $_POST['tag'] == "" ? stripslashes($_GET['tag']) : $_POST['tag'];
+  $xfn = $_POST['xfn'] == "" ? stripslashes($_GET['xfn']) : $_POST['xfn'];
   $counter = $_POST['counter'] == "" ? 0 : $_POST['counter'];
   $groupid = $_POST['group'];
 
   if ($_POST['action'] == "bmaddlink") {
     if ($groupid == "") $error = "Please choose a group to add the link to.";
   	else {
-  	  $error = _addLink($memberid, $groupid, $url, htmlspecialchars($text), htmlspecialchars($desc), htmlspecialchars($comment), $tag, $counter);
+  	  $error = _addLink($memberid, $groupid, $url, htmlspecialchars($text), htmlspecialchars($desc), htmlspecialchars($comment), $tag, $counter, $xfn);
   		if ($error[0]) {
   		  header("Location: $url");
   			exit();
@@ -54,9 +55,29 @@ else {
   echo '<link rel="stylesheet" type="text/css" href="../../styles/bookmarklet.css" />';
   echo '<link rel="stylesheet" type="text/css" href="../../styles/addedit.css" />';
   echo '</head><body>';
+
+  global $CONF;
+  $tag_array = Array();
+
+  $query = sql_query("SELECT DISTINCT tag FROM " . sql_table('plug_blogroll_tags'));
+  while ($row = mysql_fetch_object($query)) {
+     if ($row->tag == "") continue;
+     $tag_array[] = $row->tag;
+  }
+
+  $compl_tags = '';
+
+  foreach ($tag_array as $t ) {
+     $compl_tags = $compl_tags ? $compl_tags . ',' . '"'.$t.'"' : '"'.$t.'"';
+  }
+
+  echo '<script type="text/javascript">var collection = new Array('.$compl_tags.');</script><script type="text/javascript" src="'.$CONF['AdminURL'].'plugins/blogroll/actb.js"></script><script type="text/javascript" src="'.$CONF['AdminURL'].'plugins/blogroll/common.js"></script><style> #tat_table { width:250px; } </style> ';
+  
+  echo '<script type="text/javascript" src="'.$CONF['AdminURL'].'plugins/blogroll/xfn_creator.js"></script>';
+
   echo '<h1>Add link to Blogroll</h1>';
   echo $error;
-  echo "<form name=\"add\" method=\"post\" action=\"bookmarklet.php\">";
+  echo "<form name=\"add\" method=\"post\" action=\"bookmarklet.php\" onreset=\"resetstuff()\">";
   echo "<table><tbody>";
   echo "<tr onmouseover='focusRow(this);' onmouseout='blurRow(this);'>";
   echo "<td>URL</td><td><input name=\"url\" type=\"text\" id=\"url\" value=\"$url\" size=\"50\" maxlength=\"255\"></td></tr>";
@@ -67,7 +88,11 @@ else {
   echo "<tr onmouseover='focusRow(this);' onmouseout='blurRow(this);'>";
   echo "<td>Comment</td><td><input name=\"comment\" type=\"text\" id=\"comment\" value=\"$comment\" size=\"50\" maxlength=\"1024\"> (optional)</tr></td>";
   echo "<tr onmouseover='focusRow(this);' onmouseout='blurRow(this);'>";
-  echo "<td>Tag</td><td><input name=\"tag\" type=\"text\" id=\"tag\" value=\"$tag\" size=\"50\" maxlength=\"255\"> (optional)</tr></td>";
+  echo "<td>Tag</td><td><input name=\"tag\" type=\"text\" id=\"tag\" value=\"$tag\" size=\"50\" maxlength=\"255\" autocomplete=\"off\"> (optional)</tr></td>";
+  echo "<script>actb(document.getElementById('tag'), collection)</script>";
+  echo "<tr onmouseover='focusRow(this);' onmouseout='blurRow(this);'>";
+  echo "<td>XFN (see <a href=\"http://gmpg.org/xfn/11\">here</a>)</td><td><input name=\"xfn\" type=\"text\" id=\"xfn\" value=\"$xfn\" size=\"50\" maxlength=\"55\" /> (optional)<br/>";
+  include("xfn_creator.inc");
   echo "<tr onmouseover='focusRow(this);' onmouseout='blurRow(this);'>";
   echo "<td>Counter</td><td><input name=\"counter\" type=\"text\" id=\"counter\" value=\"$counter\" value=\"0\" size=\"5\" maxlength=\"10\"></td></tr>";
   echo "<tr onmouseover='focusRow(this);' onmouseout='blurRow(this);'>";

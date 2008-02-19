@@ -2,6 +2,18 @@
   require_once($DIR_PLUGINS."php-delicious/php-delicious.inc.php");
 
   function _listTagLinks ($tag, $owner) {
+    $linkToList = 10;
+    $listGet = $linkToList +1;
+    $zeroTagLink = 0;
+
+    $page = intRequestVar('offset');
+
+    if ($page == 0) {
+      $offset = 0;
+    } else {
+      $offset = $page*$linkToList;
+    }
+
     if (function_exists('mb_convert_encoding')) {
       $tag = mb_convert_encoding($tag, _CHARSET, _CHARSET);
       $tag = rawurldecode($tag);
@@ -12,10 +24,14 @@
       $tag = urlencode($tag);
     }
 
-    $query = sql_query("SELECT * FROM `".sql_table('plug_blogroll_tags')."` AS t, `".sql_table('plug_blogroll_links')."` AS l WHERE t.tag=\"".$tag."\" AND t.id=l.id AND l.owner=".$owner);
+    $query = sql_query("SELECT * FROM `".sql_table('plug_blogroll_tags')."` AS t, `".sql_table('plug_blogroll_links')."` AS l WHERE t.tag=\"$tag\" AND t.id=l.id AND l.owner=$owner LIMIT $offset,$listGet");
+
+    $rowcount = mysql_num_rows($query);
+
     echo "<h3 style=\"padding-left: 0px\">Manage links in tag $tag</h3>";
-    echo '<table><thead><tr><th>ID</th><th>URL/Title</th><th>Description</th><th>Comment</th><th>Tag</th><th>Date Created</th><th>Last clicked</th><th>Counter</th><th>Action</th></tr></thead><tbody>';
-    while ($link = mysql_fetch_assoc($query)) {
+    echo '<table><thead><tr><th>ID</th><th>URL/Title/Description</th><th>Comment</th><th>Tag</th><th>Created/Clicked</th><th>Counter</th><th>Action</th></tr></thead><tbody>';
+    for ($i = 0; $i < $linkToList; $i++) {
+      if(!($link = mysql_fetch_assoc($query))) break;
       if (strlen($link['url']) > 18) { $url = substr($link['url'],0,10).'...'; }
       else { $url = $link['url']; }
       $result = sql_query("SELECT `tag` FROM `".sql_table('plug_blogroll_tags')."` WHERE `id`=".$link['id']);
@@ -24,17 +40,32 @@
         $tags .= "<a href=\"" . $_SERVER['PHP_SELF']. "?page=managetag&tag=" . $t->tag . "\">" . $t->tag . "</a> ";
       }
       echo "<tr onmouseover='focusRow(this);' onmouseout='blurRow(this);'>";
-      echo '<td>'.$link['id'].'</td><td><a href="'.$link['url'].'" title="'.$link['url'].'"target="_blank"><code>'.$url.'</code></a><br
-      />'.$link['text'].'</td><td>'.$link['desc'].'</td><td>'.$link['comment'].'</td><td>'.$tags.'</td><td>'._formatDate($link['created']).'</td><td>';
-      if ($link['counter'] == 0) { echo '&nbsp;'; }
-      else { echo _formatDate($link['clicked']); }
+      echo '<td>'.$link['id'].'</td><td><a href="'.$link['url'].'" title="'.$link['url'].'"target="_blank"><code>'.$url
+      .'</code></a><br />'.$link['text'].'<br/><br/>'.$link['desc'].'</td><td>'.$link['comment'].'</td><td>'.$tags.'</td><td>'._formatDate($link['created']);
+
+      if ($link['counter'] > 0) {
+        echo " (last clicked "._formatDate($link['clicked']).")"; 
+      }
+
       echo '</td><td>'.$link['counter'].'</td><td>';
       echo "<a href=\"".$_SERVER['PHP_SELF']."?page=managetag&tag=$tag&action=changegroup&id=".$link['id']."\" title=\"Move this link to another group\">change group</a><br />";
-      echo "<a href=\"".$_SERVER['PHP_SELF']."?page=managetag&tag=$tag$group&action=editlink&id=".$link['id']."\" title=\"Edit this link\">edit</a><br />";
+      echo "<a href=\"".$_SERVER['PHP_SELF']."?page=managetag&tag=$tag$group&action=editlink&id=".$link['id']."&offset=".$page."\" title=\"Edit this link\">edit</a><br />";
       echo "<a href=\"".$_SERVER['PHP_SELF']."?page=managetag&tag=$tag$group&action=dellink&id=".$link['id']."&groupid=".$link['group']."\" title=\"Delete this link\">delete</a>";
       echo '</td></tr>';
     }
     echo '</tbody></table>';
+
+    if ($page > 0) {
+      $p = $page -1;
+      $prelink = $_SERVER['PHP_SELF']."?page=managetag&tag=$tag&offset=".$p;
+      echo " <a href=\"".$prelink."\">[prev]</a>";
+    }
+
+    if ($rowcount > $linkToList) {
+      $p = $page +1;
+      $nextlink = $_SERVER['PHP_SELF']."?page=managetag&tag=$tag&offset=".$p;
+      echo " <a href=\"".$nextlink."\">[next]</a>";
+    }
   }
 
   function _listTags($owner) {

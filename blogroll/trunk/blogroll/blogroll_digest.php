@@ -83,7 +83,12 @@
     $category = $blog->getCategoryIdFromName("Blogroll digest");
 
     $blog->setConvertBreaks(0);
-    $itemid = $blog->additem($category, $title, $body, "", $blogid, $mem->getID(), $timestamp, 0, 0);
+    // set as draft 1st so NP_Twitter will not pick it up, then public it
+    // by set draft=0 (== not draft)
+    $itemid = $blog->additem($category, $title, $body, "", $blogid, $mem->getID(), $timestamp, 0, 1);
+
+    mysql_query("UPDATE " . sql_table('item') . " SET idraft=0 WHERE inumber=".$itemid);;
+
 
     echo "Digest posted<br/>";
   }
