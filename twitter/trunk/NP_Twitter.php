@@ -28,26 +28,50 @@
  *   - fixed future post tweet SQL check
  *   - fixed update tweet login check.
  *   - added title, excerpt in auto tweet (%t, %e)
+ *   - added date sepecrator in tweets archive
+ *   - handled protected updates
+ *   - fixed &quot; and +
+ *   - added delete tweet function
+ *   - added reply function to add @xxx to the tweetbox (using javascript)
+ *   - fixed URL mess up on reading:
+ * v0.6
+ *   - changed only when tweetbox appear that reply/delete buttons are shown
+ *   - only allow delete own tweets
+ *   - reply button to only friends
+ *   - reply button only to those who follow me
+ *   - char counter on update box 
+ *   - fixed timezone error.... 10/0??? hopefully once and for all this time...
+ *   - fixed random tweet on new post
+ *   - added archive skinVar mode "mytweets" to show only a particular user's tweets
+ *   - added char count to tweetlet
+ *   - fixed curl warning
+ *   - fix user option bug
+ * v0.7
+ *   - new post tweet send override
  *
 admun TODO
 
-- add date sepecrator in tweets archive
-- fixed &quot;
-- link to @who
-- add delete tweet
-- add archive (only my tweet), and replies (search for @admun)
-- use JustPost event for 3.3
-
-javascript:location.href='http://edmondhui.homeip.net/blog/action.php?action=plugin&name=Twitter&op=tweetlet&url='+encodeURIComponent(location.href)+'&text='+encodeURIComponent(document.title)
-
-- char counter on update box
-- how long ago, highlight recent tweets (via CSS)
-- multiple-tweet template
-- show badge for login member
-- email, sms, wap
-
-- per member accounts... or via member options?
+- fix hicup on tweetlet on ' in title
+- fix change icon problem
+- localize icon
+- rss feed
 - search
+
+- multiple-tweet template, with admin menu
+- my tweets and replies (search for @admun)
+- language file
+
+- use JustPost event for 3.3
+- link to @who
+- add favorite support??
+
+- how long ago, highlight recent tweets (via CSS)
+
+javascript:location.href='http://edmondhui.homeip.net/blog/action.php?action=plugin&name=Twitter&op=tweetlet&url='+encodeURIComponent(location.href)+'&text='+document.title
+
+- add current user tweet
+- show badge for login member
+- per member accounts... or via member options?
 - admin menu to add/mod/del account, update tweet??
 - daily tweets digest
 - direct message
@@ -90,11 +114,12 @@ $uid = 0;
 
 // friends/followers parser
 class f_user{
-	var $id, $name, $sname, $loc, $desc, $purl, $url;
+	var $id, $name, $sname, $loc, $desc, $purl, $url, $protected;
 }
 
 function fl_contents($parser, $data) {
 	global $current_tag, $parsed_arr, $counter;
+	//echo $current_tag . ": " . $data . " (" . $counter . ")<br/>\n";
 	switch($current_tag){
 		case "*USERS*USER*ID":
 			$counter++;
@@ -118,12 +143,20 @@ function fl_contents($parser, $data) {
 			break;
 		case "*USERS*USER*URL":
 			$parsed_arr[$counter]->url .= $data;
+			break;
+		case "*USERS*USER*PROTECTED":
+			$parsed_arr[$counter]->protected .= $data;
+			break;
+		default:
+			echo "<!-- unsupported follower tag: "
+			. $current_tag . " = " . $data . " -->\n";
 			break;
 	}
 }
 
 function fd_contents($parser, $data) {
 	global $current_tag, $parsed_arr, $counter;
+	//echo $current_tag . ": " . $data . " (" . $counter . ")<br/>\n";
 	switch($current_tag){
 		case "*USERS*USER*ID":
 			$counter++;
@@ -147,6 +180,13 @@ function fd_contents($parser, $data) {
 			break;
 		case "*USERS*USER*URL":
 			$parsed_arr[$counter]->url .= $data;
+			break;
+		case "*USERS*USER*PROTECTED":
+			$parsed_arr[$counter]->protected .= $data;
+			break;
+		default:
+			echo "<!-- unsupported friend tag: " . $current_tag
+			.  " = " . $data . " -->\n";
 			break;
 	}
 }
@@ -163,13 +203,13 @@ function u_contents($parser, $data) {
 
 // friend_timeline parser
 class ft_status{
-	var $created, $text, $tid, $uid, $name, $screen_name, $purl;
+	var $created, $text, $tid, $uid, $name, $screen_name, $purl, $protected;
 }
 
 function ft_contents($parser, $data) {
 	global $current_tag, $parsed_arr, $counter;
 
-	//echo $current_tag . ": " . $data . " (" . $counter . ")<br/>";
+	//echo $current_tag . ": " . $data . " (" . $counter . ")<br/>\n";
 	switch($current_tag){
 		case "*STATUSES*STATUS*CREATED_AT":
 			$counter++;
@@ -195,6 +235,17 @@ function ft_contents($parser, $data) {
 		case "*STATUSES*STATUS*USER*PROFILE_IMAGE_URL":
 			$parsed_arr[$counter]->purl .= $data;
 			break;
+		case "*STATUSES*STATUS*USER*PROTECTED":
+			if ($data == "true") {
+				$parsed_arr[$counter]->protected = "1";
+			} else {
+				$parsed_arr[$counter]->protected = "0";
+			}
+			break;
+		default:
+			echo "<!-- unsupported friendtimeline tag: " 
+			. $current_tag . " = " . $data . " -->\n";
+			break;
 	}
 }
 
@@ -217,7 +268,7 @@ class NP_Twitter extends NucleusPlugin {
 		$this->twitters_tab = sql_table('plug_twitters_info');
 		$this->twitter_url = "http://twitter.com";
 		$this->client = "NP_Twitter";
-		$this->version = "v0.3";
+		$this->version = "v0.7";
 	}
 
 	function getName() {
@@ -233,7 +284,7 @@ class NP_Twitter extends NucleusPlugin {
 	}
 
 	function getVersion() {
-		return '0.5';
+		return '0.7';
 	}
 
 	function getDescription() {
@@ -244,6 +295,7 @@ class NP_Twitter extends NucleusPlugin {
 		return array(
 			'PostPluginOptionsUpdate',
 			'PostDeleteMember',
+			'AddItemFormExtras',
 			'PostAddItem'
 		);
 	}
@@ -256,15 +308,17 @@ class NP_Twitter extends NucleusPlugin {
 
 		if (!$user || !$password) return;
 
-		$header = array("X-Twitter-Client: ". $this->client, "X-Twitter-Client-Version: ". $this->version);
+		$header = array("X-Twitter-Client: " 
+		          . $this->client, "X-Twitter-Client-Version: "
+			  . $this->version);
 		$options = array(
-			CURLOPT_URL => $this->twitter_url . '/users/'.$user.'.xml',
+			CURLOPT_URL => $this->twitter_url
+			. '/users/'.$user.'.xml',
 			CURLOPT_HTTPAUTH => CURLAUTH_BASIC,
 			CURLOPT_HEADER => 0,
 			CURLOPT_USERPWD => "$user:$password",
 			CURLOPT_HTTPHEADER => $header,
-			CURLOPT_RETURNTRANSFER => 1,
-			CURLOPT_GET => 1
+			CURLOPT_RETURNTRANSFER => 1
 		);
 
 		//print_r($options);
@@ -273,7 +327,7 @@ class NP_Twitter extends NucleusPlugin {
 		$result = curl_exec($session);
 		curl_close($session);
 
-		//echo "<!-- ". $result . "-->";
+		//echo "<!-- ". $result . "-->\n";
 
 		$parser = xml_parser_create();
 		xml_set_element_handler($parser, "startTag", "endTag");
@@ -353,6 +407,11 @@ class NP_Twitter extends NucleusPlugin {
 		sql_query('CREATE TABLE IF NOT EXISTS '.$this->followers_tab.' (`uid` INT NOT NULL, `fid` INT NOT NULL, `name` VARCHAR(40) NOT NULL, `sname` VARCHAR(15) NOT NULL, `loc` VARCHAR(30) NOT NULL, `descp` VARCHAR(160) NOT NULL, `url` VARCHAR(256) NOT NULL, `purl` VARCHAR(256) NOT NULL, PRIMARY KEY (`fid`), FULLTEXT(`name`))');
 		sql_query('CREATE TABLE IF NOT EXISTS '.$this->twitters_tab.' (`authorid` TINYINT NOT NULL, `uid` INT NOT NULL, PRIMARY KEY (`authorid`, `uid`))');
 
+		// added in V0.5
+		sql_query('ALTER TABLE '.$this->friends_tab.' ADD `protected` BOOL NOT NULL AFTER `purl`');
+		sql_query('ALTER TABLE '.$this->followers_tab.' ADD `protected` BOOL NOT NULL AFTER `purl`');
+		sql_query('ALTER TABLE '.$this->tweets_tab.' ADD `protected` BOOL NOT NULL AFTER `purl`');
+
 		$this->createOption('Header','Tweets header formating','text','<ul>');
 		$this->createOption('Item','Tweets formating (%%TWITTERT%% - twitter name in text, %%TWITTERI%% - twitter name as image, %%TWEET%% - tweet, %%TDATE%% - date)','text','<li>%%TWITTERT%%: %%TWEET%%</li>');
 		$this->createOption('Footer','Tweets footer formating','text','</ul>');
@@ -360,15 +419,12 @@ class NP_Twitter extends NucleusPlugin {
 		$this->createOption('NewPostTexts','Text to tweet on new post (one per line, will be randomly pick, %l == item url, %t == title, %e == excerpt)','textarea',"Just posted to my blog, see \"%t\" (%l)\nSee what I just wrote \"%t\" @ %l\nMy blog has updated \"%t\" (%l)\n");
 
 		$this->createOption('Cleanup','Delete tweets cache on uninstall','yesno','no');
+		$this->createOption('ShowDate','Show Date in Archive?','yesno','yes');
 
 		$this->createMemberOption('TwitterUser','username','text','');
 		$this->createMemberOption('TwitterPassword','password','password','');
 	}
 	
-	/** 
-	 * Asks the user if the technoratitags table should be deleted 
-	 * and deletes it if yes
-	 */
 	function unInstall() {
 		if ($this->getOption('Cleanup') == 'yes'){
 			sql_query('DROP TABLE '.$this->tweets_tab);
@@ -387,26 +443,85 @@ class NP_Twitter extends NucleusPlugin {
 		return array($this->tweets_tab,$this->friends_tab,$this->followers_tab,$this->twitters_tab);
 	}
 
-	function doTweets($uid, $num, $page, $icon='') {
+	function doTweets($uid, $num, $page=0, $icon='', $tweetType) {
+		global $CONF, $member;
+
+		$loggedIn = $member->isLoggedIn();
 
 		$start = ($page - 1) * $num;
 		if ($start < 0) $start = 0;
 
+		$extra = '';
+		if (!$loggedIn) {
+			$extra = ' AND t.protected != 1 ';
+		}
+		
+		if ($tweetType == "mytweets") {
+			$extra .= ' AND t.fid = ' . $uid . ' ';
+		}
+
 		//select t.text,t.tid,t.uid,t.sname,t.name,t.created_at,f.purl from nucleus_plug_twitters_tweets as t,nucleus_plug_twitters_friends as f where t.uid=4185371 and f.uid=t.fid order by t.tid desc limit 0,20;
-		$query = sql_query("SELECT * FROM " . $this->tweets_tab . " WHERE uid=" . $uid 
-			. " ORDER BY tid DESC LIMIT " . $start . "," . $num);
+		$query = sql_query("SELECT * FROM " . $this->tweets_tab . " as t WHERE t.uid=" . $uid . $extra . " ORDER BY tid DESC LIMIT " . $start . "," . $num);
 		if (mysql_num_rows($query) == 0) return;
+
+		$date_head = $this->getOption('ShowDate');
+
+		if ($page == 0) $date_head = "no";
 
 		echo "<div id=\"twitter\">";
 		echo $this->getOption('Header');
 		while ($row = mysql_fetch_object($query)) {
-			$fromt = "<a href=\"" . $this->twitter_url . "/" . $row->sname . "\">" . $row->sname . "</a>";
-			$fromi = "<a href=\"" . $this->twitter_url . "/" . $row->sname . "\"><img src=\"" 
-				. $row->purl . "\" alt=\"" . $row->sname . "\" title=\""
-				. $row->sname . "\"/></a>";
-			$date = "<a href=\"" . $this->twitter_url . "/" . $row->sname . "/statuses/" . $row->tid . "\">" . $row->created_at . "</a>";
+			$new_head = substr($row->created_at, 0, 10);
+			if ($new_head != $date_head && $date_head != "no") {
+				echo "<li><h3>".$new_head."</h3></li>";
+				$date_head = $new_head;
+			}
+
+			$fromt = "<a href=\"" . $this->twitter_url . "/" 
+			       . $row->sname . "\">" . $row->sname . "</a>";
+			$fromi = "<a href=\"" . $this->twitter_url . "/" 
+			       . $row->sname . "\"><img src=\"" 
+			       . $row->purl . "\" alt=\"" . $row->sname 
+			       . "\" title=\"" . $row->sname . "\"/></a>";
+			$date = "<a href=\"" . $this->twitter_url . "/"
+			      . $row->sname . "/statuses/" . $row->tid 
+			      . "\">" . $row->created_at . "</a>";
+
+			if ($loggedIn) {
+				global $updateboxed;
+				if ($updateboxed == "true") {
+					if ($row->fid != $row->uid) {
+						$followed = 0;
+						// ED$ we can pre-fetch all followers into an array..... should be faster
+						$q = sql_query("SELECT * FROM " . $this->followers_tab 
+						     . " WHERE fid = " . $row->fid);
+						if (mysql_num_rows($q) == 1) {
+							$date .= " <a href=\"javascript:insertReplyTo('@"
+							. $row->sname
+							. "')\">[reply]</a>";
+						}
+					}
+
+					//$date .= " <a href=\"".  "\">[favorite]</a>";
+
+					if ($row->fid == $row->uid) {
+						$date .= 
+						" <a href=\"" . $CONF['ActionURL'] 
+						. "?action=plugin&name=Twitter&op=deltweet&tid="
+						. $row->tid . "&redirecturl=http://" 
+						. serverVar("HTTP_HOST")
+						. serverVar('REQUEST_URI')
+						. "\">[delete]</a> "; 
+					}
+				}
+			}
+
 			// shorten URL
 			$msg = COMMENT::prepareBody($row->text);
+
+			if ($msg[0] == '@') {
+				// $msg = ;
+			}
 
 			$tweet = $this->getOption('Item');
 			// override the icon setting
@@ -420,25 +535,42 @@ class NP_Twitter extends NucleusPlugin {
 			$tweet = str_replace('%%TWITTERI%%',$fromi,$tweet);
 			$tweet = str_replace('%%TDATE%%',$date,$tweet);
 			$tweet = str_replace('%%TWEET%%',$msg,$tweet);
+			$tweet = str_replace('&amp;','&',$tweet);
 			$tweet = htmlspecialchars_decode($tweet);
 			echo $tweet;
+
 		}
 		echo $this->getOption('Footer');
 		
 		if ($page > 1) {
 			$pre = $page - 1;
-			echo "<div class=\"prev\"><a href=\"?tpage=" . $pre . "\">&lt;&lt; previous</a></div>";
+			echo "<div class=\"prev\"><a href=\"?tpage=" . $pre 
+			   . "\">&lt;&lt; newer</a></div>";
 		}
 
 		if ($page >= 1 && mysql_num_rows($query) == $num) {
 			$next = $page + 1;
-			echo "<div class=\"next\"><a href=\"?tpage=" . $next . "\">next &gt;&gt;</a></div>";
+			echo "<div class=\"next\"><a href=\"?tpage=" . $next
+			   . "\">older &gt;&gt;</a></div>";
 		}
 		echo "</div>";
 	}
 
-	function doScript($uid, $num, $page) {
-		global $CONF;
+	function doScript($uid, $num, $page, $icon, $tweetType) {
+		global $CONF, $updateboxed;
+
+		if ($updateboxed == "true") {
+			$rep = '&rep=1';
+		} else {
+			$rep = '';
+		}
+
+		if ($tweetType == "tweets") {
+			$updatetype = "update";
+		} else {
+			$updatetype = "aupdate";
+		}
+
 		?>
 		  <!-- code from http://dutchcelt.nl/weblog/article/ajax_for_weblogs/ -->
 		  <script type="text/javascript">
@@ -463,9 +595,7 @@ class NP_Twitter extends NucleusPlugin {
 		 
 		    function TWgetMyHTML() {
 		 
-			  var serverPage = '<?php echo $CONF['IndexURL'];
-			  ?>action.php?action=plugin&name=Twitter&op=update&uid=<?php echo $uid?>&num=<?php echo $num; ?>&tpage=<?php echo $page; ?>';
-			  var objTW = document.getElementById('twitter');
+			  var serverPage = '<?php echo $CONF['IndexURL']; ?>action.php?action=plugin&name=Twitter&op=<? echo $updatetype; ?>&uid=<?php echo $uid?>&num=<?php echo $num; ?>&tpage=<?php echo $page . $rep; ?>&icon=<? echo $icon; ?>'; var objTW = document.getElementById('twitter');
 			  ajaxTW.open("GET", serverPage);
 			  ajaxTW.onreadystatechange = function() {
 				if (ajaxTW.readyState == 4 && ajaxTW.status == 200) {
@@ -478,7 +608,7 @@ class NP_Twitter extends NucleusPlugin {
 		   }
 		 
 		   function TWstartRefresh() {
-			 setTimeout("TWgetMyHTML()",15*60*1000);
+			 setTimeout("TWgetMyHTML()",5*60*1000);
 		   }
 		 
 		   // trick learnt from wp wordspew
@@ -532,13 +662,17 @@ class NP_Twitter extends NucleusPlugin {
 		}
 	}
 
-	/*
-	 */
 	function doSkinVar($skinType, $type, $memb='', $num=0, $icon='') {
 
 		if ($type == "updatebox") {
+			global $updateboxed;
+			$updateboxed = "true";
 			global $CONF, $member;
 			if (!$member->isLoggedIn()) { return; }
+
+			// ED$ check if this user has configure his/her account 
+
+			$this->addCharCountScript();
 			echo "<form method=\"post\" action=\"".$CONF['ActionURL']."\">\n"
               			. "<div class=\"Twitter\">\n"
 				. "<input type=\"hidden\" name=\"action\" value=\"plugin\" />\n"
@@ -546,8 +680,10 @@ class NP_Twitter extends NucleusPlugin {
 				. "<input type=\"hidden\" name=\"redirecturl\" value=\"" 
 				. serverVar('REQUEST_URI') . "\" /> \n"
 				. "<input type=\"hidden\" name=\"op\" value=\"tweet\" /> \n"
-				. "<textarea name=\"text\" rows=\"3\" cols=\"22\" /></textarea>\n"
+				. "<label for=\"tweet_box\">  </label>"
+				. "<textarea name=\"text\" rows=\"2\" cols=\"70\" id=\"tweet_box\" onKeyUp=\"Contar('tweet_box','tweet_count','{CHAR} characters left.',140);\"/></textarea>\n"
 				. "<input type=\"submit\" class=\"button\" value=\"Tweet!\" />"
+				. "<br><span id=\"tweet_count\" class=\"minitext\">140 characters left.</span>"
 				. "</div>"
 				. "</form>\n";
 			return;
@@ -565,35 +701,44 @@ class NP_Twitter extends NucleusPlugin {
 		$uid = $this->getTwitterId($authorid);
 		$username = $this->getMemberOption($authorid,'TwitterUser');
 
-		if ($type == "tweets") {
-			$this->doScript($uid, $num, $page);
-			$this->doTweets($uid, $num, $page, $icon);
+		if ($type == "tweets" || $type == "mytweets") {
+			$this->doScript($uid, $num, $page, $icon, $type);
+			$this->doTweets($uid, $num, $page, $icon, $type);
 		}
 
 		if ($type == "friends") {
-			$query = sql_query("SELECT * FROM " . $this->friends_tab . " WHERE uid=" . $uid);
+			$query = sql_query("SELECT * FROM " 
+			       . $this->friends_tab . " WHERE uid=" . $uid);
 			if (mysql_num_rows($query) == 0) return;
 
 			while ($row = mysql_fetch_object($query)) {
-				echo "<img src=\"" . $row->purl . "\" alt=\"" . $row->sname . "\" title=\"" .  $row->sname . "\"/>";
+				echo "<img src=\"" . $row->purl . "\" alt=\""
+				   . $row->sname . "\" title=\"" . $row->sname
+				   . "\"/>";
 			}
 		}
 
 		if ($type == "link") {
 			$label = $num;
-			echo "<a href=\"" . $this->twitter_url . "/" . $username . "\">" . $label . "</a>";
+			echo "<a href=\"" . $this->twitter_url . "/" 
+			   . $username . "\">" . $label . "</a>";
 		}
 
 		if ($type == "stats") {
-			$query = sql_query("SELECT * FROM " . $this->friends_tab . " WHERE uid=" . $uid);
-			echo "<a href=\"" . $this->twitter_url . "/" . $username . "/friends\">" .  mysql_num_rows($query) . " friends</a><br/>";
-			$query = sql_query("SELECT * FROM " . $this->followers_tab . " WHERE uid=" . $uid);
-			echo mysql_num_rows($query) . " followers<br/>";
+			$query = sql_query("SELECT * FROM " 
+			. $this->friends_tab . " WHERE uid=" . $uid);
+			echo "following <a href=\"" . $this->twitter_url . "/" 
+			. $username . "/friends\">" .  mysql_num_rows($query) 
+			. " people</a><br/>";
+			$query = sql_query("SELECT * FROM " 
+			. $this->followers_tab . " WHERE uid=" . $uid);
+			echo mysql_num_rows($query) . " people following me<br/>";
 		}
 	}
 
 	function getTwitterId($memberid) {
-		$result = sql_query('SELECT uid FROM ' . $this->twitters_tab . ' WHERE authorid=' . $memberid);
+		$result = sql_query('SELECT uid FROM ' . $this->twitters_tab 
+		        . ' WHERE authorid=' . $memberid);
 		$author = mysql_fetch_object($result);
 		return $author->uid;
 	}
@@ -601,14 +746,16 @@ class NP_Twitter extends NucleusPlugin {
 	function updateFriendsTL($user, $password, $memberid) {
 		$session = curl_init();
 
-		$header = array("X-Twitter-Client: ". $this->client, "X-Twitter-Client-Version: v0.1". $this->version);
+		$header = array("X-Twitter-Client: " 
+		        . $this->client, "X-Twitter-Client-Version: v0.1"
+			. $this->version);
 		$options = array(
-			CURLOPT_URL => $this->twitter_url . '/statuses/friends_timeline.xml',
+			CURLOPT_URL => $this->twitter_url
+			. '/statuses/friends_timeline.xml',
 			CURLOPT_HTTPAUTH => CURLAUTH_BASIC,
 			CURLOPT_HEADER => 0,
 			CURLOPT_USERPWD => "$user:$password",
 			CURLOPT_RETURNTRANSFER => 1,
-			CURLOPT_GET => 1,
 			CURLOPT_HTTPHEADER => $header
 		);
 
@@ -621,7 +768,7 @@ class NP_Twitter extends NucleusPlugin {
 		$result = curl_exec($session);
 		curl_close($session);
 
-		//echo "<!-- ". $result . "-->";
+		//echo "<!-- ". $result . "-->\n";
 
 		$parser = xml_parser_create();
 		xml_set_element_handler($parser, "startTag", "endTag");
@@ -634,39 +781,28 @@ class NP_Twitter extends NucleusPlugin {
 		$uid = $this->getTwitterId($memberid);
 
 		global $parsed_arr, $counter, $current_tag;
-		$month = array ( "Jan" => '01', "Feb" => '02', "Mar" => '03', "Apr" => '04', "May" => '05', "Jun" => '06', "Jul" => '07', 
-				"Aug" => '08', "Sep" => '09', "Oct" => '10', "Nov" => '11', "Dec" => '12' );
-		$offset = date('Z')/60/60; // get timezone offset
+		$offset = date('Z'); // get timezone offset (in sec)
+
 		for ($x=1;$status = array_pop($parsed_arr);$x++) {
-			$date_arr = explode(' ', $status->created);
-			$time = explode(":",$date_arr[3]);
-			$time['0'] = $time['0'] + $offset;
-
-			// current timezone is < GMT and caused a underflow, time+date need adjust
-			if ($time['0'] < 0) {
-				$time['0'] = 24 + $time['0'];
-				$date_arr[2] -= 1;
-			}
-
-			// current timezone is > GMT and caused a overflow, time+date need adjust
-			if ($time['0'] > 23) {
-				$time['0'] = 24 - $time['0'];
-				$date_arr[2] += 1;
-			}
-
-			$created_at = $date_arr[5] . "-" . $month[$date_arr[1]] . "-" . $date_arr[2] . " " . implode(":",$time);
+			$gmt_time = strtotime($status->created);
+			$created_at = date("Y-n-j H:i:s", $gmt_time);
 
 			echo $x . ": " . $status->text . " ("
-			. $status->screen_name .  ", " . $status->name . ", " . $created_at . " [" . $status->created . "]" . ")<br/>";
+			. $status->screen_name .  ", " . $status->name 
+			. ", " . $created_at . " [" . $status->created . "], "
+			. $status->protected . ")<br/>\n";
 
 			sql_query('INSERT INTO ' . $this->tweets_tab 
-				. ' (text,created_at,tid,uid,fid,sname,name,purl) VALUES (\''
-				. htmlspecialchars($status->text, ENT_QUOTES) . '\',\''
+				. ' (text,created_at,tid,uid,fid,sname,name,purl,protected) VALUES (\''
+				. htmlspecialchars($status->text, ENT_QUOTES) 
+				. '\',\''
 				. $created_at . '\',\'' 
 				. $status->tid . '\',\'' . $uid . '\',\''
-				. $status->uid . '\',\'' . htmlspecialchars($status->screen_name, ENT_QUOTES)
+				. $status->uid . '\',\'' 
+				. htmlspecialchars($status->screen_name, ENT_QUOTES)
 				. '\',\'' . htmlspecialchars($status->name, ENT_QUOTES) 
 				. '\',\'' . $status->purl
+				. '\',\'' . $status->protected
 				. '\') ON DUPLICATE KEY UPDATE uid=uid'
 			);
 		}
@@ -686,7 +822,6 @@ class NP_Twitter extends NucleusPlugin {
 			CURLOPT_HEADER => 0,
 			CURLOPT_USERPWD => "$user:$password",
 			CURLOPT_RETURNTRANSFER => 1,
-			CURLOPT_GET => 1,
 			CURLOPT_HTTPHEADER => $header
 		);
 
@@ -696,7 +831,7 @@ class NP_Twitter extends NucleusPlugin {
 		$result = curl_exec($session);
 		curl_close($session);
 
-		//echo "<!-- ". $result . "-->";
+		//echo "<!-- ". $result . "-->\n";
 
 		$parser = xml_parser_create();
 		xml_set_element_handler($parser, "startTag", "endTag");
@@ -712,17 +847,18 @@ class NP_Twitter extends NucleusPlugin {
 		sql_query('DELETE FROM ' . $this->followers_tab . ' WHERE uid=' . $uid);
 		for ($x=1;$status = array_pop($parsed_arr);$x++) {
 			echo $x . ": " . $status->name . " ("
-			. $status->id . ", " . $status->sname . ", " . $status->loc . ", "
-			. $status->desc . ", " . $status->url . ")<br/>";
+			. $status->id . ", " . $status->sname . ", " 
+			. $status->loc . ", " . $status->desc . ", "
+			. $status->url . ", " . $status->protected 
+			.  ")<br/>\n";
 
-			sql_query('INSERT INTO ' . $this->followers_tab 
-				. ' (uid,fid,name,loc,descp,url,purl) VALUES (\''
-				. $uid . '\',\'' . $status->id . '\',\'' 
-				. htmlspecialchars($status->name, ENT_QUOTES) . '\',\'' 
-				. htmlspecialchars($status->loc, ENT_QUOTES) . '\',\'' 
-				. htmlspecialchars($status->desc, ENT_QUOTES) . '\',\'' 
-				. $status->url . '\',\'' . $status->purl . '\')'
-			);
+			if ($status->protected == 'true') {
+				$status->protected = 1;
+			} else {
+				$status->protected = 0;
+			}
+
+			sql_query('REPLACE ' . $this->followers_tab . ' (uid,fid,name,loc,descp,url,purl,protected) VALUES (\'' . $uid . '\',\'' . $status->id . '\',\'' . htmlspecialchars($status->name, ENT_QUOTES) . '\',\'' . htmlspecialchars($status->loc, ENT_QUOTES) . '\',\'' . htmlspecialchars($status->desc, ENT_QUOTES) . '\',\'' . $status->url . '\',\'' . $status->purl . '\',\'' . $status->protected . '\')');
 		}
 
 		$counter = 0;
@@ -733,14 +869,16 @@ class NP_Twitter extends NucleusPlugin {
 	function updateFriends($user, $password, $memberid) {
 		$session = curl_init();
 
-		$header = array("X-Twitter-Client: ". $this->client, "X-Twitter-Client-Version: ". $this->version);
+		$header = array("X-Twitter-Client: "
+		        . $this->client, "X-Twitter-Client-Version: "
+			. $this->version);
 		$options = array(
-			CURLOPT_URL => $this->twitter_url . '/statuses/friends.xml',
+			CURLOPT_URL => $this->twitter_url 
+			. '/statuses/friends.xml',
 			CURLOPT_HTTPAUTH => CURLAUTH_BASIC,
 			CURLOPT_HEADER => 0,
 			CURLOPT_USERPWD => "$user:$password",
 			CURLOPT_RETURNTRANSFER => 1,
-			CURLOPT_GET => 1,
 			CURLOPT_HTTPHEADER => $header
 		);
 
@@ -750,7 +888,7 @@ class NP_Twitter extends NucleusPlugin {
 		$result = curl_exec($session);
 		curl_close($session);
 
-		//echo "<!-- ". $result . "-->";
+		//echo "<!-- ". $result . "-->\n";
 
 		$parser = xml_parser_create();
 		xml_set_element_handler($parser, "startTag", "endTag");
@@ -766,18 +904,18 @@ class NP_Twitter extends NucleusPlugin {
 		sql_query('DELETE FROM ' . $this->friends_tab . ' WHERE uid=' . $uid);
 		for ($x=1;$status = array_pop($parsed_arr);$x++) {
 			echo $x . ": " . $status->name . " ("
-			. $status->id . ", " . $status->sname . ", " . $status->loc . ", "
-			. $status->desc . ", " . $status->url . ")<br/>";
+			. $status->id . ", " . $status->sname . ", " 
+			. $status->loc . ", " . $status->desc . ", " 
+			. $status->url . ", " . $status->protected 
+			. ")<br/>\n";
 
-			sql_query('INSERT INTO ' . $this->friends_tab 
-				. ' (uid,fid,name,sname,loc,descp,url,purl) VALUES (\''
-				. $uid . '\',\'' . $status->id . '\',\'' 
-				. htmlspecialchars($status->name, ENT_QUOTES) . '\',\'' 
-				. htmlspecialchars($status->sname, ENT_QUOTES) . '\',\'' 
-				. htmlspecialchars($status->loc, ENT_QUOTES) . '\',\'' 
-				. htmlspecialchars($status->desc, ENT_QUOTES) . '\',\'' 
-				. $status->url . '\',\'' . $status->purl . '\')'
-			);
+			if ($status->protected == 'true') {
+				$status->protected = 1;
+			} else {
+				$status->protected = 0;
+			}
+
+			sql_query('REPLACE ' . $this->friends_tab . ' (uid,fid,name,sname,loc,descp,url,purl,protected) VALUES (\'' . $uid . '\',\'' . $status->id . '\',\'' . htmlspecialchars($status->name, ENT_QUOTES) . '\',\'' . htmlspecialchars($status->sname, ENT_QUOTES) . '\',\'' . htmlspecialchars($status->loc, ENT_QUOTES) . '\',\'' . htmlspecialchars($status->desc, ENT_QUOTES) . '\',\'' . $status->url . '\',\'' . $status->purl . '\',\'' . $status->protected . '\')');
 		}
 
 		$counter = 0;
@@ -785,19 +923,22 @@ class NP_Twitter extends NucleusPlugin {
 		xml_parser_free($parser); 
 	}
 
-	function sendTweet($user, $password, $text) {
+	function delTweet($user, $password, $tid) {
 		$session = curl_init();
 
-		$header = array("X-Twitter-Client: ". $this->client, "X-Twitter-Client-Version: ". $this->version);
+		$header = array("X-Twitter-Client: "
+		        . $this->client, "X-Twitter-Client-Version: "
+			. $this->version);
 		$options = array(
-			CURLOPT_URL => $this->twitter_url . '/statuses/update.xml',
+			CURLOPT_URL => 
+			$this->twitter_url . '/statuses/destroy/' . $tid 
+			. ".xml",
 			CURLOPT_HTTPAUTH => CURLAUTH_BASIC,
 			CURLOPT_HEADER => 0,
 			CURLOPT_USERPWD => "$user:$password",
 			CURLOPT_RETURNTRANSFER => 1,
 			CURLOPT_POST => 1,
-			CURLOPT_HTTPHEADER => $header,
-			CURLOPT_POSTFIELDS => "status=" . $text
+			CURLOPT_HTTPHEADER => $header
 		);
 
 		//print_r($options);
@@ -806,7 +947,33 @@ class NP_Twitter extends NucleusPlugin {
 		$result = curl_exec($session);
 		curl_close($session);
 
+		sql_query('DELETE FROM ' . $this->tweets_tab . ' WHERE tid='. $tid);
+	}
 
+	function sendTweet($user, $password, $text) {
+		$session = curl_init();
+
+
+		$header = array("X-Twitter-Client: "
+		        . $this->client, "X-Twitter-Client-Version: "
+			. $this->version);
+		$options = array(
+			CURLOPT_URL => $this->twitter_url 
+			. '/statuses/update.xml',
+			CURLOPT_HTTPAUTH => CURLAUTH_BASIC,
+			CURLOPT_HEADER => 0,
+			CURLOPT_USERPWD => "$user:$password",
+			CURLOPT_RETURNTRANSFER => 1,
+			CURLOPT_POST => 1,
+			CURLOPT_HTTPHEADER => $header,
+			CURLOPT_POSTFIELDS => "status=" . urlencode($text)
+		);
+
+		//print_r($options);
+		curl_setopt_array($session, $options);
+
+		$result = curl_exec($session);
+		curl_close($session);
 	}
 
 	function doAction($type) {
@@ -820,24 +987,35 @@ class NP_Twitter extends NucleusPlugin {
 				$user = $this->getMemberOption($row->mnumber,'TwitterUser');
 				$password = $this->getMemberOption($row->mnumber,'TwitterPassword');
 
-				if (!$user) continue;
+				if (!$user || !$password) continue;
 
-				echo "Updating friends...<br/>";
+				echo "<h2>Updating friends...</h2>\n";
 				$this->updateFriends($user,$password,$row->mnumber);
-				echo "Updating followers...<br/>";
+				echo "<h2>Updating followers...</h2>\n";
 				$this->updateFollowers($user,$password,$row->mnumber);
-				echo "Updating tweets...<br/>";
+				echo "<h2>Updating tweets...</h2>\n";
 				$this->updateFriendsTL($user,$password,$row->mnumber);
 			}
 
 		}
 
-		if ($action == "update") {
+		if ($action == "update" || $action == "aupdate") {
 			$uid = RequestVar('uid');
 			$num = RequestVar('num');
 			$page = RequestVar('tpage');
+			$icon = RequestVar('icon');
+			if (IntRequestVar('rep') == 1) {
+				global $updateboxed;
+				$updateboxed = "true";
+			}
 
-			$this->doTweets($uid, $num, $page);
+			if ($action == "update") {
+				$tweetype = "tweets";
+			} else {
+				$tweetype = "mytweets";
+			}
+
+			$this->doTweets($uid, $num, $page, $icon, $tweetype);
 		}
 
 		if ($action == "tweet") {
@@ -851,10 +1029,28 @@ class NP_Twitter extends NucleusPlugin {
 				$text = $tweetas . " " . $text;
 			}
 
-			$user = $this->getOption('TwitterUser');
-			$password = $this->getOption('TwitterPassword');
+			$user = $this->getMemberOption($member->getID(),'TwitterUser');
+			$password = $this->getMemberOption($member->getID(),'TwitterPassword');
+
+			if (!$user || !$password) return;
 
       			$this->sendTweet($user, $password, $text);
+
+			header('Location: ' . $redirect);
+		}
+
+		if ($action == "deltweet") {
+			global $member;
+			if (!$member->isLoggedIn()) doError('You\'re not logged in.');
+			$tid =  RequestVar('tid');
+			$redirect=RequestVar('redirecturl');
+
+			$user = $this->getMemberOption($member->getID(),'TwitterUser');
+			$password = $this->getMemberOption($member->getID(),'TwitterPassword');
+
+			if (!$user || !$password) return;
+
+      			$this->delTweet($user, $password, $tid);
 
 			header('Location: ' . $redirect);
 		}
@@ -865,30 +1061,54 @@ class NP_Twitter extends NucleusPlugin {
 			global $CONF;
 			$url =  RequestVar('url');
 
-			echo "<h1>Tweetlet</h1><form method=\"post\" action=\"".$CONF['ActionURL']."\">\n"
-              			. "<div class=\"Twitter\">\n"
-				. "<input type=\"hidden\" name=\"action\" value=\"plugin\" />\n"
-				. "<input type=\"hidden\" name=\"name\" value=\"Twitter\" />\n"
-				. "<input type=\"hidden\" name=\"redirecturl\" value=\"" . $url . "\" />\n"
-				. "<input type=\"hidden\" name=\"op\" value=\"tweet\" />\n"
-				. "<select name=\"tweetas\">
-					<option selected>Reading:
-					<option>Looking at:
-					<option>Listening to:
-					<option>Laughing at:
-					<option>at:
-					<option>Waiting for:
-					<option>Looking forward to:
-					</select><br/>"
-				. "<textarea name=\"text\" rows=\"3\" cols=\"50\" />" . RequestVar('text') . " (" . RequestVar('url') . ")</textarea><br/>\n"
-				. "<input type=\"submit\" class=\"button\" value=\"Tweet!\" />"
-				. "</div>"
-				. "</form>\n";
+			$this->addCharCountScript();
+			echo "<h1>Tweetlet</h1><form method=\"post\" action=\""
+			.$CONF['ActionURL']."\">\n" 
+			. "<div class=\"Twitter\">\n"
+			. "<input type=\"hidden\" name=\"action\" value=\"plugin\" />\n"
+			. "<input type=\"hidden\" name=\"name\" value=\"Twitter\" />\n"
+			. "<input type=\"hidden\" name=\"redirecturl\" value=\""
+			. $url . "\" />\n" 
+			. "<input type=\"hidden\" name=\"op\" value=\"tweet\" />\n"
+			. "<select name=\"tweetas\">
+				<option selected>Reading:
+				<option>Looking at:
+				<option>Listening to:
+				<option>Laughing at:
+				<option>at:
+				<option>Waiting for:
+				<option>Looking forward to:
+				</select><br/>"
+			. "<textarea name=\"text\" rows=\"2\" cols=\"70\" id=\"tweet_box\" onKeyUp=\"Contar('tweet_box','tweet_count','{CHAR} characters left.',120);\"/>\n"
+			. RequestVar('text') ." ". RequestVar('url') 
+			. "</textarea>\n"
+			. "<br><span id=\"tweet_count\" class=\"minitext\">" 
+			. intVal(120 - strlen(RequestVar('text') ." ". RequestVar('url'))) 
+			. " characters left.</span><br/>"
+			. "<input type=\"submit\" class=\"button\" value=\"Tweet!\" />"
+			. "</div>"
+			. "</form>\n";
 		}
 	}
 
+	function event_AddItemFormExtras($data) {
+?>
+		<h3>Twitter</h3>
+		<p>
+                <input type="checkbox" name="tweet_this_post"
+<?php
+                if ($this->getOption('TweetOnNewPost') == "yes") {
+                        echo " checked=\"checked\"";
+                }
+?>
+                />Send tweet on this post
+                </p>
+<?php
+	}
+
 	function event_PostAddItem($data) {
-		if ($this->getOption('TweetOnNewPost') == 'yes') {
+		$tweet_this = RequestVar('tweet_this_post');
+		if ($tweet_this == "on") {
 			$itemid = $data['itemid'];
 			$query=sql_query('SELECT iauthor FROM ' . sql_table('item') . ' WHERE inumber=' . $itemid . ' AND idraft=0 AND itime <= NOW()');
 			if (mysql_num_rows($query) == 0) return;
@@ -898,20 +1118,80 @@ class NP_Twitter extends NucleusPlugin {
 
 			$user = $this->getMemberOption($authorId,'TwitterUser');
 			$password = $this->getMemberOption($authorId,'TwitterPassword');
-	        	$url = createItemLink($itemid);
-			$pre_arr = explode("\n", $this->getOption('NewPostTexts'));
 
-			$text = $pre_arr[rand(0,count($pre_arr))];
-			$text = str_replace("%l",$url,$text);
+			if (!$user || !$password) {
+				return;
+			}
+
+			$pre_arr = explode("\n", $this->getOption('NewPostTexts'));
+			if (count($pre_arr) > 1) {
+				$text = $pre_arr[rand(0,count($pre_arr)-1)];
+			} else {
+				$text = $pre_arr[0];
+			}
 
 			global $manager;
 			$item = &$manager->getItem($itemid, 0, 0);
-			$text = str_replace("%t",$item['title'],$text);
-			$text =
-			str_replace("%e",strip_tags(substr($item['body'], 0, 30)). "...",$text);
 
+	        	$url = createItemLink($itemid);
+			$text = str_replace("%l",$url,$text);
+
+			// ED$ only do this if %t is used, else we can used 110 words
+			$exc_to_see = 60; // 110-strlen($item['title']);
+
+			$text = str_replace("%t",$item['title'],$text);
+			$text = str_replace("%e", strip_tags(substr($item['body'], 0, $exc_to_see)) . "...", $text);
+
+			ACTIONLOG::add(INFO, 'Tweet on new post: ' . $text);
       			$this->sendTweet($user, $password, $text);
 		}
+	}
+
+	function addCharCountScript()
+	{
+?>
+<script type="text/javascript">
+  function insertReplyTo(text){
+    document.getElementById('tweet_box').value+= text + " ";
+    document.getElementById('tweet_box').focus();
+  }
+</script>
+<script type="text/javascript">
+<!-- code taken from http://javascript.internet.com/forms/character-counter.html -->
+
+function getObject(obj) {
+  var theObj;
+  if(document.all) {
+    if(typeof obj=="string") {
+      return document.all(obj);
+    } else {
+      return obj.style;
+    }
+  }
+  if(document.getElementById) {
+    if(typeof obj=="string") {
+      return document.getElementById(obj);
+    } else {
+      return obj.style;
+    }
+  }
+  return null;
+}
+
+//Contador de caracteres.
+function Contar(entrada,salida,texto,caracteres) {
+  var entradaObj=getObject(entrada);
+  var salidaObj=getObject(salida);
+  var longitud=caracteres - entradaObj.value.length;
+  if(longitud <= 0) {
+    longitud=0;
+    texto='<span class="disable"> '+texto+' </span>';
+    entradaObj.value=entradaObj.value.substr(0,caracteres);
+  }
+  salidaObj.innerHTML = texto.replace("{CHAR}",longitud);
+}
+</script>
+<?
 	}
 
 }
