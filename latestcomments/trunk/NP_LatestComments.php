@@ -26,12 +26,21 @@
       v1.5a - add %P
       v1.6  - call PreItem event to enable NP_Smiley support
             - batch all comments to display in one shot
-      v1.7  - mod by PiyoPiyoNaku (http://www.renege.net), 03-Feb-2007
-              option to change date format.
-      v1.71 - mod by PiyoPiyoNaku, 04-Feb-2007
-	    - fix my typo on the history
-	    - compatible with NP_Alias
-      v1.71a - Use sql_query so benchamark function can pick up the activity
+	  v1.7  - mod by PiyoPiyoNaku (http://www.renege.net), 03-Feb-2007
+			  option to change date format.
+	  v1.71 - mod by PiyoPiyoNaku, 04-Feb-2007
+			- fix my typo on the history
+			- compatible with NP_Alias
+	  v1.8	- mod by PiyoPiyoNaku, 02-Mar-2007
+			- adds third skinvar parameter <%LatestComments(,,member)%> to have output similar to NP_MemberComments
+	  v1.81 - mod by PiyoPiyoNaku, 09-Mar-2007
+			- code cleaning regarding compatibility with NP_Alias [Must use the new NP_Alias v1.3 to make the compatibility works]
+	  v1.82 - mod by PiyoPiyoNaku, 12-Mar-2007
+			- language support for Japanese-utf8
+	  v1.83 - mod by PiyoPiyoNaku, 16-Mar-2007
+			- maximum number of characters for each name
+          v1.84 - mod by Edmond Hui
+	  		- use sql_*
   */
 
 class NP_LatestComments extends NucleusPlugin {
@@ -40,21 +49,52 @@ class NP_LatestComments extends NucleusPlugin {
 	function getName() { return 'Latest Comments'; }
 	function getAuthor()  { return 'anand | moraes | admun | e-Musty | PiyoPiyoNaku'; }
 	function getURL()  { return 'http://www.renege.net/'; }
-	function getVersion() { return '1.71a'; }
+	function getVersion() { return '1.84'; }
 	function getDescription() {
-		return 'This plugin can be used to display the last few comments.';
+		return _LCOM_DESC;
 	}
+	
+	//<mod by PiyoPiyoNaku>
+	function init() {
+		$language = ereg_replace( '[\\|/]', '', getLanguageName());
+		if ($language == "japanese-utf8")
+		{
+			define(_LCOM_DESC,				'最新のコメントを表示するプラグイン。 スキンへの記述： &lt;%LatestComments%&gt;');
+			define(_LCOM_OPTHEAD,			'コメントの一覧のヘッダ。デフォルトは 「&lt;ul&gt;」');
+			define(_LCOM_OPTFORMAT,			'コメント一覧の本体。デフォルトは 「&lt;li&gt;&lt;a href="%l" title="Posts to: %p"&gt;%u&lt;/a&gt; says %c&lt;/li&gt;」');
+			define(_LCOM_OPTFOOT,			'コメントの一覧のフッタ。デフォルトは 「&lt;/ul&gt;」');
+			define(_LCOM_DATEFORMAT,			'日付の形式。デフォルトは 「Y-m-d H:i:s」');
+			define(_LCOM_OPT1,				'ディスプレイ名はメンバー短縮名？デフォルトは 「はい」');
+			define(_LCOM_OPT2,				'1コメント中に表示するキャラクターの数。デフォルトは 「85」');
+			define(_LCOM_OPT3,				'ワードの終わりにコメントはブレイクするですか？デフォルトは 「はい」');
+			define(_LCOM_OPT4,				'ディスプレイ名のキャラクターの数。デフォルトは 「15」');
+		}
+		else
+		{
+			define(_LCOM_DESC,				'This plugin can be used to display the last few comments. Skinvar: &lt;%LatestComments%&gt;');
+			define(_LCOM_OPTHEAD,			'Header formatting. Default is &lt;ul&gt;');
+			define(_LCOM_OPTFORMAT,			'Comment formatting. Default is &lt;li&gt;&lt;a href="%l" title="Posts to: %p"&gt;%u&lt;/a&gt; says %c&lt;/li&gt;');
+			define(_LCOM_OPTFOOT,			'Footer formatting. Default is &lt;/ul&gt;');
+			define(_LCOM_DATEFORMAT,		'Date format. Default is Y-m-d H:i:s');
+			define(_LCOM_OPT1,				'Display name is short member name? Default is Yes');
+			define(_LCOM_OPT2,				'Max characters in each comment. Default is 85');
+			define(_LCOM_OPT3,				'Break comment at the end of the word? Default is Yes');
+			define(_LCOM_OPT4,				'Max characters of display name. Default is 15');
+		}
+	}
+	//</mod by PiyoPiyoNaku>
 
 	function install() {
-		$this->createOption('option1','Show short member names instead of real member names?','yesno','yes');
-		$this->createOption('option2','Max number of characters in each comment:','text','85');
-		$this->createOption('option3','Break comments at the end of word instead of cut off in the middle?','yesno','yes');
+		$this->createOption('option1',_LCOM_OPT1,'yesno','yes');
+		$this->createOption('option2',_LCOM_OPT2,'text','85');
+		$this->createOption('option3',_LCOM_OPT3,'yesno','yes');
 		//<mod by PiyoPiyoNaku>
-        $this->createOption('dateformat','Date format (using PHP date() function)','text','Y-m-d H:i:s');
-		//end of <mod by PiyoPiyoNaku>
-		$this->createOption('header','Header formatting','textarea','<ul>');
-		$this->createOption('comment','Comment formatting','textarea','<li><a href="%l" title="Posts to: %p">%u</a> says %c</li>');
-		$this->createOption('footer','Footer formatting','textarea','</ul>');
+		$this->createOption('option4',_LCOM_OPT4,'text','15');
+        $this->createOption('dateformat',_LCOM_DATEFORMAT,'text','Y-m-d H:i:s');
+		//</mod by PiyoPiyoNaku>
+		$this->createOption('header',_LCOM_OPTHEAD,'textarea','<ul>');
+		$this->createOption('comment',_LCOM_OPTFORMAT,'textarea','<li><a href="%l" title="Posts to: %p">%u</a> says %c</li>');
+		$this->createOption('footer',_LCOM_OPTFOOT,'textarea','</ul>');
 	}
 
 	// Make it compatible w/ Nucleus 3
@@ -67,33 +107,9 @@ class NP_LatestComments extends NucleusPlugin {
 		}
 	}
 
-	//<PiyoPiyoNaku's mod>
-	function PrintAlias(&$membername, &$aliasname) {
-		global $blog;
-
-		$sql = "SELECT mnumber FROM `nucleus_member` WHERE mname='" . $membername . "'";
-		$res = sql_query($sql);
-		$id = mysql_fetch_object($res);
-		$id = $id->mnumber;
-
-		if ($id) { 
-			$sql = "SELECT * FROM `nucleus_team` WHERE tmember='" . $id . "' AND tblog='" . $blog->getID() . "'";
-			$res = sql_query($sql);
-						
-			$alias = mysql_fetch_object($res);
-			$alias = $alias->alias;
-			
-			if ($alias)
-			{
-				$aliasname = $alias;
-			} 
-		}
-	} 
-	//end of <PiyoPiyoNaku's mod>
-
 	// skinvar plugin can have a blogname as second parameter
 	function doSkinVar($skinType) {
-		global $manager, $blog, $CONF;
+		global $manager, $blog, $CONF, $memberid;
 		$params = func_get_args();
 		$option1 = $this->getOption('option1');
 		$option2 = $this->getOption('option2');
@@ -107,6 +123,15 @@ class NP_LatestComments extends NucleusPlugin {
 		} else { 
 			$numberOfCharacters = 85; 
 		}
+		
+		//<mod by PiyoPiyoNaku>
+		$option4 = $this->getOption('option4');
+		if ($option4) { 
+			$numberOfName = $option4; 
+		} else { 
+			$numberOfName = 15;
+		}
+		//</mod by PiyoPiyoNaku>
 
 		// how many comments will be shown?
 		if ($params[1]) {
@@ -129,8 +154,22 @@ class NP_LatestComments extends NucleusPlugin {
 		else { 
 			$blogid = " WHERE cblog=".($params[2]); 
 		}
+		
+		//<mod by PiyoPiyoNaku>
+		if(!$params[3]) {
+			$memberonly = '';
+		}
+		else if ($params[3] == "member") {
+			if (!$blogid) {
+				$memberonly = ' WHERE cmember='. $memberid;
+			}
+			else {
+				$memberonly = ' AND cmember='. $memberid;
+			}
+		}
 
-		$query = "SELECT cuser, cbody, citem, cmember, ctime, cnumber FROM ".sql_table('comment')." ".$blogid." ORDER by ctime DESC LIMIT 0,".$numberOfComments;
+		$query = "SELECT cuser, cbody, citem, cmember, ctime, cnumber FROM ".sql_table('comment')." ".$blogid.$memberonly." ORDER by ctime DESC LIMIT 0,".$numberOfComments;
+		//</mod by PiyoPiyoNaku>
 
 		$comments = sql_query($query);
 
@@ -174,22 +213,32 @@ class NP_LatestComments extends NucleusPlugin {
 				// show short member names
 				if ($option1 == "yes") {
 					//<mod by PiyoPiyoNaku>
-					$membername = $mem->getDisplayName();
-					$this->PrintAlias($membername, $aliasname);
-					if ($aliasname) {
-						$myname = $aliasname;
-						$aliasname = "";
-					} else {
-						$myname = $membername; 
+					$myname = $mem->getDisplayName();
+					$pluginName = 'NP_Alias';
+					if ($manager->pluginInstalled($pluginName))
+					{
+						$pluginObject =& $manager->getPlugin($pluginName);
+						if ($pluginObject) {
+							$myname = $pluginObject->getAliasfromMemberName($myname);
+						}
 					}
-					//end of <mod by PiyoPiyoNaku>
+					//</mod by PiyoPiyoNaku>
 				}
 				// show real member names
 				else { 
 					$myname = $mem->getRealName(); 
 				}
-
 			}
+			
+			//<mod by PiyoPiyoNaku>
+			if ( strlen($myname) > $numberOfName ) {
+				$displayedName = substr($myname,0,$numberOfName);
+				$displayedName .= "...";
+			}
+			else {
+				$displayedName = $myname;
+			}
+			//</mod by PiyoPiyoNaku>
 
 			$itemlink = createItemLink($row->citem, '');
 
@@ -197,14 +246,13 @@ class NP_LatestComments extends NucleusPlugin {
 				$ctext .= "...";
 			}
 
-			$out .= str_replace("%u",$myname, $com_templ);
+			$out .= str_replace("%u", $displayedName, $com_templ);
 			$out = str_replace("%l", $IndexURL.$itemlink."#".$row->cnumber, $out);
 			$out = str_replace("%P", $IndexURL.$itemlink, $out);
 			$out = str_replace("%c", $ctext, $out);
-			//$out = str_replace("%t", $ctime, $out);
 			//<mod by PiyoPiyoNaku>
 			$out = str_replace("%t", date($this->getOption('dateformat'),strtotime($ctime)), $out);
-			//end of <mod by PiyoPiyoNaku>
+			//</mod by PiyoPiyoNaku>
 
 			if (strpos($out, "%p")) {
 				$citem = $manager->getItem($row->citem, 0, 0);
