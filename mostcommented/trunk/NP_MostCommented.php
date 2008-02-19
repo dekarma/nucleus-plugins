@@ -23,7 +23,7 @@ class NP_MostCommented extends NucleusPlugin {
 	function getName() 			{ return 'Most Commented';    }
 	function getAuthor()  		{ return 'TeRanEX, mod by Edmond Hui (admun)'; }
 	function getURL() 			{ return 'http://wiki.budts.be/nucleus:plugins:most_commented'; }
-	function getVersion() 		{ return '1.1a'; }
+	function getVersion() 		{ return '1.2'; }
 	function getDescription() 	{ return 'Shows a list of items with the most comments'; }
 
 	function supportsFeature($what) {
@@ -42,18 +42,19 @@ class NP_MostCommented extends NucleusPlugin {
 	}
 
 
-	function doSkinVar($skinType, $numOfPostsToShow) {
+	function doSkinVar($skinType, $numOfPostsToShow, $duration) {
 		global $blog;
 		if ($numOfPostsToShow <= 0) {
 			$numOfPostsToShow = 10;
 		}
 
-		$q = 	"SELECT i.inumber id, count(c.cnumber) num_of_comments, i.ititle title ".
-				"FROM ".sql_table('comment')." c, ".sql_table('item')." i ".
-				"WHERE c.cblog='" . $blog->blogid ."' AND c.citem = i.inumber ".
-				"GROUP BY i.inumber, i.ititle ".
-				"ORDER BY num_of_comments DESC ".
-				"LIMIT 0, ".intval($numOfPostsToShow);
+		$q = "SELECT i.inumber id, count(c.cnumber) num_of_comments, i.ititle title, i.itime itime FROM ".sql_table('comment')." c, ".sql_table('item')." i WHERE c.cblog='" . $blog->blogid ."' AND c.citem = i.inumber ";
+                        
+		if($duration !="") {
+			$q .= " AND DATE_SUB(CURDATE(),INTERVAL ".$duration." DAY) <= itime ";
+		}
+
+		$q .= "GROUP BY i.inumber, i.ititle ORDER BY num_of_comments DESC LIMIT 0, ".intval($numOfPostsToShow);
 
 		$res = sql_query($q);
 
