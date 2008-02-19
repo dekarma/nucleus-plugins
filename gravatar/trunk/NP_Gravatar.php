@@ -3,9 +3,9 @@
 class NP_Gravatar extends NucleusPlugin {
 
    /* ==========================================================================================
-	* Nucleus Gravatar Plugin 0.8
+	* Nucleus Gravatar Plugin 0.7
 	*
-	* Copyright 2004-2007 by Niels Leenheer
+	* Copyright 2004 by Niels Leenheer
 	* ==========================================================================================
 	* This program is free software and open source software; you can redistribute
 	* it and/or modify it under the terms of the GNU General Public License as
@@ -23,8 +23,8 @@ class NP_Gravatar extends NucleusPlugin {
 	* http://www.gnu.org/licenses/gpl.html
 	* ==========================================================================================
 	*
-    * 0.8   - Added gravatar class to the image
-    * 0.7   - Added support for Nucleus 3.3
+        * 0.8   - turn off alt attribute in avatar (admun)
+        * 0.7   - Added support for Nucleus 3.3
 	* 0.6   - Added the ability to specify a different size as a parameter of 
 	*         comment template variable
 	* 0.5   - Added option to change the gravatar URL from the plugin options
@@ -40,7 +40,7 @@ class NP_Gravatar extends NucleusPlugin {
 	}
 
 	function getAuthor()  {
-		return 'Niels Leenheer';
+		return 'Niels Leenheer, mod by admun (Edmond Hui)';
 	}
 
 	function getURL() {
@@ -48,12 +48,12 @@ class NP_Gravatar extends NucleusPlugin {
 	}
 
 	function getVersion() {
-		return '0.7';
+		return '0.8';
 	}
 
 	function getDescription() {
 		return 'Show gravatars next to each comment. For more information about '.
-			   'gravatars see www.gravatar.com.';
+			   'gravatars see site.gravatar.com.';
 	}
 	
 	function supportsFeature($feature) {
@@ -78,6 +78,7 @@ class NP_Gravatar extends NucleusPlugin {
 		$this->gravatarRating = $this->getOption('gravatarRating');
 		$this->gravatarBorder = $this->getOption('gravatarBorder');
 		$this->gravatarURL = $this->getOption('gravatarURL');
+                $this->showAlt = $this->getOption('showAlt');
 	}	
 	
 	function install() {
@@ -86,6 +87,7 @@ class NP_Gravatar extends NucleusPlugin {
     	$this->createOption('gravatarRating','Gravatar rating','select','R','G|G|PG|PG|R|R|X|X');
     	$this->createOption('gravatarBorder','Gravatar border','text','#000000');
     	$this->createOption('gravatarURL','Gravatar server','select','wide.gravatar.com','Default|wide.gravatar.com|Alternative|www.gravatar.com');
+    	$this->createOption('showAlt','Empty alt attribute in the image?','yesno','no');
 	}
 
 	function doTemplateCommentsVar(&$item, &$comment, $size = null) {
@@ -118,7 +120,7 @@ class NP_Gravatar extends NucleusPlugin {
 			if ($this->gravatarDefault != '')
 			{
 				$output .= "<img src='".$this->gravatarDefault;
-				$output .= "' width='".$size."' height='".$size."' alt='".$comment['user']."' class='gravatar' />";
+				$output .= "' width='".$size."' height='".$size."' alt='".$comment['user']."' />";
 			}
 		}
 		else
@@ -134,7 +136,14 @@ class NP_Gravatar extends NucleusPlugin {
 			if ($this->gravatarBorder != '')
 				$output .= "&amp;border=".$this->gravatarBorder;
 	
-			$output .= "' width='".$size."' height='".$size."' alt='".htmlentities($comment['user'])."' class='gravatar' />";
+                        if ($this->showAlt == "no")
+                        {
+			        $output .= "' width='".$size."' height='".$size."' alt='".htmlentities($comment['user'])."' />";
+                        }
+                        else
+                        {
+			        $output .= "' width='".$size."' height='".$size."' alt=''/>";
+                        }
 		}
 		
 		echo $output;
