@@ -198,5 +198,7 @@ define('_PROFILE_ADMIN_CREATEACCOUNT33X_HEAD',     'Sample Code for createaccoun
 define('_PROFILE_ADMIN_CREATEACCOUNT33X',     'createaccount.php');
 define('_PROFILE_ADMIN_CREATEACCOUNT33X_INTRO',    'If you would like new members to be able to complete certain profile fields during registration, you can list those fields in the &quot;registration&quot; field on the '._PROFILE_ADMIN_CONFIG.' tab.
         Then copy the php code below to a text file called createaccount.php and upload to your nucleus root directory. Make a backup of the original createaccount.php file that ships with Nucleus CMS. You must also enable member registration for your site.');
+// new in 2.20
+define('_PROFILE_LABEL_LASTUPDATED',     'Last Updated');
 
 ?>

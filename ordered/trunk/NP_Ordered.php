@@ -47,6 +47,12 @@
  * setcat is yes or no and indicates whether the catid variable should be set according to category of item, even if not set in uri
  */
 
+/* To Do:
+  *
+  * Make admin page forms handle all at once instead of one form per line
+  * Use the blog offset when getting random items, check if use it elsewhere and be sure to make that correct as well.
+  */
+  
 /* History:
  *
  * 1.25 - 11/19/2007 -

@@ -31,8 +31,8 @@ PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 
 
-	$disFieldCols = array('fvalidate','forder');
-	$disTypeCols = array('fvalidate');
+	$disFieldCols = array('fformatnull','forder');
+	$disTypeCols = array('fformatnull');
 	$disTypes = array();
 	$action_url = $CONF['ActionURL'];
 	$thispage = $CONF['PluginURL'] . "profile/index.php";
@@ -213,7 +213,7 @@ border-bottom: 1px solid #778;
 			$fname = '';
 			$ofname = $fname;
 			$row = array('fname'=>'','flabel'=>'','ftype'=>'text','required'=>'0','enabled'=>'1','flength'=>'0','fsize'=>'0',
-						'fformat'=>'','fwidth'=>'0','fheight'=>'0','ffilesize'=>'0','ffiletype'=>'','foptions'=>'','fvalidate'=>'');
+						'fformat'=>'','fwidth'=>'0','fheight'=>'0','ffilesize'=>'0','ffiletype'=>'','foptions'=>'','fformatnull'=>'');
 			$acttype = 'addfield';
 		}
 		echo '<div class="center">'."\n";
@@ -265,7 +265,7 @@ border-bottom: 1px solid #778;
 		echo "<td>"._PROFILE_ADMIN_HELP_SIZE."</td></tr>\n";
 		echo '<tr><td class="e">'.ucfirst(_PROFILE_FORMAT).'</td><td class="v"><input size="60" name="fformat" value="'.htmlentities($row['fformat']).'" />'."</td>";
 		echo "<td>"._PROFILE_ADMIN_HELP_FORMAT."</td></tr>\n";
-        echo '<tr><td class="e">'.ucfirst(_PROFILE_FORMATNULL).'</td><td class="v"><input size="60" name="fvalidate" value="'.htmlentities($row['fvalidate']).'" />'."</td>";
+        echo '<tr><td class="e">'.ucfirst(_PROFILE_FORMATNULL).'</td><td class="v"><input size="60" name="fformatnull" value="'.htmlentities($row['fformatnull']).'" />'."</td>";
 		echo "<td>"._PROFILE_ADMIN_HELP_FORMATNULL."</td></tr>\n";
 		echo '<tr><td class="e">'.ucfirst(_PROFILE_WIDTH).'</td><td class="v"><input size="60" name="fwidth" value="'.$row['fwidth'].'" />'."</td>";
 		echo "<td>"._PROFILE_ADMIN_HELP_WIDTH."</td></tr>\n";
@@ -419,7 +419,7 @@ border-bottom: 1px solid #778;
 		echo "<td>"._PROFILE_ADMIN_HELP_SIZE."</td></tr>\n";
 		echo '<tr><td class="e">'.ucfirst(_PROFILE_FORMAT).'</td><td class="v"><input size="60" name="fformat" value="'.$row['fformat'].'" />'."</td>";
 		echo "<td>"._PROFILE_ADMIN_HELP_FORMAT."</td></tr>\n";
-        echo '<tr><td class="e">'.ucfirst(_PROFILE_FORMATNULL).'</td><td class="v"><input size="60" name="fvalidate" value="'.htmlentities($row['fvalidate']).'" />'."</td>";
+        echo '<tr><td class="e">'.ucfirst(_PROFILE_FORMATNULL).'</td><td class="v"><input size="60" name="fformatnull" value="'.htmlentities($row['fformatnull']).'" />'."</td>";
 		echo "<td>"._PROFILE_ADMIN_HELP_FORMATNULL."</td></tr>\n";
 		echo '<tr><td class="e">'.ucfirst(_PROFILE_WIDTH).'</td><td class="v"><input size="60" name="fwidth" value="'.htmlentities($row['fwidth']).'" />'."</td>";
 		echo "<td>"._PROFILE_ADMIN_HELP_WIDTH."</td></tr>\n";

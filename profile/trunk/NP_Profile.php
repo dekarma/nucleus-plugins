@@ -137,7 +137,10 @@ History:
     * add tab on admin page for sample createaccount.php file for adding Profile fields to registration.
 [FUTURE]
   [v2.20 -- future release to require upgrade procedure (uninstall/reinstall)]
-    * rename fvalidate column to fformatnull. See all occurences of fvalidate in this file and in profile/index.php.
+    * keep lastUpdated field (date) - thanks david_again - 2.20.a01
+    * Make skinvar for memberlist using template to call in different fields from profile - thanks pheser
+    * rename fvalidate column to fformatnull. See all occurences of fvalidate in this file and in profile/index.php. - 2.20.a01
+    * investigate caching all profile values for a given member to lessen number of db queries per page.
 
 To do:
 * Offer some validation options for fields, i.e. isEmail, isURL, isList
@@ -155,7 +158,7 @@ class NP_Profile extends NucleusPlugin {
 	var $showEmail = 0;
     var $allowedProtocols = array("http","https"); // protocols that will be allowed in url fields
 	var $restrictView = 0;
-    var $specialfields = array('startform','endform','status','editlink','submitbutton','editprofile','closeform');
+    var $specialfields = array('startform','endform','status','editlink','submitbutton','editprofile','closeform','memberlist');
 
 	function getName() { return 'Profile Plugin'; }
 
@@ -163,7 +166,7 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://www.iai.com/';	}
 
-	function getVersion() {	return '2.19'; }
+	function getVersion() {	return '2.20.a01'; }
 
 	function getDescription() {
         if (!$this->_optionExists('email_public_deny') && $this->_optionExists('email_public')) {
@@ -227,7 +230,7 @@ class NP_Profile extends NucleusPlugin {
 					  `ffilesize` int(11) NOT NULL default '0',
 					  `ffiletype` varchar(255),
 					  `foptions` text,
-					  `fvalidate` varchar(255),
+					  `fformatnull` varchar(255),
 					  `forder` int(11) NOT NULL default '0',
                       `fdefault` varchar(255),
                       `fpublic` tinyint(2) NOT NULL default '0',
@@ -243,7 +246,7 @@ class NP_Profile extends NucleusPlugin {
 					  `ffilesize` int(11) NOT NULL default '0',
 					  `ffiletype` varchar(255),
 					  `foptions` text,
-					  `fvalidate` varchar(255),
+					  `fformatnull` varchar(255),
 					  PRIMARY KEY (`type`)) TYPE=MyISAM");
 
         sql_query("CREATE TABLE IF NOT EXISTS ". sql_table('plugin_profile_config').
@@ -297,6 +300,16 @@ class NP_Profile extends NucleusPlugin {
             sql_query("UPDATE ".sql_table('plugin_profile_fields')." SET fpublic=1 WHERE fname='nick' OR fname='url' OR fname='notes' OR fname='avatar'");
         }
 
+// this is to update tables from v 2.1x to 2.20
+		$pres = sql_query("SHOW COLUMNS FROM ".sql_table('plugin_profile_fields')." LIKE 'fvalidate'");
+        if (!mysql_num_rows($pres)) {
+            sql_query("ALTER TABLE ".sql_table('plugin_profile_fields')." CHANGE `fvalidate` `fformatnull` varchar(255)");
+        }
+		$pres = sql_query("SHOW COLUMNS FROM ".sql_table('plugin_profile_types')." LIKE 'fvalidate'");
+        if (!mysql_num_rows($pres)) {
+            sql_query("ALTER TABLE ".sql_table('plugin_profile_types')." CHANGE `fvalidate` `fformatnull` varchar(255)");
+        }
+
 // Fill the tables with default values if needed
 
 // fill the plugin_profile_fields table
@@ -314,7 +327,7 @@ class NP_Profile extends NucleusPlugin {
 				  'ffilesize'=>0,
 				  'ffiletype'=>'',
 				  'foptions'=>'',
-				  'fvalidate'=>'',
+				  'fformatnull'=>'',
 				  'forder'=>0,
                   'fdefault'=>'',
                   'fpublic'=>0),
@@ -331,7 +344,7 @@ class NP_Profile extends NucleusPlugin {
 				  'ffilesize'=>0,
 				  'ffiletype'=>'',
 				  'foptions'=>'',
-				  'fvalidate'=>'',
+				  'fformatnull'=>'',
 				  'forder'=>0,
                   'fdefault'=>'',
                   'fpublic'=>1),
@@ -348,7 +361,7 @@ class NP_Profile extends NucleusPlugin {
 				  'ffilesize'=>0,
 				  'ffiletype'=>'',
 				  'foptions'=>'',
-				  'fvalidate'=>'',
+				  'fformatnull'=>'',
 				  'forder'=>0,
                   'fdefault'=>'',
                   'fpublic'=>1),
@@ -365,7 +378,7 @@ class NP_Profile extends NucleusPlugin {
 				  'ffilesize'=>0,
 				  'ffiletype'=>'',
 				  'foptions'=>'',
-				  'fvalidate'=>'',
+				  'fformatnull'=>'',
 				  'forder'=>0,
                   'fdefault'=>'',
                   'fpublic'=>0),
@@ -382,7 +395,7 @@ class NP_Profile extends NucleusPlugin {
 				  'ffilesize'=>0,
 				  'ffiletype'=>'',
 				  'foptions'=>'',
-				  'fvalidate'=>'',
+				  'fformatnull'=>'',
 				  'forder'=>0,
                   'fdefault'=>'',
                   'fpublic'=>1),
@@ -399,7 +412,7 @@ class NP_Profile extends NucleusPlugin {
 				  'ffilesize'=>0,
 				  'ffiletype'=>'',
 				  'foptions'=>'',
-				  'fvalidate'=>'',
+				  'fformatnull'=>'',
 				  'forder'=>0,
                   'fdefault'=>'',
                   'fpublic'=>0),
@@ -416,7 +429,7 @@ class NP_Profile extends NucleusPlugin {
 				  'ffilesize'=>0,
 				  'ffiletype'=>'',
 				  'foptions'=>'',
-				  'fvalidate'=>'',
+				  'fformatnull'=>'',
 				  'forder'=>0,
                   'fdefault'=>'',
                   'fpublic'=>0),
@@ -433,7 +446,7 @@ class NP_Profile extends NucleusPlugin {
 				  'ffilesize'=>0,
 				  'ffiletype'=>'',
 				  'foptions'=>_PROFILE_MALE.'|m;'._PROFILE_FEMALE.'|f',
-				  'fvalidate'=>'',
+				  'fformatnull'=>'',
 				  'forder'=>0,
                   'fdefault'=>'',
                   'fpublic'=>0),
@@ -450,7 +463,7 @@ class NP_Profile extends NucleusPlugin {
 				  'ffilesize'=>0,
 				  'ffiletype'=>'',
 				  'foptions'=>'',
-				  'fvalidate'=>'',
+				  'fformatnull'=>'',
 				  'forder'=>0,
                   'fdefault'=>'',
                   'fpublic'=>0),
@@ -467,7 +480,7 @@ class NP_Profile extends NucleusPlugin {
 				  'ffilesize'=>15000,
 				  'ffiletype'=>'jpg;gif;png;jpeg',
 				  'foptions'=>'',
-				  'fvalidate'=>'',
+				  'fformatnull'=>'',
 				  'forder'=>0,
                   'fdefault'=>'',
                   'fpublic'=>1),
@@ -484,7 +497,7 @@ class NP_Profile extends NucleusPlugin {
 				  'ffilesize'=>0,
 				  'ffiletype'=>'',
 				  'foptions'=>'',
-				  'fvalidate'=>'',
+				  'fformatnull'=>'',
 				  'forder'=>0,
                   'fdefault'=>'',
                   'fpublic'=>0),
@@ -501,7 +514,7 @@ class NP_Profile extends NucleusPlugin {
 				  'ffilesize'=>0,
 				  'ffiletype'=>'',
 				  'foptions'=>'',
-				  'fvalidate'=>'',
+				  'fformatnull'=>'',
 				  'forder'=>0,
                   'fdefault'=>'',
                   'fpublic'=>0),
@@ -518,7 +531,7 @@ class NP_Profile extends NucleusPlugin {
 				  'ffilesize'=>0,
 				  'ffiletype'=>'',
 				  'foptions'=>'',
-				  'fvalidate'=>'',
+				  'fformatnull'=>'',
 				  'forder'=>0,
                   'fdefault'=>'',
                   'fpublic'=>0),
@@ -535,7 +548,7 @@ class NP_Profile extends NucleusPlugin {
 				  'ffilesize'=>0,
 				  'ffiletype'=>'',
 				  'foptions'=>'',
-				  'fvalidate'=>'',
+				  'fformatnull'=>'',
 				  'forder'=>0,
                   'fdefault'=>'',
                   'fpublic'=>0),
@@ -552,7 +565,7 @@ class NP_Profile extends NucleusPlugin {
 				  'ffilesize'=>0,
 				  'ffiletype'=>'',
 				  'foptions'=>'',
-				  'fvalidate'=>'',
+				  'fformatnull'=>'',
 				  'forder'=>0,
                   'fdefault'=>'',
                   'fpublic'=>0),
@@ -569,7 +582,7 @@ class NP_Profile extends NucleusPlugin {
 				  'ffilesize'=>0,
 				  'ffiletype'=>'',
 				  'foptions'=>'',
-				  'fvalidate'=>'',
+				  'fformatnull'=>'',
 				  'forder'=>0,
                   'fdefault'=>'',
                   'fpublic'=>0),
@@ -586,7 +599,7 @@ class NP_Profile extends NucleusPlugin {
 				  'ffilesize'=>0,
 				  'ffiletype'=>'',
 				  'foptions'=>'',
-				  'fvalidate'=>'',
+				  'fformatnull'=>'',
 				  'forder'=>0,
                   'fdefault'=>'',
                   'fpublic'=>0),
@@ -603,10 +616,27 @@ class NP_Profile extends NucleusPlugin {
 				  'ffilesize'=>0,
 				  'ffiletype'=>'',
 				  'foptions'=>_PROFILE_PRIVACYLEVEL_0.'|0;'._PROFILE_PRIVACYLEVEL_1.'|1;'._PROFILE_PRIVACYLEVEL_2.'|2',
-				  'fvalidate'=>'',
+				  'fformatnull'=>'',
 				  'forder'=>0,
                   'fdefault'=>'0',
-                  'fpublic'=>1)
+                  'fpublic'=>1),
+			array('fname'=>'lastupdated',
+				  'flabel'=>_PROFILE_LABEL_LASTUPDATED,
+				  'ftype'=>'date',
+				  'required'=>0,
+				  'enabled'=>1,
+				  'flength'=>12,
+				  'fsize'=>12,
+				  'fformat'=>'D-M-Y',
+				  'fwidth'=>0,
+				  'fheight'=>0,
+				  'ffilesize'=>0,
+				  'ffiletype'=>'',
+				  'foptions'=>'',
+				  'fformatnull'=>'',
+				  'forder'=>0,
+                  'fdefault'=>'',
+                  'fpublic'=>0)
 		);
 		foreach ($fields as $value) {
 			if (mysql_num_rows(sql_query("SELECT * FROM ".sql_table('plugin_profile_fields')." WHERE fname='".$value['fname']."'")) == 0) {
@@ -624,7 +654,7 @@ class NP_Profile extends NucleusPlugin {
 					.$value['ffilesize']."','"
 					.$value['ffiletype']."','"
 					.$value['foptions']."','"
-					.$value['fvalidate']."','"
+					.$value['fformatnull']."','"
                     .$value['forder']."','"
                     .$value['fdefault']."','"
 					.$value['fpublic']."')");
@@ -632,17 +662,17 @@ class NP_Profile extends NucleusPlugin {
 		}
 // fill in the plugin_profile_types table
 		$types = array(
-			array('type'=>'text','flength'=>255,'fsize'=>40,'fformat'=>'','fwidth'=>0,'fheight'=>0,'ffilesize'=>0,'ffiletype'=>'','foptions'=>'','fvalidate'=>''),
-			array('type'=>'textarea','flength'=>8,'fsize'=>35,'fformat'=>'','fwidth'=>0,'fheight'=>0,'ffilesize'=>5000,'ffiletype'=>'','foptions'=>'','fvalidate'=>''),
-			array('type'=>'mail','flength'=>60,'fsize'=>25,'fformat'=>'','fwidth'=>0,'fheight'=>0,'ffilesize'=>0,'ffiletype'=>'','foptions'=>'','fvalidate'=>''),
-			array('type'=>'file','flength'=>255,'fsize'=>25,'fformat'=>'','fwidth'=>64,'fheight'=>64,'ffilesize'=>50000,'ffiletype'=>'jpg;gif;png;jpeg','foptions'=>'','fvalidate'=>''),
-			array('type'=>'list','flength'=>255,'fsize'=>40,'fformat'=>'ul-profilelist','fwidth'=>0,'fheight'=>0,'ffilesize'=>0,'ffiletype'=>'','foptions'=>'','fvalidate'=>''),
-			array('type'=>'password','flength'=>25,'fsize'=>25,'fformat'=>'','fwidth'=>0,'fheight'=>0,'ffilesize'=>0,'ffiletype'=>'','foptions'=>'','fvalidate'=>''),
-			array('type'=>'dropdown','flength'=>255,'fsize'=>1,'fformat'=>'','fwidth'=>0,'fheight'=>0,'ffilesize'=>0,'ffiletype'=>'','foptions'=>'','fvalidate'=>''),
-			array('type'=>'date','flength'=>25,'fsize'=>25,'fformat'=>'D-M-Y','fwidth'=>0,'fheight'=>0,'ffilesize'=>0,'ffiletype'=>'','foptions'=>'','fvalidate'=>''),
-			array('type'=>'url','flength'=>255,'fsize'=>40,'fformat'=>'','fwidth'=>0,'fheight'=>0,'ffilesize'=>0,'ffiletype'=>'','foptions'=>'','fvalidate'=>''),
-			array('type'=>'number','flength'=>25,'fsize'=>25,'fformat'=>'','fwidth'=>0,'fheight'=>0,'ffilesize'=>0,'ffiletype'=>'','foptions'=>'','fvalidate'=>''),
-			array('type'=>'radio','flength'=>255,'fsize'=>25,'fformat'=>'','fwidth'=>0,'fheight'=>0,'ffilesize'=>0,'ffiletype'=>'','foptions'=>'','fvalidate'=>''),
+			array('type'=>'text','flength'=>255,'fsize'=>40,'fformat'=>'','fwidth'=>0,'fheight'=>0,'ffilesize'=>0,'ffiletype'=>'','foptions'=>'','fformatnull'=>''),
+			array('type'=>'textarea','flength'=>8,'fsize'=>35,'fformat'=>'','fwidth'=>0,'fheight'=>0,'ffilesize'=>5000,'ffiletype'=>'','foptions'=>'','fformatnull'=>''),
+			array('type'=>'mail','flength'=>60,'fsize'=>25,'fformat'=>'','fwidth'=>0,'fheight'=>0,'ffilesize'=>0,'ffiletype'=>'','foptions'=>'','fformatnull'=>''),
+			array('type'=>'file','flength'=>255,'fsize'=>25,'fformat'=>'','fwidth'=>64,'fheight'=>64,'ffilesize'=>50000,'ffiletype'=>'jpg;gif;png;jpeg','foptions'=>'','fformatnull'=>''),
+			array('type'=>'list','flength'=>255,'fsize'=>40,'fformat'=>'ul-profilelist','fwidth'=>0,'fheight'=>0,'ffilesize'=>0,'ffiletype'=>'','foptions'=>'','fformatnull'=>''),
+			array('type'=>'password','flength'=>25,'fsize'=>25,'fformat'=>'','fwidth'=>0,'fheight'=>0,'ffilesize'=>0,'ffiletype'=>'','foptions'=>'','fformatnull'=>''),
+			array('type'=>'dropdown','flength'=>255,'fsize'=>1,'fformat'=>'','fwidth'=>0,'fheight'=>0,'ffilesize'=>0,'ffiletype'=>'','foptions'=>'','fformatnull'=>''),
+			array('type'=>'date','flength'=>25,'fsize'=>25,'fformat'=>'D-M-Y','fwidth'=>0,'fheight'=>0,'ffilesize'=>0,'ffiletype'=>'','foptions'=>'','fformatnull'=>''),
+			array('type'=>'url','flength'=>255,'fsize'=>40,'fformat'=>'','fwidth'=>0,'fheight'=>0,'ffilesize'=>0,'ffiletype'=>'','foptions'=>'','fformatnull'=>''),
+			array('type'=>'number','flength'=>25,'fsize'=>25,'fformat'=>'','fwidth'=>0,'fheight'=>0,'ffilesize'=>0,'ffiletype'=>'','foptions'=>'','fformatnull'=>''),
+			array('type'=>'radio','flength'=>255,'fsize'=>25,'fformat'=>'','fwidth'=>0,'fheight'=>0,'ffilesize'=>0,'ffiletype'=>'','foptions'=>'','fformatnull'=>''),
 		);
 		foreach ($types as $value) {
 			if (mysql_num_rows(sql_query("SELECT * FROM ".sql_table('plugin_profile_types')." WHERE type='".$value['type']."'")) == 0) {
@@ -656,7 +686,7 @@ class NP_Profile extends NucleusPlugin {
 					.$value['ffilesize']."','"
 					.$value['ffiletype']."','"
 					.$value['foptions']."','"
-					.$value['fvalidate']."')");
+					.$value['fformatnull']."')");
 			}
 		}
 // fill in plugin_profile_config table
@@ -1029,6 +1059,9 @@ password
 							}
 						}
 						break;
+					case 'memberlist':
+						$this->displayMemberList($param2,intval($param3),$param4);
+						break;
 					case 'mail':
 						if ($this->restrictView && !$this->getFieldAttribute($param1,'fpublic')) break;
 						$result = sql_query("SELECT memail FROM ".sql_table(member)." WHERE mnumber=" . $pmid);
@@ -1042,7 +1075,7 @@ password
 							$safe_add_arr = $this->safeAddress($value);
 							$safe_add = $safe_add_arr['address'];
                             if ($value == '') {
-                                $formatnull = $this->getFieldAttribute($param1,'fvalidate');
+                                $formatnull = $this->getFieldAttribute($param1,'fformatnull');
                                 $label = $this->getFieldAttribute($param1,'flabel');
                                 $safe_add = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%','%ADDRESS%','%USERNAME%','%SITENAME%','%TLD%','%ADDRESS(R)%'), array($value,$label,$value,$param1,$pname,$pmid,$safe_add,$safe_add_arr['username'],$safe_add_arr['sitename'],$safe_add_arr['tld'],$safe_add_arr['address_r']), $formatnull);
                             }
@@ -1123,7 +1156,7 @@ password
 						}
 						else {
 							if ($value == '') {
-                                $formatnull = $this->getFieldAttribute($param1,'fvalidate');
+                                $formatnull = $this->getFieldAttribute($param1,'fformatnull');
                                 $label = $this->getFieldAttribute($param1,'flabel');
                                 $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $formatnull);
                                 $value = $fvalue;
@@ -1152,7 +1185,7 @@ password
 						}
 						else {
 							if ($value == '') {
-                                $formatnull = $this->getFieldAttribute($param1,'fvalidate');
+                                $formatnull = $this->getFieldAttribute($param1,'fformatnull');
                                 $label = $this->getFieldAttribute($param1,'flabel');
                                 $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $formatnull);
                                 $value = $fvalue;
@@ -1193,7 +1226,7 @@ password
 						}
 						else {
 							if ($value == '') {
-                                $formatnull = $this->getFieldAttribute($param1,'fvalidate');
+                                $formatnull = $this->getFieldAttribute($param1,'fformatnull');
                                 $label = $this->getFieldAttribute($param1,'flabel');
                                 $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $formatnull);
                                 $value = $fvalue;
@@ -1230,7 +1263,7 @@ password
 							}
 							else {
                                 if ($value == '') {
-                                    $formatnull = $this->getFieldAttribute($param1,'fvalidate');
+                                    $formatnull = $this->getFieldAttribute($param1,'fformatnull');
                                     $label = $this->getFieldAttribute($param1,'flabel');
                                     $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $formatnull);
                                     $value = $fvalue;
@@ -1257,7 +1290,7 @@ password
 							}
 							else {
                                 if ($value == '') {
-                                    $formatnull = $this->getFieldAttribute($param1,'fvalidate');
+                                    $formatnull = $this->getFieldAttribute($param1,'fformatnull');
                                     $label = $this->getFieldAttribute($param1,'flabel');
                                     $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $formatnull);
                                     $value = $fvalue;
@@ -1283,7 +1316,7 @@ password
 							}
 							else {
 								if ($value == '') {
-                                    $formatnull = $this->getFieldAttribute($param1,'fvalidate');
+                                    $formatnull = $this->getFieldAttribute($param1,'fformatnull');
                                     $label = $this->getFieldAttribute($param1,'flabel');
                                     $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $formatnull);
                                     $value = $fvalue;
@@ -1322,7 +1355,7 @@ password
 							}
 							else {
 								if ($value == '') {
-                                    $formatnull = $this->getFieldAttribute($param1,'fvalidate');
+                                    $formatnull = $this->getFieldAttribute($param1,'fformatnull');
                                     $label = $this->getFieldAttribute($param1,'flabel');
                                     $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $formatnull);
                                     $value = $fvalue;
@@ -1355,7 +1388,7 @@ password
 								$safe_add_arr = $this->safeAddress($value);
 								$safe_add = $safe_add_arr['address'];
 								if ($value == '') {
-                                    $formatnull = $this->getFieldAttribute($param1,'fvalidate');
+                                    $formatnull = $this->getFieldAttribute($param1,'fformatnull');
                                     $label = $this->getFieldAttribute($param1,'flabel');
                                     $safe_add = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%','%ADDRESS%','%USERNAME%','%SITENAME%','%TLD%','%ADDRESS(R)%'), array($value,$label,$value,$param1,$pname,$pmid,$safe_add,$safe_add_arr['username'],$safe_add_arr['sitename'],$safe_add_arr['tld'],$safe_add_arr['address_r']), $formatnull);
 								}
@@ -1410,7 +1443,7 @@ password
 								echo '<input name="' . $param1 . '" type="file" size="' . $size . '" />' . "\n";
 							}
 							else {
-                                $formatnull = $this->getFieldAttribute($param1,'fvalidate');
+                                $formatnull = $this->getFieldAttribute($param1,'fformatnull');
                                 if (strlen($value) >= 3) {
 									$value = $CONF['MediaURL'] . $value;
 								}
@@ -1714,7 +1747,7 @@ password
 							$datearr = explode('-',$date);
 							if ($date == '' || $date == '--') {
                                 $value = '';
-                                $formatnull = $this->getFieldAttribute($param1,'fvalidate');
+                                $formatnull = $this->getFieldAttribute($param1,'fformatnull');
                                 $label = $this->getFieldAttribute($param1,'flabel');
                                 $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $formatnull);
                                 $value = $fvalue;
@@ -1806,7 +1839,7 @@ password
 								'ffilesize'=>intPostVar('ffilesize'),
 								'ffiletype'=>str_replace(',',';',postVar('ffiletype')),
 								'foptions'=>postVar('foptions'),
-								'fvalidate'=>postVar('fvalidate'),
+								'fformatnull'=>postVar('fformatnull'),
                                 'forder'=>postVar('forder'),
                                 'fdefault'=>postVar('fdefault'),
                                 'fpublic'=>postVar('fpublic')
@@ -1846,7 +1879,7 @@ password
 								'ffilesize'=>intPostVar('ffilesize'),
 								'ffiletype'=>str_replace(',',';',postVar('ffiletype')),
 								'foptions'=>postVar('foptions'),
-								'fvalidate'=>postVar('fvalidate'),
+								'fformatnull'=>postVar('fformatnull'),
                                 'forder'=>postVar('forder'),
                                 'fdefault'=>postVar('fdefault'),
                                 'fpublic'=>postVar('fpublic')
@@ -1897,7 +1930,7 @@ password
 								'ffilesize'=>intPostVar('ffilesize'),
 								'ffiletype'=>str_replace(',',';',postVar('ffiletype')),
 								'foptions'=>postVar('foptions'),
-								'fvalidate'=>postVar('fvalidate')
+								'fformatnull'=>postVar('fformatnull')
 								);
 			if ($otype == $type) {
 				$this->updateTypeDef($type, $valuearray);
@@ -2233,7 +2266,7 @@ password
 												sql_query("UPDATE ".sql_table('plugin_profile')." SET value='$day-$month-$year' WHERE field='".addslashes($field)."' AND memberid=$memberid");
 											}
 											else {
-												sql_query("INSERT INTO ".sql_table('plugin_profile')." VALUES($memberid,'$field','$day-$month-$year','0')");
+												sql_query("INSERT INTO ".sql_table('plugin_profile')." VALUES($memberid,'".addslashes($field)."','$day-$month-$year','0')");
 											}
 										}
 										else {
@@ -2338,8 +2371,18 @@ password
 				}
 				$newparams .= "status=1";
 				$destURL = $pgparts[0].'?'.$newparams;
+				// stamp the lastUpdated field
+				$day = date('d');
+				$month = date('m');
+				$year = date('Y');
+				if(mysql_num_rows(sql_query("SELECT * FROM ".sql_table('plugin_profile')." WHERE memberid=$memberid AND field='lastupdated'")) > 0) {
+					sql_query("UPDATE ".sql_table('plugin_profile')." SET value='$day-$month-$year' WHERE field='lastupdated' AND memberid=$memberid");
+				}
+				else {
+					sql_query("INSERT INTO ".sql_table('plugin_profile')." VALUES($memberid,'lastupdated','$day-$month-$year','0')");
+				}
 			} // end if postvar('memberid') == $member->id
-
+											
 			if (!$noredirect) header("Location: " . $destURL);
 			break;
 		default:
@@ -2532,7 +2575,7 @@ password
 	}
 
 	function getFieldAttribute($field,$attribute) {
-		$query = "SELECT ".$attribute.", ftype FROM ".sql_table('plugin_profile_fields')." WHERE fname='".$field."'";
+		$query = "SELECT ".$attribute.", ftype FROM ".sql_table('plugin_profile_fields')." WHERE fname='".addslashes($field)."'";
 		$resa = sql_query($query);
 		if (mysql_num_rows($resa) == 0) return '';
 		$res = mysql_fetch_assoc($resa);
@@ -2750,5 +2793,9 @@ password
             }
         }
 	}
-}
+	
+	function displayMemberList($templatename='',$amount=0,$orderby='nick|ASC') {
+		
+		//$this->currentItem->$part = preg_replace_callback("#<\%LightBox2\((.*?)\)%\>#", array(&$this, 'parse'), $this->currentItem->$part);
+	}
 ?>
