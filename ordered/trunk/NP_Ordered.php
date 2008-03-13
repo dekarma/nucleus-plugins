@@ -55,6 +55,8 @@
   
 /* History:
  *
+ * 1.25.01 - 01/142008 -
+ *  * fix bug where blogname parameter in blog-type not working.
  * 1.25 - 11/19/2007 -
  *  * add random key to item type of skinvar
  *  * add random order option to blog type of skinvar
@@ -106,7 +108,7 @@ class NP_Ordered extends NucleusPlugin {
 
 	// version of the plugin
 	function getVersion() {
-		return '1.25';
+		return '1.25.01';
 	}
 
 	// a description to be shown on the installed plugins listing
