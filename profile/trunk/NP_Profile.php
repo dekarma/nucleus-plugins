@@ -140,14 +140,19 @@ History:
     * keep lastUpdated field (date) - thanks david_again - 2.20.a01
     * Make skinvar for memberlist using template to call in different fields from profile - thanks pheser
     * rename fvalidate column to fformatnull. See all occurences of fvalidate in this file and in profile/index.php. - 2.20.a01
-    * investigate caching all profile values for a given member to lessen number of db queries per page.
+    * investigate caching all profile values for a given member to lessen number of db queries per page. - 2.20.a02
+	  *  caching brought the number of queries for my test member page, displaying 18 profile fields from 233 queries to 19 queries
 
 To do:
 * Offer some validation options for fields, i.e. isEmail, isURL, isList
 * Make the Example Code in admin area dynamic based on enabled fields and field order (future parameter)
 
 */
-
+/*
+if (!is_array($profile_values)) $profile_values = array();
+if (!is_array($profile_types)) $profile_types = array();
+if (!is_array($profile_fields)) $profile_fields = array();
+*/
 
 class NP_Profile extends NucleusPlugin {
 
@@ -159,6 +164,10 @@ class NP_Profile extends NucleusPlugin {
     var $allowedProtocols = array("http","https"); // protocols that will be allowed in url fields
 	var $restrictView = 0;
     var $specialfields = array('startform','endform','status','editlink','submitbutton','editprofile','closeform','memberlist');
+	var $profile_types = array();
+	var $profile_fields = array();
+	var $profile_values = array();
+	var $member_values = array();
 
 	function getName() { return 'Profile Plugin'; }
 
@@ -166,7 +175,7 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://www.iai.com/';	}
 
-	function getVersion() {	return '2.20.a01'; }
+	function getVersion() {	return '2.20.a02'; }
 
 	function getDescription() {
         if (!$this->_optionExists('email_public_deny') && $this->_optionExists('email_public')) {
@@ -301,11 +310,11 @@ class NP_Profile extends NucleusPlugin {
         }
 
 // this is to update tables from v 2.1x to 2.20
-		$pres = sql_query("SHOW COLUMNS FROM ".sql_table('plugin_profile_fields')." LIKE 'fvalidate'");
+		$pres = sql_query("SHOW COLUMNS FROM ".sql_table('plugin_profile_fields')." LIKE 'fformatnull'");
         if (!mysql_num_rows($pres)) {
             sql_query("ALTER TABLE ".sql_table('plugin_profile_fields')." CHANGE `fvalidate` `fformatnull` varchar(255)");
         }
-		$pres = sql_query("SHOW COLUMNS FROM ".sql_table('plugin_profile_types')." LIKE 'fvalidate'");
+		$pres = sql_query("SHOW COLUMNS FROM ".sql_table('plugin_profile_types')." LIKE 'fformatnull'");
         if (!mysql_num_rows($pres)) {
             sql_query("ALTER TABLE ".sql_table('plugin_profile_types')." CHANGE `fvalidate` `fformatnull` varchar(255)");
         }
@@ -795,6 +804,27 @@ password
 		$this->showEmail = $this->getOption('email_public');
 		$this->pwd_min_length = intval($this->getOption('pwd_min_length'));
 		$this->pwd_complexity = intval($this->getOption('pwd_complexity'));
+
+		$query = "SELECT * FROM ".sql_table('plugin_profile_types');
+		$res = sql_query($query);
+		while ($row = mysql_fetch_assoc($res)) {
+			$typearr = array();
+			foreach ($row as $key=>$value) {
+				$typearr[$key] = $value;
+			}
+			$this->profile_types[$row['type']] = $typearr;
+		}
+
+		$query = "SELECT * FROM ".sql_table('plugin_profile_fields');
+		$res = sql_query($query);
+		while ($row = mysql_fetch_assoc($res)) {
+			$typearr = array();
+			foreach ($row as $key=>$value) {
+				$typearr[$key] = $value;
+			}
+			$this->profile_fields[$row['fname']] = $typearr;
+		}
+		//print_r($this->profile_fields);
 	}
 
 	function hasAdminArea() { return 1; }
@@ -961,7 +991,7 @@ password
 
 				if ($param2 == 'label') {
 					$isreq = (bool)$this->getFieldAttribute($param1,'required');
-					$bstyle = '';
+					h$bstyle = '';
 					$estyle = '';
 					if ($isEdit && $isreq) {
 						$bstyle = $this->req_emp['start'];
@@ -972,6 +1002,17 @@ password
 				else {
 					$this->restrictView = $this->restrictViewer();
                     $formfieldname = $formfieldprefix.$param1;
+					if ($pmid > 0 && $pmid != 999999999) {
+						if (!array_key_exists($pmid,$this->member_values)) {
+							// fill the profile_values variable for this member
+							$result = sql_query("SELECT * FROM ".sql_table('member')." WHERE mnumber=$pmid");
+							while ($memvals = mysql_fetch_assoc($result)) {
+								foreach ($memvals as $key=>$value) {
+									$this->member_values[$pmid][$key] = $value;
+								}
+							}
+						}
+					}
 					switch($param1) {
 					case 'password':
 						if ($isEdit) {
@@ -1064,8 +1105,9 @@ password
 						break;
 					case 'mail':
 						if ($this->restrictView && !$this->getFieldAttribute($param1,'fpublic')) break;
-						$result = sql_query("SELECT memail FROM ".sql_table(member)." WHERE mnumber=" . $pmid);
-						$value = mysql_result($result,'memail');
+						//$result = sql_query("SELECT memail FROM ".sql_table(member)." WHERE mnumber=" . $pmid);
+						//$value = mysql_result($result,'memail');
+						$value = $this->member_values[$pmid]['memail'];
 						$size = $this->getFieldAttribute($param1,'fsize');
 						$maxlength = $this->getFieldAttribute($param1,'flength');
 						if ($param2 != 'show' && $isEdit) {
@@ -1124,8 +1166,9 @@ password
 						}
 						break;
 					case 'nick':
-						$result = sql_query("SELECT mname FROM ".sql_table(member)." WHERE mnumber=" . $pmid);
-						$value = mysql_result($result,'mname');
+						//$result = sql_query("SELECT mname FROM ".sql_table(member)." WHERE mnumber=" . $pmid);
+						//$value = mysql_result($result,'mname');
+						$value = $this->member_values[$pmid]['mname'];
 						$size = $this->getFieldAttribute($param1,'fsize');
 						$maxlength = $this->getFieldAttribute($param1,'flength');
 						if ($param2 != 'show' && $isEdit) {
@@ -1147,8 +1190,9 @@ password
 						break;
 					case 'realname':
 						if ($this->restrictView && !$this->getFieldAttribute($param1,'fpublic')) break;
-						$result = sql_query("SELECT mrealname FROM ".sql_table(member)." WHERE mnumber=" . $pmid);
-						$value = mysql_result($result,'mrealname');
+						//$result = sql_query("SELECT mrealname FROM ".sql_table(member)." WHERE mnumber=" . $pmid);
+						//$value = mysql_result($result,'mrealname');
+						$value = $this->member_values[$pmid]['mrealname'];
 						$size = $this->getFieldAttribute($param1,'fsize');
 						$maxlength = $this->getFieldAttribute($param1,'flength');
 						if ($param2 != 'show' && $isEdit) {
@@ -1176,8 +1220,9 @@ password
 						break;
 					case 'url':
 						if ($this->restrictView && !$this->getFieldAttribute($param1,'fpublic')) break;
-						$result = sql_query("SELECT murl FROM ".sql_table(member)." WHERE mnumber=" . $pmid);
-						$value = mysql_result($result,'murl');
+						//$result = sql_query("SELECT murl FROM ".sql_table(member)." WHERE mnumber=" . $pmid);
+						//$value = mysql_result($result,'murl');
+						$value = $this->member_values[$pmid]['murl'];
 						$size = $this->getFieldAttribute($param1,'fsize');
 						$maxlength = $this->getFieldAttribute($param1,'flength');
 						if ($param2 != 'show' && $isEdit) {
@@ -1217,8 +1262,9 @@ password
 						break;
 					case 'notes':
 						if ($this->restrictView && !$this->getFieldAttribute($param1,'fpublic')) break;
-						$result = sql_query("SELECT mnotes FROM ".sql_table(member)." WHERE mnumber=" . $pmid);
-						$value = mysql_result($result,'mnotes');
+						//$result = sql_query("SELECT mnotes FROM ".sql_table(member)." WHERE mnumber=" . $pmid);
+						//$value = mysql_result($result,'mnotes');
+						$value = $this->member_values[$pmid]['mnotes'];
 						$rows = $this->getFieldAttribute($param1,'flength');
 						$cols = $this->getFieldAttribute($param1,'fsize');
 						if ($param2 != 'show' && $isEdit) {
@@ -1250,8 +1296,9 @@ password
 						break;
 					default:
 						if ($this->restrictView && !$this->getFieldAttribute($param1,'fpublic')) break;
-                        $pobj = mysql_fetch_object(sql_query('SELECT mname as result FROM '.sql_table(member).' WHERE mnumber=' . $pmid));
-                        $pname = $pobj->result;
+                        //$pobj = mysql_fetch_object(sql_query('SELECT mname as result FROM '.sql_table(member).' WHERE mnumber=' . $pmid));
+                        //$pname = $pobj->result;
+						$pname = $this->member_values[$pmid]['mname'];
 						$type = $this->getFieldAttribute($param1,'ftype');
 						switch($type) {
 						case 'text':
@@ -2382,7 +2429,7 @@ password
 					sql_query("INSERT INTO ".sql_table('plugin_profile')." VALUES($memberid,'lastupdated','$day-$month-$year','0')");
 				}
 			} // end if postvar('memberid') == $member->id
-											
+
 			if (!$noredirect) header("Location: " . $destURL);
 			break;
 		default:
@@ -2417,18 +2464,20 @@ password
 		else {
 			$existing = $this->fieldExists($fieldname);
 			if ($existing) {
-				$fieldname = addslashes($fieldname);
-				$where = " WHERE fname='$fieldname'";
+				//$fieldname = $fieldname;
+				$where = " WHERE fname='".addslashes($fieldname)."'";
 				$pquery = "UPDATE ".sql_table('plugin_profile_fields')." SET ";
 				$i = 0;
 				foreach ($valuearray as $key=>$value) {
 					if ($key != 'fname') {
 						$pquery .= ($i == 0 ? '' : ', ')."$key='".addslashes($value)."'";
 						$i += 1;
+						//$this->profile_fields[$fieldname][$key] = $value;
 					}
 				}
 				$pquery .= $where;
 				sql_query($pquery);
+
 			}
 		}
 	}
@@ -2517,6 +2566,7 @@ password
 			return 0;
 		}
 		else {
+			if (array_key_exists($fieldname,$this->profile_fields)) return 1;
 			return mysql_num_rows(sql_query("SELECT * FROM ".sql_table('plugin_profile_fields')." WHERE fname='".addslashes($fieldname)."'"));
 		}
 	}
@@ -2527,7 +2577,8 @@ password
 			return 0;
 		}
 		else {
-			return mysql_num_rows(sql_query("SELECT * FROM ".sql_table('plugin_profile_types')." WHERE type='".addslashes($typename)."'"));
+			if (array_key_exists($typename,$this->profile_types)) return 1;
+			else return mysql_num_rows(sql_query("SELECT * FROM ".sql_table('plugin_profile_types')." WHERE type='".addslashes($typename)."'"));
 		}
 	}
 
@@ -2539,15 +2590,49 @@ password
 
 	function getValue($memberid, $field) {
         $memberid = intval($memberid);
-		$result = sql_query("SELECT value FROM ".sql_table('plugin_profile')." WHERE memberid=$memberid AND field='".addslashes($field)."' ORDER BY torder ASC");
-		$value = '';
-		if (mysql_num_rows($result) > 0) {
+		if (!array_key_exists($memberid,$this->profile_values)) {
+			// fill the profile_values variable for this member
+			$result = sql_query("SELECT field,value,torder FROM ".sql_table('plugin_profile')." WHERE memberid=$memberid ORDER BY field ASC, torder ASC");
 			while ($valobj = mysql_fetch_object($result)) {
-				$value .= $valobj->value;
+				if ($valobj->torder < 1) {
+					$this->profile_values[$memberid][$valobj->field] = $valobj->value;
+				}
+				else {
+					$this->profile_values[$memberid][$valobj->field] .= $valobj->value;
+				}
 			}
 		}
+
+		/*
+		if (array_key_exists($memberid,$this->profile_values)) {
+			$value = $this->profile_values[$memberid][$field];
+		}
+		else {
+			// fill the profile_values variable for this member
+			$result = sql_query("SELECT field,value,torder FROM ".sql_table('plugin_profile')." WHERE memberid=$memberid ORDER BY field ASC, torder ASC");
+			while ($valobj = mysql_fetch_object($result)) {
+				if ($valobj->torder < 1) {
+					$this->profile_values[$memberid][$valobj->field] = $valobj->value;
+				}
+				else {
+					$this->profile_values[$memberid][$valobj->field] .= $valobj->value;
+				}
+			}
+
+			//get the cuurent value for display
+			//$result = sql_query("SELECT value FROM ".sql_table('plugin_profile')." WHERE memberid=$memberid AND field='".addslashes($field)."' ORDER BY torder ASC");
+			//$value = '';
+			//if (mysql_num_rows($result) > 0) {
+			//	while ($valobj = mysql_fetch_object($result)) {
+			//		$value .= $valobj->value;
+			//	}
+			//}
+
+		}*/
+		$value = $this->profile_values[$memberid][$field];
 		if ($value == '' && $memberid == 999999999) {
 			$value = postVar($field);
+			$this->profile_values[$memberid][$field] = $value;
 		}
 		return $value;
 	}
@@ -2575,16 +2660,27 @@ password
 	}
 
 	function getFieldAttribute($field,$attribute) {
-		$query = "SELECT ".$attribute.", ftype FROM ".sql_table('plugin_profile_fields')." WHERE fname='".addslashes($field)."'";
-		$resa = sql_query($query);
-		if (mysql_num_rows($resa) == 0) return '';
-		$res = mysql_fetch_assoc($resa);
-		$result = $res[$attribute];
-		$field_type = $res['ftype'];
+		if (array_key_exists($field,$this->profile_fields)) {
+			$result = $this->profile_fields[$field][$attribute];
+			$field_type = $this->profile_fields[$field]['ftype'];
+		}
+		else {
+			$query = "SELECT ".$attribute.", ftype FROM ".sql_table('plugin_profile_fields')." WHERE fname='".addslashes($field)."'";
+			$resa = sql_query($query);
+			if (mysql_num_rows($resa) == 0) return '';
+			$res = mysql_fetch_assoc($resa);
+			$result = $res[$attribute];
+			$field_type = $res['ftype'];
+		}
 		if (in_array($result, array('','0')) && !in_array($attribute, array('fname','flabel','ftype','required','enabled','fdefault','fpublic'))) {
-			$query = "SELECT ".$attribute." FROM ".sql_table('plugin_profile_types')." WHERE type='".$field_type."'";
-			$res = sql_query($query);
-			$result = mysql_result($res,0);
+			if (array_key_exists($field_type,$this->profile_types)) {
+				$result = $this->profile_types[$field_type][$attribute];
+			}
+			else {
+				$query = "SELECT ".$attribute." FROM ".sql_table('plugin_profile_types')." WHERE type='".$field_type."'";
+				$res = sql_query($query);
+				$result = mysql_result($res,0);
+			}
 		}
 		return $result;
 	}
@@ -2768,14 +2864,21 @@ password
     }
 
     function getEnabledFields() {
-        $enabledfields = array();
-        $query = "SELECT `fname` FROM ".sql_table('plugin_profile_fields')." WHERE `enabled`=1 ORDER BY `flabel` ASC";
-        $result = sql_query($query);
-        if (mysql_num_rows($result) > 0 ) {
-            while ($row = mysql_fetch_assoc($result)) {
-                $enabledfields[] = $row['fname'];
-            }
-        }
+		$enabledfields = array();
+		if (!empty($this->profile_fields)) {
+			foreach ($this->profile_fields as $key=>$value) {
+				if ($value['enabled'] == 1) $enabledfields[] = $key;
+			}
+		}
+		else {
+			$query = "SELECT `fname` FROM ".sql_table('plugin_profile_fields')." WHERE `enabled`=1 ORDER BY `flabel` ASC";
+			$result = sql_query($query);
+			if (mysql_num_rows($result) > 0 ) {
+				while ($row = mysql_fetch_assoc($result)) {
+					$enabledfields[] = $row['fname'];
+				}
+			}
+		}
         return $enabledfields;
     }
 
@@ -2793,9 +2896,10 @@ password
             }
         }
 	}
-	
+
 	function displayMemberList($templatename='',$amount=0,$orderby='nick|ASC') {
-		
+
 		//$this->currentItem->$part = preg_replace_callback("#<\%LightBox2\((.*?)\)%\>#", array(&$this, 'parse'), $this->currentItem->$part);
 	}
+}
 ?>
