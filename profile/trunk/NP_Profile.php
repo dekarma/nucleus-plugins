@@ -991,7 +991,7 @@ password
 
 				if ($param2 == 'label') {
 					$isreq = (bool)$this->getFieldAttribute($param1,'required');
-					h$bstyle = '';
+					$bstyle = '';
 					$estyle = '';
 					if ($isEdit && $isreq) {
 						$bstyle = $this->req_emp['start'];
