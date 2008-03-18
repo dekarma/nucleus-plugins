@@ -219,4 +219,6 @@ define('_PROFILE_ADMIN_HELP_TEMPLATE_BODY',     'Enter the html code and variabl
 		Valid variables are %memberlink%, %memberid%, and %fieldname%, where fieldname is the value of any field defined in your installation of NP_Profile.');
 define('_PROFILE_ACTION_DUPLICATE_TEMPLATE',	'This template name already exists. The name must be unique.');
 define('_PROFILE_ADMIN_TEMPLATES_ADD',		'Add New Template');
+define('_PROFILE_NEXT',		'&gt;&gt;');
+define('_PROFILE_PREV',		'&lt;&lt;');
 ?>

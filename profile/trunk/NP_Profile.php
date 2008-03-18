@@ -136,10 +136,10 @@ History:
     * fix headers already sent errors when user registering from createaccount.php in version 3.3x
     * add tab on admin page for sample createaccount.php file for adding Profile fields to registration.
   v2.20 -- future release to require upgrade procedure (uninstall/reinstall)]
-    * keep lastUpdated field (date) - thanks david_again - 2.20.a01
-    * Make skinvar for memberlist using template to call in different fields from profile - thanks pheser - 2.20.a03
-    * rename fvalidate column to fformatnull. See all occurences of fvalidate in this file and in profile/index.php. - 2.20.a01
-    * investigate caching all profile values for a given member to lessen number of db queries per page. - 2.20.a02
+    * keep lastUpdated field (date) - thanks david_again 
+    * Make skinvar for memberlist using template to call in different fields from profile - thanks pheser
+    * rename fvalidate column to fformatnull.
+    * caching all profile values for a given member to lessen number of db queries per page.
 	  *  caching brought the number of queries for my test member page, displaying 18 profile fields from 233 queries to 19 queries
 
 [FUTURE]
@@ -159,13 +159,14 @@ class NP_Profile extends NucleusPlugin {
 	var $showEmail = 0;
     var $allowedProtocols = array("http","https"); // protocols that will be allowed in url fields
 	var $restrictView = 0;
-    var $specialfields = array('startform','endform','status','editlink','submitbutton','editprofile','closeform','memberlist');
+    var $specialfields = array('startform','endform','status','editlink','submitbutton','editprofile','closeform','memberlist','memberlistpager');
 	var $profile_types = array();
 	var $profile_fields = array();
 	var $profile_values = array();
 	var $member_values = array();
 	//var $profile_templates = array();
 	var $template_types = array('memberlist');
+	var $mllist_count = array(0,0);
 
 	function getName() { return 'Profile Plugin'; }
 
@@ -315,14 +316,39 @@ class NP_Profile extends NucleusPlugin {
         }
 
 // this is to update tables from v 2.1x to 2.20
-		$pres = sql_query("SHOW COLUMNS FROM ".sql_table('plugin_profile_fields')." LIKE 'fformatnull'");
-        if (!mysql_num_rows($pres)) {
-            sql_query("ALTER TABLE ".sql_table('plugin_profile_fields')." CHANGE `fvalidate` `fformatnull` varchar(255)");
-        }
-		$pres = sql_query("SHOW COLUMNS FROM ".sql_table('plugin_profile_types')." LIKE 'fformatnull'");
-        if (!mysql_num_rows($pres)) {
-            sql_query("ALTER TABLE ".sql_table('plugin_profile_types')." CHANGE `fvalidate` `fformatnull` varchar(255)");
-        }
+		if ($this->getDbVersion() < 220) {
+			$pres = sql_query("SHOW COLUMNS FROM ".sql_table('plugin_profile_fields')." LIKE 'fformatnull'");
+			if (!mysql_num_rows($pres)) {
+				sql_query("ALTER TABLE ".sql_table('plugin_profile_fields')." CHANGE `fvalidate` `fformatnull` varchar(255)");
+			}
+			$pres = sql_query("SHOW COLUMNS FROM ".sql_table('plugin_profile_types')." LIKE 'fformatnull'");
+			if (!mysql_num_rows($pres)) {
+				sql_query("ALTER TABLE ".sql_table('plugin_profile_types')." CHANGE `fvalidate` `fformatnull` varchar(255)");
+			}
+			// change format of date storage
+			$pres = sql_query("SELECT * FROM ".sql_table('plugin_profile')." WHERE field IN(SELECT fname FROM "
+					.sql_table('plugin_profile_fields')." WHERE ftype='date')");
+			if (mysql_num_rows($pres)) {
+				while($row = mysql_fetch_assoc($pres)) {
+					$date = $row['value'];
+					$membid = $row['memberid'];
+					$field = $row['field'];
+					if (strpos($date,'-') === False) {
+						$date = $this->_mySubstr($date,0,2).'-'.$this->_mySubstr($date,2,2).'-'.$this->_mySubstr($date,4,4);
+					}
+					$datearr = explode('-',$date);
+					$day = $datearr[0];
+					$month = $datearr[1];
+					$year = $datearr[2];
+					if (strlen($month) == 1) $month = "0".$month;
+					if (strlen($day) == 1) $day = "0".$day;
+					$newdate = "$year-$month-$day";
+					if (strlen($day) <= 2 && strlen($year) == 4)
+						sql_query("UPDATE ".sql_table('plugin_profile')." SET value='$newdate' WHERE memberid=$membid AND field='$field'");
+				}
+			}
+			$this->setDbVersion(220);
+		}
 
 // Fill the tables with default values if needed
 
@@ -986,6 +1012,7 @@ password
 					if (!is_numeric($param4)) {
                         $param4 = $this->_getMemberIdFromName($param4);
 					}
+
 					if (intval($param4) > 0) {
 						$pmid = intval($param4);
 					}
@@ -999,7 +1026,7 @@ password
 						$pmid = $this->_getAuthorFromItemId($tiid);
 					}
 					else {
-						if (!$param2 == 'label') {
+						if (($param2 != 'label') && (!in_array($param1,$this->specialfields)) ) {
 							return;
 						}
 					}
@@ -1023,6 +1050,7 @@ password
 					echo $bstyle.$this->getFieldAttribute($param1,'flabel').$estyle;
 				}
 				else {
+
 					$this->restrictView = $this->restrictViewer();
                     $formfieldname = $formfieldprefix.$param1;
 					if ($pmid > 0 && $pmid != 999999999) {
@@ -1125,6 +1153,9 @@ password
 						break;
 					case 'memberlist':
 						$this->displayMemberList($param2,intval($param3),$rawparam4);
+						break;
+					case 'memberlistpager':
+						$this->displayMemberListPager();
 						break;
 					case 'mail':
 						if ($this->restrictView && !$this->getFieldAttribute($param1,'fpublic')) break;
@@ -1857,9 +1888,9 @@ password
                                 $format = $formatarr[0];
                             }
 							else {
-								$day = $datearr[0];
+								$year = $datearr[0];
 								$month = $datearr[1];
-								$year = $datearr[2];
+								$day = $datearr[2];
                                 if ($day == '') $day = date('d');
                                 if ($month == '') $month = date('m');
                                 if ($year == '') $year = date('Y');
@@ -2425,12 +2456,14 @@ password
                                         if ($month == '') $month = date('m');
                                         if ($year == '') $year = date('Y');
 
-										if (($year > 1850) && ($year <= date("Y")) && ($month > 0) && ($month < 13) && ($day > 0) && ($day < 32)) {
+										if (($year > 1000) && ($year <= (date("Y") + 200)) && ($month > 0) && ($month < 13) && ($day > 0) && ($day < 32)) {
 											if(mysql_num_rows(sql_query("SELECT * FROM ".sql_table('plugin_profile')." WHERE memberid=$memberid AND field='".addslashes($field)."'")) > 0) {
-												sql_query("UPDATE ".sql_table('plugin_profile')." SET value='$day-$month-$year' WHERE field='".addslashes($field)."' AND memberid=$memberid");
+												if (strlen($month) == 1) $month = "0".$month;
+												if (strlen($day) == 1) $day = "0".$day;
+												sql_query("UPDATE ".sql_table('plugin_profile')." SET value='$year-$month-$day' WHERE field='".addslashes($field)."' AND memberid=$memberid");
 											}
 											else {
-												sql_query("INSERT INTO ".sql_table('plugin_profile')." VALUES($memberid,'".addslashes($field)."','$day-$month-$year','0')");
+												sql_query("INSERT INTO ".sql_table('plugin_profile')." VALUES($memberid,'".addslashes($field)."','$year-$month-$day','0')");
 											}
 										}
 										else {
@@ -3079,11 +3112,19 @@ password
 //echo "$templatename <br /><br />";
 //echo "$amount <br /><br />";
 //echo "$orderby <br /><br />";
-		$templatebody = quickQuery("SELECT tbody as result FROM ".sql_table('plugin_profile_templates')." WHERE ttype='memberlist' AND tname='".addslashes(trim($templatename))."'");
-//echo $templatebody;
+		
+		$templatebody = quickQuery("SELECT tbody as result FROM ".sql_table('plugin_profile_templates')." WHERE ttype='memberlist' AND tname='".addslashes(trim($templatename))."'");	
 		if ($templatebody == '') return;
+//echo $templatebody;
+		
 		$amount = intval($amount);
-		if ($amount > 1) $limit = " LIMIT $amount";
+		$currentPage = intPostVar('profile_ml_page');
+		if ($currentPage < 1) $currentPage = 1;
+		if ($amount > 1) {
+			if ($currentPage == 1) $offset = 0;
+			else $offset = ($currentPage - 1) * $amount;
+			$limit = " LIMIT $offset,$amount";
+		}
 		$ordarr = explode('|',trim($orderby));
 //print_r($ordarr);
 //echo strtoupper($ordarr[0]);
@@ -3123,6 +3164,8 @@ password
 		$query .= $limit;
 //echo "$query <br /><br />";
 		$result = sql_query($query);
+		$this->mllist_count[0] = $amount;
+		$this->mllist_count[1] = mysql_num_rows($result);
 		while ($row = mysql_fetch_assoc($result)) {
 //echo $row['mid']."<br /><br />";
 			$mid = intval($row['mid']);
@@ -3145,6 +3188,41 @@ print_r($toarr);
 echo "<br /><br />\n";
 */
 			echo str_replace($fromarr,$toarr,$templatebody);
+		}
+	}
+	
+	function displayMemberListPager() {
+		$currentPage = intPostVar('profile_ml_page');
+		if ($currentPage < 1) $currentPage = 1;
+		if ($this->mllist_count[0] > 0) {
+			echo '<div class="pagerform">'."\n";
+			if ($currentPage > 1) {
+				echo '<form enctype="multipart/form-data" name="profilepagerprev" action="" method="post" style="display:inline">' . "\n";
+				echo '<input type="hidden" name="profile_ml_page" value="'.($currentPage - 1).'" />';
+				echo '<input type="submit" name="prev" value="'._PROFILE_PREV.'" />' . "\n";
+				echo "</form>\n";
+				//echo "&nbsp;";
+			}
+			if ($this->mllist_count[1] == $this->mllist_count[0]) {
+				echo '<form enctype="multipart/form-data" name="profilepagernext" action="" method="post" style="display:inline">' . "\n";
+				echo '<input type="hidden" name="profile_ml_page" value="'.($currentPage + 1).'" />';
+				echo '<input type="submit" name="next" value="'._PROFILE_NEXT.'" />' . "\n";
+				echo "</form>\n";
+			}		
+			echo "</div>\n";
+		}
+	}
+	
+	function getDbVersion() {
+		return intval(quickQuery("SELECT cvalue as result FROM ".sql_table('plugin_profile_config')." WHERE csetting='dbversion'"));
+	}
+	
+	function setDbVersion($version){
+		$version = intval($version);
+		if (!$version) return;
+		else {
+			sql_query("DELETE FROM ".sql_table('plugin_profile_config')." WHERE csetting='dbversion'");
+			sql_query("INSERT INTO ".sql_table('plugin_profile_config')." VALUES('dbversion','$version')");
 		}
 	}
 }

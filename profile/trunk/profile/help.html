@@ -25,8 +25,9 @@
 <p>Version 2 has changed much from version 1, including additional database tables and plugin options. This requires that version 1 be uninstalled before version 2 can be installed. Please follow this procedure to upgrade to version 2 from version 1.</p>
 <p>Upgrading from version 2.01 to 2.02+ also requires you follow this procedure, but step 2 can be skipped.</p>
 <p>Upgrading from version 2.02+ to 2.03+ does not require any special procedure. Simply copy the new files over the old files.</p>
-<p>Uppgrading from version 2.0x to 2.1x requires you follow the this procedure, but step 2 can be skipped.</p>
+<p>Uppgrading from version 2.0x to 2.1x requires you follow this procedure, but step 2 can be skipped.</p>
 <p>Upgrading from version 2.1x to 2.1x does not require any special procedure. Simply copy the new files over the old files.</p>
+<p><b>Uppgrading from version 2.0x or 2.1x to 2.2x requires you follow this procedure, but step 2 can be skipped.</b></p>
 <ol>
 <li>Backup your database.</li>
 <li>Make a copy of your existing nucleus/plugins/NP_Profile.php file to a safe place. You will need this if you wish to revert later and to help you migrate your custom field settings to the version 2 database storage.</li>
@@ -68,7 +69,8 @@
 
 <h3><a name="skinvars">SkinVars</a></h3>
 
-<p>The Profile skin variable is valid in all skin types. When a member is viewing his own member page, the fields are displayed as form input fields to allow the member to update his own profile.</p>
+<p>The Profile skin variable is valid in all skin types. members can update their profile from a number of places, based on configuration, including on his own member page, 
+in the Profile page of the admin area, or on a special edit profile page.</p>
 
 <p>It has the general form of </p>
 
@@ -76,8 +78,8 @@
 where
 <ul>
 <li><i>fieldname</i> is the name of the field to display. By default, the valid values are <b>nick, realname, mail,
-notes, url</b>, msn, sex, birthdate, avatar, location, hobbies, secret, icq, favoritesite, bio, resume, privacylevel.
-The ones in bold are Nucleus member fields and represent data kept by the Nucleus Core. More details about these special Nucleus fields will be given later. It can also be one of a number of special values such as startform, endform, submitbutton, password, editlink, editprofile, or status, as described later.</li>
+notes, url</b>, msn, sex, birthdate, avatar, location, hobbies, secret, icq, favoritesite, bio, resume, privacylevel, and lastupdated (2.2x).
+The ones in bold are Nucleus member fields and represent data kept by the Nucleus Core. More details about these special Nucleus fields will be given later. It can also be one of a number of special values such as startform, endform, closeform, submitbutton, password, editlink, editprofile, memberlist (2.2x) or status, as described later.</li>
 <li><i>special</i> is one of label or show as described below (can be left blank, the default behavior):</li>
    <ul>
    <li>label - Valid for all fields. Shows the label for the named field..</li>
@@ -114,11 +116,34 @@ On an item page or in a template (see TemplateVar below) will show the real name
 <li><b>&lt;%Profile(editlink)%&gt;</b> will add the html needed to display a link to the profile edit form, but only if a member is viewing his own member page. Otherwise, it displays nothing. Should be used on Member Details skin part if members will be allowed to edit their own profiles.</li>
 <li><b>&lt;%Profile(editprofile)%&gt;</b> will add the html needed to display a link to the profile edit page, but only if a member is viewing his own member page. Otherwise, it displays nothing. Should be used on Member Details skin part if members will be allowed to edit their own profiles.</li>
 </ul>
+
+<p>The special 'memberlist' version of the skinvar (new in 2.2x) has a different format than shown above. It is used to list members of your site in a formatted way and including any of the custom fields of your site. It's format is given below:</p>
+&lt;%Profile(memeberlist,<i>template</i>,<i>amount</i>,<i>orderby</i>)%&gt;
+where
+<ul>
+<li><i>template</i> is the name of a template defined in the NP_Profile admin page in the NucleusCMS admin area. There is a simple sample template called 'default' that is installed with 2.2x.</li>
+<li><i>amount</i> is the amount of members to list. Should be a positive integer. If left blank, or set to 0, all members will be listed.</li>
+<li><i>orderby</i> is an indication of how to sort the list. It has the format of <i>fieldname</i>|<i>sortType</i>
+	, where <i>fieldname</i> is the name of a defined field, and <i>sortType</i> is one of ASC or DESC, for either ascending sorting, or descending sorting, respectively.
+	To sort the results randomly, just set <i>orderby</i> to <b>random</b>. Default is nick|ASC. 
+	If you decide to sort on one of the NP_Profile fields, and a member has not entered any data for that field, that member will <b>NOT</b> appear in the list.</li>
+</ul>
+
+<p>More details about the formatting of the list using templates will be given below in the <a href="#manage">Plugin Management</a> section.</p>
+
+<p>Some examples of the memberlist skinvar:</p>
+<ul>
+<li><b>&lt;%Profile(memberlist,default,0,nick|ASC)%&gt;</b> will display all members, alphabetically by display name, using the default template.</li>
+<li><b>&lt;%Profile(memberlist,default,10,random)%&gt;</b> will display 10 random members formatted using the default template.</li>
+<li><b>&lt;%Profile(memberlist,mymembers,10,lastupdated|DESC)%&gt;</b> will display the 10 members who most recently updated their profiles, with the most recent update first. Each list entry will be formatted according to the mymembers template.</li>
+<li><b>&lt;%Profile(memberlistpager)%&gt;</b> when added below a memberlist call, like above,will add paging buttons to page through list.
+</ul>
+
 <p>For some ideas see the <a href="#tips">Tips and Tricks</a> section below.</p>
 
 <h3><a name="templatevars">TemplateVars</a></h3>
 
-<p>The skinvars described above can be used in the Item Body fields and Comment Body fields of any template. However, the special types of password, startform, endform, editlink, editprofile, and status, are not available.</p>
+<p>The skinvars described above can be used in the Item Body fields and Comment Body fields of any template. However, the special types of password, startform, endform, closeform, submitbutton, editlink, editprofile, memberlist and status, are not available.</p>
 
 <h3><a name="fieldnames">Field Names</a></h3>
 
@@ -135,6 +160,8 @@ On an item page or in a template (see TemplateVar below) will show the real name
 <li><b>status</b> can be used to display the status of a update submit on the member input form.</li>
 <li><b>editlink</b> is used used on the Member Details skin part to create a link to the profile edit form. Link only visible to members when viewing own profile.</li>
 <li><b>editprofile</b> is used used on the Member Details skin part to create a link to the profile edit page. This page is separate from the Members Detail page and can be formatted and styled independent of the format of the members details page. Link only visible to members when viewing own profile.</li>
+<li><b>memberlist</b> is used in the skins to create a formatted list of site members. It's use is described in the Skin Variables section. New to 2.20.</li>
+<li><b>memberlistpager</b> is used in the skins, in conjunction with the memberlist form, to create simple buttons to page through the list of site members displayed using the memberlist form above. Doesn't make sense if no amount is used in the memberlist call. New to 2.20.</li>
 </ul>
 
 <h4>Nucleus</h4>
@@ -162,6 +189,7 @@ On an item page or in a template (see TemplateVar below) will show the real name
 <li><b>favoritesite</b> is the favorite web site of the member. url.</li>
 <li><b>bio</b> is biographical info of the member. textarea.</li>
 <li><b>resume</b> is a link to the resume of the member. url.</li>
+<li><b>lastupdated</b> is a field that is stamped whenever a user modifies his profile. Can be displayed like any other field. New to 2.20.</li>
 </ul>
 <p>Other fields can be added from the Plugin Admin area as described later. All fields must be of one of the types described in the next section.</p>
 
@@ -195,8 +223,10 @@ On an item page or in a template (see TemplateVar below) will show the real name
 <ul>
 <li><b>[Field Definitions]</b> : This displays the table of defined fields. New fields can be added from this page and existing fields can be edited or deleted.</li>
 <li><b>[Field Types]</b> : This displays the table of defined field types. Default settings for existing field types can be edited from this page.</li>
+<li><b>[Templates]</b> : This displays the table of defined templates. New templates can be added from this page and existing templates can be edited or deleted. New to 2.20.</li>
 <li><b>[Form Configuration]</b> : This displays a table of form configuration parameters. The main field is a field to format the editprofile page. New to 2.1.</li>
 <li><b>[Example Code]</b> : This displays a page containing example code for the default skin's Member Details part as a suggestion for usage.</li>
+<li><b>[createaccount.php]</b> : This displays a page containing example code for a createaccount.php that could be used to request some of the profile fields during member registration. The list of fields appearing and their order is set on the Edit Configuration page. To be useful, the php on this page must be copied to a file called createaccount.php and then this file must replace the existing createaccount.php in your nucleus root directory. New to 2.19, and NucleusCMS 3.3x.</li>
 <li><b>[createaccount.html]</b> : This displays a page containing example code for a createaccount.html that could be used to request some of the profile fields during member registration. The list of fields appearing and their order is set on the Edit Configuration page. To be useful, the html on this page must be copied to a file called createaccount.html and then this file must replace the existing createaccount.html in your nucleus root directory.</li>
 </ul>
 
@@ -377,6 +407,31 @@ default setting set for that that field type in the type settings form.</p>
 <li><b>Options</b> : String. Generally should not be set here, as each field will require different options. Can be used to set a default, though if the options are not set in the field definition. See the explanation of the options in the Field Definition section above.</li>
 </ul>
 
+<h4>Edit Template Definitions Form</h4>
+
+<p>When adding or editing a template definition, the Edit Template Definitions form is used. Below the fields are described.
+All fields must contain valid data.</p>
+<ul>
+<li><b>Name</b> : The name of the template. Only a-z and 0-9 allowed. Must be unique. Only advanced users should change an existing template's name.</li>
+<li><b>Type</b> : Select the template type. As of 2.20, only memberlist type is valid.</li>
+<li><b>Body</b> : A format string indicating how the member's data should be displayed in the list.</li>
+	<ul>
+    <li>The format can be any string, including html code, containing the special string variables (case matters), in the form of %fieldname%. Each occurance of these variables will be replaced by the raw data for the given field. Below some format variables are described and examples are given:</li>
+        <br /><b>Format Variables:</b>
+        <ul>
+        <li><b>%memberlink%</b> - The raw URL to the member's page. To create a link, you must add the correct HTML tags around it. A sample output would be index.php?memberid=3 for a site using the default URL scheme.</li>
+        <li><b>%memberid%</b> - The ID of the member.</li>
+        <li><b>%<i>fieldname</i>%</b> - The value of the <i>fieldname</i> field. <i>fieldname</i> must match the case as defined, and should be all lowercase. For example, %nick% might be replaced by fmertz, and %realname% by Fred Mertz, and %location% by New York City.
+			%email% respects the option settings about to whom to show email addresses.</li>
+        </ul>
+        <b>Examples:</b>
+        <ul>
+        <li>&lt;li&gt;&lt;a href=&quot;%memberlink%&quot; title=&quot;%realname%&quot;&gt;%nick%&lt;/a&gt;&lt;/li&gt; would give a link to a users member page, displaying his nickname in the list.</li>
+        <li>&lt;li&gt;&lt;a href=&quot;%memberlink%&quot; title=&quot;%realname%&quot;&gt;%nick% (%sex%, %zodiac%)&lt;/a&gt;&lt;/li&gt; would give a link to a users member page, displaying his nickname in the list, and also displaying his gender and zodiac sign, if fields called 'sex' and 'zodiac' are defined.</li>
+        </ul><br />
+    </ul>
+</ul>
+
 <h4>Edit Form Configuration Settings Form</h4>
 
 <p>This page allows the setting of miscelleneous profile configuration settings. This is new to version 2.1 and presently has three configuration setting &mdash; editprofile, membersettings, and registration.</p>
@@ -508,6 +563,32 @@ http://forum.nucleuscms.org/viewtopic.php?t=13919</a> </p>
 <h3><a name="history">Version History</a></h3>
 
 <ul>
+<li>Version 2.20: 03-19-2008 requires upgrade procedure (uninstall/reinstall)<br />
+17th Release of version 2 adds the following to version 2.19.01
+    <ul>
+    <li> keep lastUpdated field (date) - thanks david_again</li>
+    <li> Make skinvar for memberlist using template to call in different fields from profile - thanks pheser</li>
+    <li> rename fvalidate column to fformatnull.</li>
+    <li> caching all profile values for a given member to lessen number of db queries per page.</li>
+	<li> caching brought the number of queries for my test member page, displaying 18 profile fields from 233 queries to 19 queries</li>
+	</ul>
+</li>
+<li>Version 2.19.01: 01-11-2008<br />
+16th Release of version 2 adds the following to version 2.19
+    <ul>
+    <li> fix headers already sent errors when user registering from createaccount.php in version 3.3x</li>
+    <li> add tab on admin page for sample createaccount.php file for adding Profile fields to registration.</li>
+ 
+	</ul>
+</li>
+<li>Version 2.19: 09-19-2007<br />
+15th release of version 2 adds the following to 2.18 version
+    <ul>
+    <li> modify PostRegister event and doAction method to recognize more generic registration methods beyond creataccount.html (testing for NP_NewAccount)</li>
+    <li> modify output of radio fields to use labels for xhtml compliance</li>
+    <li> some syntax improvement to help.html for xhtml compliance</li>
+	</ul>
+</li>
 <li>Version 2.18: 07-09-2007<br />
 14th release of version 2 adds the following to 2.17 version
     <ul>
