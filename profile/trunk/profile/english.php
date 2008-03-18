@@ -200,5 +200,23 @@ define('_PROFILE_ADMIN_CREATEACCOUNT33X_INTRO',    'If you would like new member
         Then copy the php code below to a text file called createaccount.php and upload to your nucleus root directory. Make a backup of the original createaccount.php file that ships with Nucleus CMS. You must also enable member registration for your site.');
 // new in 2.20
 define('_PROFILE_LABEL_LASTUPDATED',     'Last Updated');
-
+define('_PROFILE_ADMIN_TEMPLATE',     'Templates');
+define('_PROFILE_ADMIN_TEMPLATES_HEAD',     'Custom Templates');
+define('_PROFILE_ADMIN_TEMPLATES_SUCCESS_UPD',     'Template successfully updated.');
+define('_PROFILE_ADMIN_TEMPLATES_SUCCESS_DEL',     'Template successfully deleted.');
+define('_PROFILE_ADMIN_TEMPLATES_SUCCESS_ADD',     'Template successfully added.');
+define('_PROFILE_ACTION_NO_TEMPLATE',           'No template name specified.');
+define('_PROFILE_ADMIN_TEMPLATES_DELETE_HEAD',		'Delete Template');
+define('_PROFILE_ADMIN_DELETE_OPEN_TEMPLATE',		'You have chosen to delete this template');
+define('_PROFILE_ADMIN_DELETE_CONFIRM_TEMPLATE',		'Do you really want to delete this template?');
+define('_PROFILE_ADMIN_DELETE_RETURN_TEMPLATE',		'Return to Templates Definitions.');
+define('_PROFILE_TEMPLATE',     'Templates');
+define('_PROFILE_BODY',     'Body');
+define('_PROFILE_ADMIN_TEMPLATES_EDIT_HEAD',     'Edit Template');
+define('_PROFILE_ADMIN_HELP_TEMPLATE_NAME',     'Name of template, must be unique. Only a-z and 0-9 allowed, no spaces.');
+define('_PROFILE_ADMIN_HELP_TEMPLATE_TYPE',     'Choose the type of template. Currently, only memberlist supported.');
+define('_PROFILE_ADMIN_HELP_TEMPLATE_BODY',     'Enter the html code and variables to format each item in the list. All variables will return the raw, unformated value of the corresponding field.
+		Valid variables are %memberlink%, %memberid%, and %fieldname%, where fieldname is the value of any field defined in your installation of NP_Profile.');
+define('_PROFILE_ACTION_DUPLICATE_TEMPLATE',	'This template name already exists. The name must be unique.');
+define('_PROFILE_ADMIN_TEMPLATES_ADD',		'Add New Template');
 ?>

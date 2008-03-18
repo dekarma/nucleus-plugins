@@ -40,7 +40,7 @@ PARTICULAR PURPOSE. See the GNU General Public License for more details.
 	$admin = $member->isAdmin();
 	$thisquerystring = serverVar('QUERY_STRING');
 	$showlist = strtolower(trim(requestVar('showlist')));
-	if (!in_array($showlist, array('fields','editfield','types','edittype','example','deleteconfirm','config','createaccount','createaccount33x'))) $showlist = 'fields';
+	if (!in_array($showlist, array('fields','editfield','types','edittype','templates','edittemplate','example','deleteconfirm','config','createaccount','createaccount33x'))) $showlist = 'fields';
 	$status = intval(requestVar('status'));
 
 	$newhead = '
@@ -145,6 +145,7 @@ border-bottom: 1px solid #778;
 	echo '<ul class="navlist">'."\n";
 	echo ' <li><a class="'.($showlist == 'fields' ? 'current' : '').'" href="'.$thispage.'?showlist=fields&amp;safe=true">'._PROFILE_ADMIN_FIELD_DEF.'</a></li> '."\n";
 	echo ' <li><a class="'.($showlist == 'types' ? 'current' : '').'" href="'.$thispage.'?showlist=types&amp;safe=true">'._PROFILE_ADMIN_FIELD_TYPE.'</a></li>'."\n";
+	echo ' <li><a class="'.($showlist == 'templates' ? 'current' : '').'" href="'.$thispage.'?showlist=templates&amp;safe=true">'._PROFILE_ADMIN_TEMPLATE.'</a></li>'."\n";
 	echo ' <li><a class="'.($showlist == 'config' ? 'current' : '').'" href="'.$thispage.'?showlist=config&amp;safe=true">'._PROFILE_ADMIN_CONFIG.'</a></li>'."\n";
 	echo ' <li><a class="'.($showlist == 'example' ? 'current' : '').'" href="'.$thispage.'?showlist=example&amp;safe=true">'._PROFILE_ADMIN_EXAMPLE.'</a></li>'."\n";
 	echo ' <li><a class="'.($showlist == 'createaccount33x' ? 'current' : '').'" href="'.$thispage.'?showlist=createaccount33x&amp;safe=true">'._PROFILE_ADMIN_CREATEACCOUNT33X.'</a></li>'."\n";
@@ -297,29 +298,50 @@ border-bottom: 1px solid #778;
 	} // end edit field
 
 /**************************************
- *	 Confirm Field Delete		      *
+ *	 Confirm Deletions  		      *
  **************************************/
 	if ($showlist == "deleteconfirm") {
-		$fname = requestVar('fname');
-		$acttype = 'deletefield';
-
+		$fname = trim(requestVar('fname'));
+		$tname = trim(requestVar('tname'));
 		echo '<div class="center">'."\n";
-		echo "<h2>"._PROFILE_ADMIN_FIELDS_DELETE_HEAD."</h2>\n";
+		if ($fname != '') {
+			$acttype = 'deletefield';
 
-		echo '<form method="post" action="'.$action_url.'">'."\n";
-        echo '<input type="hidden" name="action" value="plugin" />'."\n";
-        echo '<input type="hidden" name="name" value="Profile" />'."\n";
-        echo '<input type="hidden" name="fname" value="'.$fname.'" />'."\n";
-		echo '<input type="hidden" name="type" value="'.$acttype.'" />'."\n";
-        $manager->addTicketHidden();
-		echo _PROFILE_ADMIN_DELETE_OPEN." - '$fname'<br /><br />";
-		echo _PROFILE_ADMIN_DELETE_BODY1."<br />\n";
-		echo _PROFILE_ADMIN_DELETE_BODY2."<br /><br />\n";
-		echo _PROFILE_ADMIN_DELETE_CONFIRM."<br /><br />\n";
-		echo '<input type="submit" value="'._PROFILE_YES.'" />';
-		echo '<br /><br /><a href="'.$thispage.'?showlist=fields&amp;safe=true">'._PROFILE_ADMIN_DELETE_RETURN.'</a>'."\n";
-		echo "</form>\n";
 
+			echo "<h2>"._PROFILE_ADMIN_FIELDS_DELETE_HEAD."</h2>\n";
+
+			echo '<form method="post" action="'.$action_url.'">'."\n";
+			echo '<input type="hidden" name="action" value="plugin" />'."\n";
+			echo '<input type="hidden" name="name" value="Profile" />'."\n";
+			echo '<input type="hidden" name="fname" value="'.$fname.'" />'."\n";
+			echo '<input type="hidden" name="type" value="'.$acttype.'" />'."\n";
+			$manager->addTicketHidden();
+			echo _PROFILE_ADMIN_DELETE_OPEN." - '$fname'<br /><br />";
+			echo _PROFILE_ADMIN_DELETE_BODY1."<br />\n";
+			echo _PROFILE_ADMIN_DELETE_BODY2."<br /><br />\n";
+			echo _PROFILE_ADMIN_DELETE_CONFIRM."<br /><br />\n";
+			echo '<input type="submit" value="'._PROFILE_YES.'" />';
+			echo '<br /><br /><a href="'.$thispage.'?showlist=fields&amp;safe=true">'._PROFILE_ADMIN_DELETE_RETURN.'</a>'."\n";
+			echo "</form>\n";
+		}
+		if ($tname != '') {
+			$acttype = 'deletetemplate';
+
+
+			echo "<h2>"._PROFILE_ADMIN_TEMPLATES_DELETE_HEAD."</h2>\n";
+
+			echo '<form method="post" action="'.$action_url.'">'."\n";
+			echo '<input type="hidden" name="action" value="plugin" />'."\n";
+			echo '<input type="hidden" name="name" value="Profile" />'."\n";
+			echo '<input type="hidden" name="tname" value="'.$tname.'" />'."\n";
+			echo '<input type="hidden" name="type" value="'.$acttype.'" />'."\n";
+			$manager->addTicketHidden();
+			echo _PROFILE_ADMIN_DELETE_OPEN_TEMPLATE." - '$tname'<br /><br />";
+			echo _PROFILE_ADMIN_DELETE_CONFIRM_TEMPLATE."<br /><br />\n";
+			echo '<input type="submit" value="'._PROFILE_YES.'" />';
+			echo '<br /><br /><a href="'.$thispage.'?showlist=templates&amp;safe=true">'._PROFILE_ADMIN_DELETE_RETURN_TEMPLATE.'</a>'."\n";
+			echo "</form>\n";
+		}
 		echo "</div>\n";
 	}
 
@@ -442,6 +464,121 @@ border-bottom: 1px solid #778;
 		}
 		echo $toplink;
 	} // end edit types
+
+/**************************************
+ *	 Template Defs					      *
+ **************************************/
+	if ($showlist == "templates")
+	{
+		echo '<div class="center">'."\n";
+		echo "<h2>"._PROFILE_ADMIN_TEMPLATES_HEAD."</h2>\n";
+		echo ' <a class="buttonlink" href="'.$thispage.'?showlist=edittemplate&amp;tname=&amp;safe=true">'._PROFILE_ADMIN_TEMPLATES_ADD.'</a>'."\n";
+		if ($status){
+				switch ($status) {
+				case 1:
+					echo " <span style=\"color:blue\">"._PROFILE_ADMIN_TEMPLATES_SUCCESS_ADD."</span>\n";
+					break;
+				case 2:
+					echo "<span style=\"color:blue\">"._PROFILE_ADMIN_TEMPLATES_SUCCESS_UPD."</span>\n";
+					break;
+				case 3:
+					echo " <span style=\"color:blue\">"._PROFILE_ADMIN_TEMPLATES_SUCCESS_DEL."</span>\n";
+					break;
+				default:
+				}
+			}
+
+		$templateres = $profplug->getTemplateDef();
+
+		echo '<table border="0" cellpadding="3" width="600">'."\n";
+		echo "<tr class=\"h\">\n";
+		echo "<th>".ucfirst(_PROFILE_TEMPLATE)."</th><th>".ucfirst(_PROFILE_TYPE)."</th><th>".ucfirst(_PROFILE_BODY)."</th>";
+		echo "<th>".ucfirst(_PROFILE_ACTIONS)."</th></tr>\n";
+		while ($row = mysql_fetch_assoc($templateres)) {
+			echo "<tr>\n";
+			echo '<td class="e">'.$row['tname']."</td>\n";
+			echo '<td class="v">'.$row['ttype']."</td>\n";
+			$tbody = nl2br(str_replace(array('<','>'),array('&lt;','&gt;'),$row['tbody']));
+			echo '<td class="v">'.$tbody."</td>\n";
+			echo '<td class="v"><a href="'.$thispage.'?showlist=edittemplate&amp;tname='.$row['tname'].'&amp;safe=true">'._PROFILE_EDIT.'</a>'."\n";
+			echo ' - <a href="'.$thispage.'?showlist=deleteconfirm&amp;tname='.$row['tname'].'&amp;safe=true">'._PROFILE_DELETE.'</a></td>'."\n";
+			echo "</tr>\n";
+		}
+		echo "</table>\n";
+		echo "</div>\n";
+		echo $toplink;
+	} // end types
+
+/**************************************
+ *	 Edit Template Defs			      *
+ **************************************/
+	if ($showlist == "edittemplate")
+	{
+		$tname = requestVar('tname');
+		if ($profplug->templateExists($tname)) {
+			$templateres = $profplug->getTemplateDef($tname);
+			$row = mysql_fetch_assoc($templateres);
+			$otname = $tname;
+			$acttype = 'updatetemplate';
+		}
+		else {
+			$tname = '';
+			$otname = $tname;
+			$row = array('tname'=>'','ttype'=>'memberlist','tbody'=>'');
+			$acttype = 'addtemplate';
+		}
+
+
+		echo '<div class="center">'."\n";
+		echo "<h2>"._PROFILE_ADMIN_TEMPLATES_EDIT_HEAD."</h2>\n";
+		if ($status){
+			switch ($status) {
+			case 1:
+				echo " <span style=\"color:blue\">"._PROFILE_ADMIN_TEMPLATES_SUCCESS_ADD."</span>\n";
+				break;
+			case 2:
+				echo "<span style=\"color:blue\">"._PROFILE_ADMIN_TEMPLATES_SUCCESS_UPD."</span>\n";
+				break;
+			case 3:
+				echo " <span style=\"color:blue\">"._PROFILE_ADMIN_TEMPLATES_SUCCESS_DEL."</span>\n";
+				break;
+			default:
+			}
+		}
+
+		echo '<form method="post" action="'.$action_url.'">'."\n";
+		echo '<input type="hidden" name="action" value="plugin" />'."\n";
+		echo '<input type="hidden" name="name" value="Profile" />'."\n";
+		echo '<input type="hidden" name="type" value="'.$acttype.'" />'."\n";
+		echo '<input type="hidden" name="otname" value="'.$otname.'" />'."\n";
+        $manager->addTicketHidden();
+
+		echo '<table border="0" cellpadding="3" width="600">'."\n";
+		echo "<tr class=\"h\">\n";
+		echo "<th>".ucfirst(_PROFILE_PARAMETER)."</th><th>".ucfirst(_PROFILE_VALUE)."</th><th>".ucfirst(_PROFILE_HELP)."</th></tr>\n";
+		echo '<tr><td class="e">'.ucfirst(_PROFILE_TEMPLATE).'</td><td class="v"><input size="60" name="tname" value="'.$row['tname'].'" />'."</td>";
+		echo "<td>"._PROFILE_ADMIN_HELP_TEMPLATE_NAME."</td></tr>\n";
+		echo '<tr><td class="e">'.ucfirst(_PROFILE_TYPE).'</td><td class="v"><select name="ttype">';
+		foreach ($profplug->template_types as $value) {
+			echo '<option value="' . $value . '"'. ($value == $row['ttype'] ? 'selected="selected"' : '').'>' . $value . '</option>';
+		}
+		echo "</select></td>";
+		echo "<td>"._PROFILE_ADMIN_HELP_TEMPLATE_TYPE."</td></tr>\n";
+		echo '<tr><td class="e">'.ucfirst(_PROFILE_BODY).'</td><td class="v"><textarea name="tbody" cols="30" rows="5">' . $row['tbody'] . '</textarea>' . "</td>";
+		echo "<td>"._PROFILE_ADMIN_HELP_TEMPLATE_BODY."</td></tr>\n";
+		echo '<tr><td class="e"></td><td class="v"><input type="submit" value="'._PROFILE_SUBMIT.'" />'."</td><td></td></tr>\n";
+		echo "</table>\n";
+		echo "</form>\n";
+		echo "</div>\n";
+/*
+		}
+		else {
+			echo "$dtemplate - "._PROFILE_ADMIN_TYPES_NO_TEMPLATE."\n";
+		}
+*/
+		echo $toplink;
+	} // end edit templates
+
 
 /**************************************
  *	 CONFIG  					      *

@@ -135,23 +135,19 @@ History:
   v2.19.01 -- 16th Release of version 2 adds the following to version 2.19
     * fix headers already sent errors when user registering from createaccount.php in version 3.3x
     * add tab on admin page for sample createaccount.php file for adding Profile fields to registration.
-[FUTURE]
-  [v2.20 -- future release to require upgrade procedure (uninstall/reinstall)]
+  v2.20 -- future release to require upgrade procedure (uninstall/reinstall)]
     * keep lastUpdated field (date) - thanks david_again - 2.20.a01
-    * Make skinvar for memberlist using template to call in different fields from profile - thanks pheser
+    * Make skinvar for memberlist using template to call in different fields from profile - thanks pheser - 2.20.a03
     * rename fvalidate column to fformatnull. See all occurences of fvalidate in this file and in profile/index.php. - 2.20.a01
     * investigate caching all profile values for a given member to lessen number of db queries per page. - 2.20.a02
 	  *  caching brought the number of queries for my test member page, displaying 18 profile fields from 233 queries to 19 queries
+
+[FUTURE]
 
 To do:
 * Offer some validation options for fields, i.e. isEmail, isURL, isList
 * Make the Example Code in admin area dynamic based on enabled fields and field order (future parameter)
 
-*/
-/*
-if (!is_array($profile_values)) $profile_values = array();
-if (!is_array($profile_types)) $profile_types = array();
-if (!is_array($profile_fields)) $profile_fields = array();
 */
 
 class NP_Profile extends NucleusPlugin {
@@ -168,6 +164,8 @@ class NP_Profile extends NucleusPlugin {
 	var $profile_fields = array();
 	var $profile_values = array();
 	var $member_values = array();
+	//var $profile_templates = array();
+	var $template_types = array('memberlist');
 
 	function getName() { return 'Profile Plugin'; }
 
@@ -175,7 +173,7 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://www.iai.com/';	}
 
-	function getVersion() {	return '2.20.a02'; }
+	function getVersion() {	return '2.20.a03'; }
 
 	function getDescription() {
         if (!$this->_optionExists('email_public_deny') && $this->_optionExists('email_public')) {
@@ -262,6 +260,13 @@ class NP_Profile extends NucleusPlugin {
 					" ( `csetting` varchar(255) NOT NULL,
 					  `cvalue` text,
 					  PRIMARY KEY (`csetting`)) TYPE=MyISAM");
+
+		sql_query("CREATE TABLE IF NOT EXISTS ". sql_table('plugin_profile_templates').
+					" ( `tname` varchar(255) NOT NULL,
+					  `ttype` varchar(255) NOT NULL,
+					  `tbody` text,
+					  PRIMARY KEY (`tname`),
+					  UNIQUE KEY `tname` (`tname`)  ) TYPE=MyISAM");
 
 // This is to update tables for users of v 2.00.02b, from the beta tables to the released tables:
 		$hasord = false;
@@ -774,6 +779,20 @@ password
 					.$value['cvalue']."')");
 			}
 		}
+
+		$templates = array(
+			array('tname'=>'default',
+				'ttype'=>'memberlist',
+				'tbody'=>'<li><a href="%memberlink%" title="%nick%"><img src="%avatar%" alt="%nick%"/> %nick%</a></li>')
+		);
+		foreach ($templates as $value) {
+			if (mysql_num_rows(sql_query("SELECT * FROM ".sql_table('plugin_profile_templates')." WHERE tname='".$value['tname']."'")) == 0) {
+				sql_query("INSERT INTO ". sql_table('plugin_profile_templates')
+					." VALUES ('".$value['tname']."','"
+					.$value['ttype']."','"
+					.$value['tbody']."')");
+			}
+		}
 	}
 
 	function unInstall() {
@@ -908,6 +927,10 @@ password
    function doSkinVar($skinType,$param1,$param2='',$param3 = '',$param4 = '') {
 		global $CONF, $memberid, $member, $memberinfo;
 
+		$rawparam4 = $param4;
+		if (trim(strtolower($skinType)) == "returnvalue") $returnValue = 1;
+		else $returnValue = 0;
+
 		if ($this->_mySubstr($skinType,0,8) == 'template') {
 			$tiid = intval(str_replace(array('template','(',')'), array('','',''),$skinType));
 			$skinType = 'template';
@@ -1004,7 +1027,7 @@ password
                     $formfieldname = $formfieldprefix.$param1;
 					if ($pmid > 0 && $pmid != 999999999) {
 						if (!array_key_exists($pmid,$this->member_values)) {
-							// fill the profile_values variable for this member
+							// fill the member_values variable for this member
 							$result = sql_query("SELECT * FROM ".sql_table('member')." WHERE mnumber=$pmid");
 							while ($memvals = mysql_fetch_assoc($result)) {
 								foreach ($memvals as $key=>$value) {
@@ -1101,7 +1124,7 @@ password
 						}
 						break;
 					case 'memberlist':
-						$this->displayMemberList($param2,intval($param3),$param4);
+						$this->displayMemberList($param2,intval($param3),$rawparam4);
 						break;
 					case 'mail':
 						if ($this->restrictView && !$this->getFieldAttribute($param1,'fpublic')) break;
@@ -1155,14 +1178,16 @@ password
                             }
 							$safe_add = $fstart.$safe_add.$fend;
 							if ($this->showEmail > 1) {
-								echo $safe_add;
+								$value = $safe_add;
 							}
 							elseif ($this->showEmail == 1 && $member->isLoggedIn()) {
-								echo $safe_add;
+								$value = $safe_add;
 							}
 							else {
-								echo $this->getOption('email_public_deny');
+								$value =  $this->getOption('email_public_deny');
 							}
+							if (!$returnValue) echo $value;
+							else return $value;
 						}
 						break;
 					case 'nick':
@@ -1185,7 +1210,8 @@ password
                                     $value = $fvalue;
                                 }
                             }
-							echo $value;
+							if (!$returnValue) echo $value;
+							else return $value;
 						}
 						break;
 					case 'realname':
@@ -1215,7 +1241,8 @@ password
                                     $value = $fvalue;
                                 }
                             }
-							echo $value;
+							if (!$returnValue) echo $value;
+							else return $value;
 						}
 						break;
 					case 'url':
@@ -1257,7 +1284,9 @@ password
 								$fend = '" title="'.$param1.'" >'.$value.'</a>';
 							}
                             }
-							echo $fstart.$value.$fend . "\n";
+							$value = $fstart.$value.$fend;
+							if (!$returnValue) echo $value. "\n";
+							else return $value;
 						}
 						break;
 					case 'notes':
@@ -1287,11 +1316,12 @@ password
                                     $fvalue = str_replace(array('%DATA%','%LABEL%','%VALUE%','%FIELD%','%MEMBER%','%ID%'), array($value,$label,$value,$param1,$pname,$pmid), $format);
                                     $value = $fvalue;
                                 }
-							else {
+								else {
                                     $value = '<textarea readonly="readonly" cols="' . $cols . '" rows="' . $rows . '">' . $this->_br2nl($value) . '</textarea>' . "\n";
+								}
 							}
-						}
-                            echo $value;
+                            if (!$returnValue) echo $value;
+							else return $value;
 						}
 						break;
 					default:
@@ -1325,7 +1355,8 @@ password
                                         $value = $fvalue;
                                     }
                                 }
-                                echo $value;
+                                if (!$returnValue) echo $value;
+								else return $value;
 							}
 							break;
 						case 'number':
@@ -1351,7 +1382,8 @@ password
                                         $value = number_format($value,intval($farr[0]),$farr[1],$farr[2]);
                                     }
                                 }
-								echo $value;
+								if (!$returnValue) echo $value;
+								else return $value;
 							}
 							break;
 						case 'url':
@@ -1390,7 +1422,9 @@ password
                                         $fend = '" title="'.$param1.'" >'.$value.'</a>';
                                     }
 								}
-								echo $fstart.$value.$fend . "\n";
+								$value = $fstart.$value.$fend . "\n";
+								if (!$returnValue) echo $value. "\n";
+								else return $value;
 							}
 							break;
 						case 'textarea':
@@ -1421,7 +1455,8 @@ password
                                         $value = '<textarea readonly="readonly" cols="' . $cols . '" rows="' . $rows . '">' . $this->_br2nl($value) . '</textarea>' . "\n";
                                     }
                                 }
-                                echo $value;
+                                if (!$returnValue) echo $value;
+								else return $value;
 							}
 							break;
 						case 'mail':
@@ -1473,14 +1508,16 @@ password
 								}
 								$safe_add = $fstart.$safe_add.$fend;
 								if ($this->showEmail > 1) {
-									echo $safe_add;
+									$value = $safe_add;
 								}
 								elseif ($this->showEmail == 1 && $member->isLoggedIn()) {
-									echo $safe_add;
+									$value = $safe_add;
 								}
 								else {
-									echo $this->getOption('email_public_deny');
+									$value = $this->getOption('email_public_deny');
 								}
+								if (!$returnValue) echo $value;
+								else return $value;
 							}
 							break;
 						case 'file':
@@ -1528,7 +1565,9 @@ password
                                         $fend = '" title="'.$param1.'" >'.$param1.'</a>';
                                     }
                                 }
-								echo $fstart.$value.$fend . "\n";
+								$value = $fstart.$value.$fend;
+								if (!$returnValue) echo $value. "\n";
+								else return $value;
 							}
 							break;
 						case 'password':
@@ -1538,7 +1577,9 @@ password
 								echo '<input name="' . $param1 . '" type="password" maxlength="' . $maxlength . '" size="' . $size . '" />' . "\n";
 							}
 							else {
-								echo '********';
+								$value = '********';
+								if (!$returnValue) echo $value;
+								else return $value;
 							}
 							break;
 						case 'dropdown':
@@ -1589,7 +1630,9 @@ password
                                                 //change nothing
                                             }
                                         }
-										echo trim($opt[0]) . "\n";
+
+										if (!$returnValue) echo trim($opt[0]) . "\n";
+										else return trim($opt[0]);
 									}
 								}
 							}
@@ -1634,7 +1677,8 @@ password
                                                 //change nothing
                                             }
                                         }
-										echo trim($opt[0]) . "\n";
+										if (!$returnValue) echo trim($opt[0]) . "\n";
+										else return trim($opt[0]);
 									}
 								}
 							}
@@ -1719,12 +1763,14 @@ password
 									break;
 								}
 
-								echo "$liststart\n";
+								if (!$returnValue) echo "$liststart\n";
 								if ($numopts) {
+									$v = 0;
 									foreach ($rawoptions as $ropt) {
 										$opt = explode("|", $ropt);
 										if (count($opt) == 1) $opt[1] = trim($opt[0]);
 										if (in_array(trim($opt[1]),$valuearr)) {
+											$v = $v + 1;
 											if ($param3 == 'link') {
 												$fstart = $estart.'<a href="';
 												$fend = '" title="'.$param1.'" >'.trim($opt[1]).'</a>'.$eend;
@@ -1747,12 +1793,18 @@ password
                                                     $fend = $eend;
                                                 }
                                             }
-											echo $fstart.trim($opt[0]).$fend . "\n";
+											if (!$returnValue) echo $fstart.trim($opt).$fend . "\n";
+											else {
+												if ($v > 1) return ", ".trim($opt);
+												else return trim($opt);
+											}
 										}
 									}
 								}
 								else {
+									$v = 0;
 									foreach ($valuearr as $opt) {
+										$v = $v + 1;
 										if ($param3 == 'link') {
 											$fstart = $estart.'<a href="';
 											$fend = '" title="'.$param1.'" >'.trim($opt).'</a>'.$eend;
@@ -1775,11 +1827,15 @@ password
                                                 $fend = $eend;
                                             }
                                         }
-										echo $fstart.trim($opt).$fend . "\n";
+										if (!$returnValue) echo $fstart.trim($opt).$fend . "\n";
+										else {
+											if ($v > 1) return ", ".trim($opt);
+											else return trim($opt);
+										}
 									}
 
 								}
-								echo "$listend\n";
+								if (!$returnValue) echo "$listend\n";
 							}
 							break;
 						case 'date':
@@ -1842,7 +1898,8 @@ password
                                 echo $dinput;
                             }
 							else {
-								echo $value;
+								if (!$returnValue) echo $value;
+								else return $value;
 							}
 							break;
 						} // end switch for for field types
@@ -1960,6 +2017,66 @@ password
 			$epvalue = postVar($cfield);
 			$this->updateConfig($epvalue,$cfield);
 
+			header('Location: ' . $manager->addTicketToUrl($destURL));
+			break;
+		case 'updatetemplate':
+			if (!$member->isAdmin() || !$manager->checkTicket()) doError(_PROFILE_ACTION_DENY);
+			$odtemplate = postVar('otname');
+			$tname = postVar('tname');
+			if ($tname == '') doError(_PROFILE_ACTION_NO_TEMPLATE);
+			if (!isValidDisplayName($tname)) {
+				doError(_ERROR_BADNAME);
+			}
+			$valuearray = array(
+								'tname'=>strtolower(postVar('tname')),
+								'ttype'=>postVar('ttype'),
+								'tbody'=>postVar('tbody')
+								);
+			if (strtolower($odtemplate) == strtolower($tname)) {
+				$this->updateTemplateDef($tname, $valuearray);
+			}
+			else if ($this->templateExists($odtemplate)) {
+				$this->addTemplateDef($tname, $odtemplate, $valuearray);
+				$this->delTemplateDef($odtemplate);
+			}
+			else {
+				$this->addTemplateDef($tname, '', $valuearray);
+			}
+			$destURL = $CONF['PluginURL'] . "profile/index.php?showlist=templates&safe=true&status=2";
+			header('Location: ' . $manager->addTicketToUrl($destURL));
+			break;
+		case 'addtemplate':
+			if (!$member->isAdmin() || !$manager->checkTicket()) doError(_PROFILE_ACTION_DENY);
+			$destURL = $CONF['PluginURL'] . "profile/index.php?showlist=templates&safe=true&status=1";
+			$tname = postVar('tname');
+			if ($tname == '') doError(_PROFILE_ACTION_NO_TEMPLATE);
+			if (!isValidDisplayName($tname)) {
+				doError(_ERROR_BADNAME);
+			}
+			$valuearray = array(
+								'tname'=>strtolower(postVar('tname')),
+								'ttype'=>postVar('ttype'),
+								'tbody'=>postVar('tbody')
+								);
+			if ($this->templateExists($tname)) {
+				doError("$tname - "._PROFILE_ACTION_DUPLICATE_TEMPLATE);
+			}
+			else {
+				$this->addTemplateDef($tname, '', $valuearray);
+			}
+			header('Location: ' . $manager->addTicketToUrl($destURL));
+			break;
+		case 'deletetemplate':
+			if (!$member->isAdmin() || !$manager->checkTicket()) doError(_PROFILE_ACTION_DENY);
+			$destURL = $CONF['PluginURL'] . "profile/index.php?showlist=templates&safe=true&status=3";
+			$tname = postVar('tname');
+			if ($tname == '') doError(_PROFILE_ACTION_NO_TEMPLATE);
+			if (!$this->templateExists($tname)) {
+				doError("$tname - "._PROFILE_ACTION_NOT_FIELD);
+			}
+			else {
+				$this->delTemplateDef($tname);
+			}
 			header('Location: ' . $manager->addTicketToUrl($destURL));
 			break;
 		case 'updatetype':
@@ -2456,6 +2573,15 @@ password
 		return $pres;
 	}
 
+	// get the template defs for a given type (or all for $templatename == '') as mysql result
+	function getTemplateDef($templatename = '') {
+		$templatename = addslashes($templatename);
+		if ($templatename == '') $where = ' ORDER BY ttype ASC,tname ASC';
+		else $where = " WHERE tname='$templatename'";
+		$pres = sql_query("SELECT * FROM ".sql_table('plugin_profile_templates').$where);
+		return $pres;
+	}
+
 	// update the field defs for a given field
 	function updateFieldDef($fieldname = '', $valuearray = array()) {
 		if ($fieldname == '') {
@@ -2553,6 +2679,73 @@ password
 			}
 		}
 	}
+
+	// update the template defs for a given template
+	function updateTemplateDef($templatename = '', $valuearray = array()) {
+		if ($templatename == '') {
+			doError(_PROFILE_ACTION_NO_TEMPLATE);
+		}
+		else {
+			$existing = $this->templateExists($templatename);
+			if ($existing) {
+				$where = " WHERE tname='".addslashes($templatename)."'";
+				$pquery = "UPDATE ".sql_table('plugin_profile_templates')." SET ";
+				$i = 0;
+				foreach ($valuearray as $key=>$value) {
+					if ($key != 'tname') {
+						$pquery .= ($i == 0 ? '' : ', ')."$key='".addslashes($value)."'";
+						$i += 1;
+						//$this->profile_fields[$fieldname][$key] = $value;
+					}
+				}
+				$pquery .= $where;
+				sql_query($pquery);
+
+			}
+		}
+	}
+
+	// add a template def for a new template
+	function addTemplateDef($templatename = '', $oldtemplatename = '', $valuearray = array()) {
+		if ($templatename == '') {
+			doError(_PROFILE_ACTION_NO_TEMPLATE);
+		}
+		else {
+			$existing = $this->templateExists($templatename);
+			if (!$existing) {
+				$pquery = "INSERT INTO ".sql_table('plugin_profile_templates')." ";
+				$i = 0;
+				$fs = '';
+				$vs = '';
+				foreach ($valuearray as $key=>$value) {
+					$fs .= ($i == 0 ? '' : ', ')."$key";
+					$vs .= ($i == 0 ? '' : ', ')."'".addslashes($value)."'";
+					$i += 1;
+				}
+				$pquery .= "($fs) VALUES($vs)";
+				sql_query($pquery);
+			}
+		}
+	}
+
+	// delete a template def
+	function delTemplateDef($templatename = '') {
+		if ($templatename == '') {
+			doError(_PROFILE_ACTION_NO_TEMPLATE);
+		}
+		else {
+			$existing = $this->templateExists($templatename);
+			if ($existing) {
+				$templatename = addslashes($templatename);
+				$where = " WHERE tname='$templatename'";
+				$pquery = "DELETE FROM ".sql_table('plugin_profile_templates');
+				$pquery .= $where;
+				sql_query($pquery);
+			}
+		}
+	}
+
+
 	//update form config
 	function updateConfig($value,$field) {
 		$value = addslashes($value);
@@ -2568,6 +2761,16 @@ password
 		else {
 			if (array_key_exists($fieldname,$this->profile_fields)) return 1;
 			return mysql_num_rows(sql_query("SELECT * FROM ".sql_table('plugin_profile_fields')." WHERE fname='".addslashes($fieldname)."'"));
+		}
+	}
+
+	function templateExists($templatename = '') {
+		if ($templatename == '') {
+			return 0;
+		}
+		else {
+			//if (array_key_exists($templatename,$this->profile_templates)) return 1;
+			return mysql_num_rows(sql_query("SELECT * FROM ".sql_table('plugin_profile_templates')." WHERE tname='".addslashes($templatename)."'"));
 		}
 	}
 
@@ -2602,33 +2805,8 @@ password
 				}
 			}
 		}
+		if (!array_key_exists($memberid,$this->profile_values)) $this->profile_values[$memberid] = array();
 
-		/*
-		if (array_key_exists($memberid,$this->profile_values)) {
-			$value = $this->profile_values[$memberid][$field];
-		}
-		else {
-			// fill the profile_values variable for this member
-			$result = sql_query("SELECT field,value,torder FROM ".sql_table('plugin_profile')." WHERE memberid=$memberid ORDER BY field ASC, torder ASC");
-			while ($valobj = mysql_fetch_object($result)) {
-				if ($valobj->torder < 1) {
-					$this->profile_values[$memberid][$valobj->field] = $valobj->value;
-				}
-				else {
-					$this->profile_values[$memberid][$valobj->field] .= $valobj->value;
-				}
-			}
-
-			//get the cuurent value for display
-			//$result = sql_query("SELECT value FROM ".sql_table('plugin_profile')." WHERE memberid=$memberid AND field='".addslashes($field)."' ORDER BY torder ASC");
-			//$value = '';
-			//if (mysql_num_rows($result) > 0) {
-			//	while ($valobj = mysql_fetch_object($result)) {
-			//		$value .= $valobj->value;
-			//	}
-			//}
-
-		}*/
 		$value = $this->profile_values[$memberid][$field];
 		if ($value == '' && $memberid == 999999999) {
 			$value = postVar($field);
@@ -2898,8 +3076,74 @@ password
 	}
 
 	function displayMemberList($templatename='',$amount=0,$orderby='nick|ASC') {
-
-		//$this->currentItem->$part = preg_replace_callback("#<\%LightBox2\((.*?)\)%\>#", array(&$this, 'parse'), $this->currentItem->$part);
+//echo "$templatename <br /><br />";
+//echo "$amount <br /><br />";
+//echo "$orderby <br /><br />";
+		$templatebody = quickQuery("SELECT tbody as result FROM ".sql_table('plugin_profile_templates')." WHERE ttype='memberlist' AND tname='".addslashes(trim($templatename))."'");
+//echo $templatebody;
+		if ($templatebody == '') return;
+		$amount = intval($amount);
+		if ($amount > 1) $limit = " LIMIT $amount";
+		$ordarr = explode('|',trim($orderby));
+//print_r($ordarr);
+		if (strtoupper($ordarr[0]) == 'RANDOM') {
+			$ordarr[0] == '';
+			$ordarr[1] == 'RANDOM';
+		}
+		if ($ordarr[0] != '') {
+			if($this->fieldExists(trim($ordarr[0]))) {
+				$ordarr[0] = str_replace(array('mail','nick','realname','url','notes','password'),array('memail','mname','mrealname','murl','mnotes','mpassword'),$ordarr[0]);
+				//$theorder = " ORDER BY ".trim($ordarr[0]);
+				}
+			else return;
+		}
+		switch (strtoupper($ordarr[1])) {
+			case 'DESC':
+                $theorder = "DESC";
+            break;
+			case 'RANDOM':
+				$theorder = "RAND()";
+			break;
+            default:
+                $theorder = "ASC";
+                break;
+		}
+		$query = "SELECT m.mnumber as mid FROM ".sql_table('member')." as m";
+		if (in_array($ordarr[0],array('memail','mname','mrealname','murl','mnotes','mpassword'))) {
+			if ($theorder == "RAND()") $query .= "ORDER BY $theorder";
+			else $query .= " ORDER BY m.".$ordarr[0]." $theorder";
+		}
+		else {
+			$query .= ", ".sql_table('plugin_profile')." as p WHERE m.mnumber=p.memberid AND p.field='".$ordarr[0]."' AND p.value<>''";
+			if ($theorder == "RAND()") $query .= " ORDER BY $theorder";
+			else $query .= " ORDER BY p.value $theorder";
+		}
+		$query .= $limit;
+//echo "$query <br /><br />";
+		$result = sql_query($query);
+		while ($row = mysql_fetch_assoc($result)) {
+//echo $row['mid']."<br /><br />";
+			$mid = intval($row['mid']);
+			$fromarr = array();
+			$toarr = array();
+			$fromarr[] = '%memberlink%';
+			$toarr[] = createMemberLink($mid);
+			$fromarr[] = '%memberid%';
+			$toarr[] = $mid;
+			foreach ($this->profile_fields as $key=>$value) {
+				if ($key != 'password') {
+					$fromarr[] = '%'.$key.'%';
+					$toarr[] = $this->doSkinVar('returnValue',$key,'show','raw',$mid);
+				}
+			}
+/*
+print_r($fromarr);
+echo "<br /><br />\n";
+print_r($toarr);
+echo "<br /><br />\n";
+*/
+			echo str_replace($fromarr,$toarr,$templatebody);
+		}
 	}
 }
 ?>
