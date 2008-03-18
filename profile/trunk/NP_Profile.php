@@ -3086,10 +3086,12 @@ password
 		if ($amount > 1) $limit = " LIMIT $amount";
 		$ordarr = explode('|',trim($orderby));
 //print_r($ordarr);
+//echo strtoupper($ordarr[0]);
 		if (strtoupper($ordarr[0]) == 'RANDOM') {
-			$ordarr[0] == '';
-			$ordarr[1] == 'RANDOM';
+			$ordarr[0] = '';
+			$ordarr[1] = 'RANDOM';
 		}
+//print_r($ordarr);
 		if ($ordarr[0] != '') {
 			if($this->fieldExists(trim($ordarr[0]))) {
 				$ordarr[0] = str_replace(array('mail','nick','realname','url','notes','password'),array('memail','mname','mrealname','murl','mnotes','mpassword'),$ordarr[0]);
@@ -3109,8 +3111,8 @@ password
                 break;
 		}
 		$query = "SELECT m.mnumber as mid FROM ".sql_table('member')." as m";
-		if (in_array($ordarr[0],array('memail','mname','mrealname','murl','mnotes','mpassword'))) {
-			if ($theorder == "RAND()") $query .= "ORDER BY $theorder";
+		if (in_array($ordarr[0],array('memail','mname','mrealname','murl','mnotes','mpassword',''))) {
+			if ($theorder == "RAND()") $query .= " ORDER BY $theorder";
 			else $query .= " ORDER BY m.".$ordarr[0]." $theorder";
 		}
 		else {
