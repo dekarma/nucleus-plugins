@@ -1,0 +1,230 @@
+/* CSS for NP_Profile editprofile page */
+body
+{
+	background-color: #444466;
+	color: #494949;
+	font-family: "Lucida Grande", "Lucida Sans Unicode", "Trebuchet MS", Trebuchet, Arial, sans-serif;
+	font-size: 11px;
+	padding: 15px 0;
+	margin: 0;
+	margin-bottom: 10px;
+}
+img
+{
+	border: 0;
+}
+form
+{
+	margin: 0;
+}
+
+/* Headings */
+h1
+{
+    font-family: "Georgia", "Lucida Grande", "Lucida Sans Unicode", "Trebuchet MS", Trebuchet, Arial, sans-serif;
+	font-weight: heavy;
+	font-size: 18px;
+	height: 24px;
+	vertical-align: bottom;
+	margin: 0;
+}
+h2
+{
+    font-family: "Georgia", "Lucida Grande", "Lucida Sans Unicode", "Trebuchet MS", Trebuchet, Arial, sans-serif;
+	font-weight: heavy;
+	font-size: 18px;
+	height: 24px;
+	vertical-align: bottom;
+	margin: 0;
+	margin-top: 6px;
+	margin-bottom: 6px;
+}
+h3
+{
+    font-family: "Georgia", "Lucida Grande", "Lucida Sans Unicode", "Trebuchet MS", Trebuchet, Arial, sans-serif;
+	font-weight: heavy;
+	font-size: 12px;
+	height: 20px;
+	vertical-align: bottom;
+	margin: 0;
+	margin-top: 6px;
+}
+h4,h5,h6
+{
+    font-family: "Georgia", "Lucida Grande", "Lucida Sans Unicode", "Trebuchet MS", Trebuchet, Arial, sans-serif;
+	font-weight: normal;
+	margin: 0;
+}
+/* Lists */
+ul
+{
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+li
+{
+	padding: 0 0 0 10px;
+	margin: 0 20px;
+}
+
+/* Links */
+a:link, a:visited
+{
+	color: #635D45;
+	text-decoration: none;
+}
+a:hover, a:active
+{
+	color: black;
+}
+#header a:link, #header a:visited
+{
+	color: #666688;
+}
+#header a:hover, #header a:active
+{
+	color: #668866;
+}
+#copyrights a:link, #copyrights a:visited
+{
+	color: #474747;
+}
+#copyrights a:hover, #copyrights a:active
+{
+	color: #737373;
+}
+
+/* Basic classes */
+.hidden
+{
+	display: none;
+}
+.centerize
+{
+	text-align: center;
+}
+.clearing
+{
+	width: 704px;
+	height: 0;
+	clear: both;
+}
+
+/*-------------------------------------------------
+  Header
+-------------------------------------------------*/
+#header
+{
+	position: relative;
+	width: 704px;
+	height: 84px;
+	/* large header image is defined below */
+	/* background: white url(images/header.jpg) no-repeat; */
+	background: white;
+	/* border-width: 2px 2px 0;
+	border-style: solid;
+	border-color: #E0E0E0; */
+	margin: auto;
+}
+#header h1
+{
+	/* small header image specific lines */
+	height: 80px;
+	width: 692px;
+	background-color: #ddddee;
+	margin: 3px 6px;
+	/* end small header image specific lines */
+	font-size: 38px;
+	text-align: center;
+	line-height: 76px;
+}
+.headertitle {
+/* uncomment below line to hide the blog title in header*/
+	/*display: none;*/
+}
+
+/*-------------------------------------------------
+  Content wrappers
+-------------------------------------------------*/
+#wrapper
+{
+	width: 704px;
+	background-color: white;
+	border-width: 2px 2px;
+	border-style: solid;
+	border-color: #E0E0E0;
+	margin: auto;
+}
+#content
+{
+	margin: 6px 6px;
+}
+#content img {
+	float: left;
+	padding: 0px 15px 0px 5px;
+}
+/* for member profile table */
+.profiletable {
+	width: 600px;
+	/*background-color: #eeeeee;*/
+	border: 1px solid black;
+}
+.profilecol1 {
+	width:100px;
+	background-color:#ddddee;
+	border:1px solid black;
+	vertical-align: top;
+	color: #333399;
+}
+.profilecol2 {
+	width:390px;
+	background-color:#ffffff;
+	border:1px solid black;
+}
+.profileeditlink {
+	background-color:#ddddee;
+	border: 1px outset #dddddd;
+	padding: 1px;
+}
+.navlist
+{
+padding: 3px 0;
+margin-left: 0;
+margin-bottom: 6px;
+border-bottom: 1px solid #778;
+font: bold 12px Verdana, sans-serif;
+}
+
+.navlist li
+{
+list-style: none;
+margin: 0;
+display: inline;
+}
+
+.navlist li a
+{
+padding: 3px 0.5em;
+margin-left: 3px;
+border: 1px solid #778;
+border-bottom: none;
+background: #DDE;
+text-decoration: none;
+}
+
+.navlist li a:link { color: #448; }
+.navlist li a:visited { color: #667; }
+
+.navlist li a:hover
+{
+color: #000;
+background: #AAE;
+border-color: #227;
+}
+
+.navlist li a.current
+{
+background: white;
+border-bottom: 1px solid white;
+}
