@@ -83,12 +83,16 @@ GB_Gallery = GreyBox.extend({
         var page_size = AJS.getWindowSize();
         AJS.setLeft(this.g_window, ((overlay_w - 50 - this.width)/2));
 
+        var header_top = AJS.getScrollTop()+55;
         if(!this.center_win) {
-            AJS.setTop(this.g_window, AJS.getScrollTop()+55);
+            AJS.setTop(this.g_window, header_top);
         }
         else {
-            var fl = ((page_size.h - this.height) /2) - 20 + AJS.getScrollTop();
+            var fl = ((page_size.h - this.height) /2) + 20 + AJS.getScrollTop();
             if(fl < 0) fl = 0;
+            if(header_top > fl) {
+                fl = header_top;
+            }
             AJS.setTop(this.g_window, fl);
         }
         this._setHeaderPos();
@@ -100,7 +104,7 @@ GB_Gallery = GreyBox.extend({
     },
 
     onShow: function() {
-        if(AJS.fx)
+        if(this.use_fx)
             AJS.fx.fadeIn(this.header, {to: 1});
         else
             AJS.setOpacity(this.header, 1);

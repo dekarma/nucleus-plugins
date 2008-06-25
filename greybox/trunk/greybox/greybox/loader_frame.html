@@ -6,7 +6,7 @@ Notice: I feel so dirty doing this, but its the only way to make it cross browse
   <script>
     var GB = parent.GB_CURRENT;
     document.write('<script type="text/javascript" src="AJS.js"><\/script>');
-    if(parent.AJS.fx) {
+    if(GB.use_fx) {
         document.write('<script type="text/javascript" src="AJS_fx.js"><\/script>');
     }
   </script>
@@ -54,35 +54,51 @@ else {
   document.write('<img id="GB_frame" src="' + gb_url + '">');
 }
 var frame = AJS.$('GB_frame');
-AJS.setOpacity(frame, 0);
 </script>
 
 </body>
 <script>
-try { AJS.getBody().focus(); }
-catch(e) { }
-
-AJS.AEV(window, 'load', function(e) {
-    AJS.removeElement(loading);
+function setupOuterGB() {
     frame.style.visibility = 'visible';
+    GB.setFrameSize();
+    GB.setWindowPosition();
+}
+
+function loaded() {
+    AJS.removeElement(loading);
+
+    GB.overlay.innerHTML += "&nbsp;"; //Safari bugfix
+    
     if(gb_type == "image") {
         if(img_holder.width != 0 && img_holder.height != 0) {
-            GB.width = img_holder.width;
-            GB.height = img_holder.height;
-            GB.overlay.innerHTML += "&nbsp;";
-            if(AJS.fx)
+            var width = img_holder.width;
+            var height = img_holder.height;
+
+            GB.width = width;
+            GB.height = height;
+
+            setupOuterGB();
+
+            if(GB.use_fx) {
+                AJS.setOpacity(frame, 0);
                 AJS.fx.fadeIn(frame);
-            else
-                AJS.setOpacity(frame, 1);
+            }
         }
     }
     else {
         GB.width = frame.offsetWidth;
         GB.height = frame.offsetHeight;
-        AJS.setOpacity(frame, 1);
+        setupOuterGB();
     }
-    GB.setFrameSize();
-    GB.setWindowPosition();
-});
+}
+
+if(GB.show_loading) {
+    AJS.AEV(window, 'load', function(e) {
+        loaded();
+    });
+}
+else {
+    loaded();
+}
 </script>
 </html>

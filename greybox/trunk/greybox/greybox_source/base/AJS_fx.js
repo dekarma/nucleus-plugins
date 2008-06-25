@@ -1,8 +1,8 @@
 /*
-Last Modified: 25/11/06 20:39:27
+Last Modified: 12/05/07 21:03:23
 
 AJS effects
-    A very small library with a lot of functionality
+    A very small effects library
 AUTHOR
     4mir Salihefendic (http://amix.dk) - amix@amix.dk
 LICENSE
@@ -11,25 +11,27 @@ LICENSE
     Copyright (c) 2006 Valerio Proietti, http://www.mad4milk.net
     http://www.opensource.org/licenses/mit-license.php
 VERSION
-    3.5
+    4.05
 SITE
     http://orangoo.com/AmiNation/AJS
 **/
 AJS.fx = {
+    _shades: {0: 'ffffff', 1: 'ffffee', 2: 'ffffdd',
+              3: 'ffffcc', 4: 'ffffbb', 5: 'ffffaa',
+              6: 'ffff99'},
+
     highlight: function(elm, options) {
         var base = new AJS.fx.Base();
         base.elm = AJS.$(elm);
-        base.setOptions(options);
         base.options.duration = 600;
+        base.setOptions(options);
 
         AJS.update(base, {
-            _shades: {0:'ff', 1:'ee', 2:'dd', 3:'cc', 4:'bb', 5:'aa', 6:'99'},
-
             increase: function(){
                 if(this.now == 7)
-                    elm.style.backgroundColor = 'transparent';
+                    elm.style.backgroundColor = '#fff';
                 else
-                    elm.style.backgroundColor = '#ffff' + this._shades[Math.floor(this.now)];
+                    elm.style.backgroundColor = '#' + AJS.fx._shades[Math.floor(this.now)];
             }
         });
         return base.custom(6, 0);
@@ -37,101 +39,53 @@ AJS.fx = {
 
     fadeIn: function(elm, options) {
         options = options || {};
-        if(!options.from) options.from = 0;
+        if(!options.from) {
+            options.from = 0;
+            AJS.setOpacity(elm, 0);
+        }
         if(!options.to) options.to = 1;
-        return this._fade(elm, options);
+        var s = new AJS.fx.Style(elm, 'opacity', options);
+        return s.custom(options.from, options.to);
     },
 
     fadeOut: function(elm, options) {
         options = options || {};
         if(!options.from) options.from = 1;
         if(!options.to) options.to = 0;
-        return this._fade(elm, options);
+        options.duration = 300;
+        var s = new AJS.fx.Style(elm, 'opacity', options);
+        return s.custom(options.from, options.to);
     },
     
-    _fade: function(elm, options) {
-        var base = new AJS.fx.Base();
-        base.elm = AJS.$(elm);
-        options.transition = AJS.fx.Transitions.linear;
-        base.setOptions(options);
-        AJS.update(base, {
-            start: function() {
-                return this.custom(this.options.from, this.options.to);
-            },
-
-            increase: function() {
-                AJS.setOpacity(this.elm, this.now);
-            }
-        });
-        return base.start();
-    },
-
     setWidth: function(elm, options) {
-        return this._setDimension(elm, 'width', options).start();
+        var s = new AJS.fx.Style(elm, 'width', options);
+        return s.custom(options.from, options.to);
     },
 
     setHeight: function(elm, options) {
-        return this._setDimension(elm, 'height', options).start();
-    },
-
-    _setDimension: function(elm, dim, options) {
-        //Init
-        var base = new AJS.fx.Base();
-        base.elm = AJS.$(elm);
-        base.setOptions(options);
-        base.elm.style.overflow = 'hidden';
-        base.dimension = dim;
-
-        if(dim == 'height')
-            base.show_size = base.elm.scrollHeight;
-        else
-            base.show_size = base.elm.offsetWidth;
-
-        //Attach methods
-        AJS.update(base, {
-            _getTo: function() {
-                if(this.dimension == 'height')
-                    return this.options.to || this.elm.scrollHeight;
-                else
-                    return this.options.to || this.elm.scrollWidth;
-            },
-
-            start: function() {
-                if(this.dimension == 'height') {
-                    return this.custom(this.elm.offsetHeight, this._getTo());
-                }
-                else {
-                    return this.custom(this.elm.offsetWidth, this._getTo());
-                }
-            },
-
-            increase: function(){
-                if(this.dimension == 'height')
-                    AJS.setHeight(this.elm, this.now);
-                else
-                    AJS.setWidth(this.elm, this.now);
-            }
-        });
-        return base;
+        var s = new AJS.fx.Style(elm, 'height', options);
+        return s.custom(options.from, options.to);
     }
 }
 
 
 //From moo.fx
-AJS.fx.Base = function() {
-    AJS.bindMethods(this);
-};
-AJS.fx.Base.prototype = {
+AJS.fx.Base = new AJS.Class({
+    init: function(options) {
+        this.options = {
+            onStart: function(){},
+            onComplete: function(){},
+            transition: AJS.fx.Transitions.sineInOut,
+            duration: 500,
+            wait: true,
+            fps: 50
+        };
+        AJS.update(this.options, options);
+        AJS.bindMethods(this);
+    },
 
     setOptions: function(options){
-        this.options = AJS.update({
-                onStart: function(){},
-                onComplete: function(){},
-                transition: AJS.fx.Transitions.sineInOut,
-                duration: 500,
-                wait: true,
-                fps: 50
-        }, options || {});
+        AJS.update(this.options, options);
     },
 
     step: function(){
@@ -181,11 +135,62 @@ AJS.fx.Base.prototype = {
         this.now = to;
         this.increase();
         return this;
+    },
+
+    setStyle: function(elm, property, val) {
+        if(this.property == 'opacity')
+            AJS.setOpacity(elm, val);
+        else
+            AJS.setStyle(elm, property, val);
     }
-};
+});
+
+AJS.fx.Style = AJS.fx.Base.extend({
+    init: function(elm, property, options) {
+        this.parent();
+        this.elm = elm;
+        this.setOptions(options);
+        this.property = property;
+    },
+
+    increase: function(){
+        this.setStyle(this.elm, this.property, this.now);
+    }
+});
+
+AJS.fx.Styles = AJS.fx.Base.extend({
+    init: function(elm, options){
+        this.parent();
+        this.elm = AJS.$(elm);
+        this.setOptions(options);
+        this.now = {};
+    },
+
+    setNow: function(){
+        for (p in this.from) 
+            this.now[p] = this.compute(this.from[p], this.to[p]);
+    },
+
+    custom: function(obj){
+        if (this.timer && this.options.wait) return;
+        var from = {};
+        var to = {};
+        for (p in obj){
+            from[p] = obj[p][0];
+            to[p] = obj[p][1];
+        }
+        return this._start(from, to);
+    },
+
+    increase: function(){
+        for (var p in this.now) this.setStyle(this.elm, p, this.now[p]);
+    }
+});
 
 //Transitions (c) 2003 Robert Penner (http://www.robertpenner.com/easing/), BSD License.
 AJS.fx.Transitions = {
     linear: function(t, b, c, d) { return c*t/d + b; },
     sineInOut: function(t, b, c, d) { return -c/2 * (Math.cos(Math.PI*t/d) - 1) + b; }
 };
+
+script_loaded = true;

@@ -1,28 +1,23 @@
 /*
-Last Modified: 27/11/06 12:04:15
+Last Modified: 29/08/07 18:28:12
 
 AJS JavaScript library
     A very small library with a lot of functionality
 AUTHOR
     4mir Salihefendic (http://amix.dk) - amix@amix.dk
 LICENSE
-    Copyright (c) 2006 Amir Salihefendic. All rights reserved.
+    Copyright (c) 2006 amix. All rights reserved.
     Copyright (c) 2005 Bob Ippolito. All rights reserved.
     http://www.opensource.org/licenses/mit-license.php
 VERSION
-    3.51
+    4.1
 SITE
     http://orangoo.com/AmiNation/AJS
 **/
 if(!AJS) {
 var AJS = {
     BASE_URL: "",
-
-    drag_obj: null,
-    drag_elm: null,
-    _drop_zones: [],
-    _cur_pos: null,
-
+    ajaxErrorHandler: null,
 
 ////
 // General accessor functions
@@ -53,6 +48,12 @@ var AJS = {
     },
     isMozilla: function() {
         return (navigator.userAgent.toLowerCase().indexOf("gecko") != -1 && navigator.productSub >= 20030210);
+    },
+    isMac: function() {
+        return (navigator.userAgent.toLowerCase().indexOf('macintosh') != -1);
+    },
+    isCamino: function() {
+        return (navigator.userAgent.toLowerCase().indexOf("camino") != -1);
     },
 
 
@@ -129,7 +130,8 @@ var AJS = {
         var r = [];
         var _flatten = function(r, l) {
             AJS.map(l, function(o) {
-                if (AJS.isArray(o))
+                if(o == null) {}
+                else if (AJS.isArray(o))
                     _flatten(r, o);
                 else
                     r.push(o);
@@ -149,8 +151,20 @@ var AJS = {
              i = start_index;
         if(end_index)
              l = end_index;
-        for(i; i < l; i++)
-            fn.apply(null, [list[i], i]);
+        for(i; i < l; i++) {
+            var val = fn(list[i], i);
+            if(val != undefined)
+                return val;
+        }
+    },
+
+    rmap: function(list, fn) {
+        var i = list.length-1, l = 0;
+        for(i; i >= l; i--) {
+            var val = fn.apply(null, [list[i], i]);
+            if(val != undefined)
+                return val;
+        }
     },
 
     filter: function(list, fn, /*optional*/ start_index, end_index) {
@@ -163,14 +177,20 @@ var AJS = {
     },
 
     partial: function(fn) {
-        var args = AJS.forceArray(arguments);
-        return AJS.$b(fn, null, args.slice(1, args.length).reverse(), false, true);
+        var args = AJS.$FA(arguments);
+        args.shift();
+        return function() {
+            args = args.concat(AJS.$FA(arguments));
+            return fn.apply(window, args);
+        }
     },
 
 
 ////
 // DOM functions
 ////
+
+//--- Accessors ----------------------------------------------
     //Shortcut: AJS.$
     getElement: function(id) {
         if(AJS.isString(id) || AJS.isNumber(id))
@@ -181,7 +201,7 @@ var AJS = {
 
     //Shortcut: AJS.$$
     getElements: function(/*id1, id2, id3*/) {
-        var args = AJS.flattenList(arguments);
+        var args = AJS.forceArray(arguments);
         var elements = new Array();
             for (var i = 0; i < args.length; i++) {
                 var element = AJS.getElement(args[i]);
@@ -191,7 +211,7 @@ var AJS = {
     },
 
     //Shortcut: AJS.$bytc
-    getElementsByTagAndClassName: function(tag_name, class_name, /*optional*/ parent) {
+    getElementsByTagAndClassName: function(tag_name, class_name, /*optional*/ parent, first_match) {
         var class_elements = [];
         if(!AJS.isDefined(parent))
             parent = document;
@@ -208,22 +228,50 @@ var AJS = {
                 j++;
             }
         }
-        return class_elements;
+        if(first_match)
+            return class_elements[0];
+        else
+            return class_elements;
+    },
+
+    nodeName: function(elm) {
+        return elm.nodeName.toLowerCase();
     },
 
     _nodeWalk: function(elm, tag_name, class_name, fn_next_elm) {
         var p = fn_next_elm(elm);
+
+        var checkFn;
+        if(tag_name && class_name) {
+            checkFn = function(p) {
+                return AJS.nodeName(p) == tag_name && AJS.hasClass(p, class_name);
+            }
+        }
+        else if(tag_name) {
+            checkFn = function(p) { return AJS.nodeName(p) == tag_name; }
+        }
+        else {
+            checkFn = function(p) { return AJS.hasClass(p, class_name); }
+        }
+
         while(p) {
-            if((AJS.nodeName(p) == tag_name || !tag_name) && (p.className == class_name || !class_name))
+            if(checkFn(p))
                 return p;
-            else
-                p = fn_next_elm(p);
+            p = fn_next_elm(p);
         }
         return null;
     },
 
     getParentBytc: function(elm, tag_name, class_name) {
         return AJS._nodeWalk(elm, tag_name, class_name, function(m) { return m.parentNode; });
+    },
+
+    hasParent: function(elm, parent_to_consider, max_look_up) {
+        if(elm == parent_to_consider)
+            return true;
+        if(max_look_up == 0)
+            return false;
+        return AJS.hasParent(elm.parentNode, parent_to_consider, max_look_up-1);
     },
 
     getPreviousSiblingBytc: function(elm, tag_name, class_name) {
@@ -234,11 +282,24 @@ var AJS = {
         return AJS._nodeWalk(elm, tag_name, class_name, function(m) { return m.nextSibling; });
     },
 
+    getBody: function() {
+        return AJS.$bytc('body')[0]
+    },
+
+
+//--- Form related ----------------------------------------------
     //Shortcut: AJS.$f
     getFormElement: function(form, name) {
         form = AJS.$(form);
         var r = null;
         AJS.map(form.elements, function(elm) {
+            if(elm.name && elm.name == name)
+                r = elm;
+        });
+        if(r)
+            return r;
+
+        AJS.map(AJS.$bytc('select', null, form), function(elm) {
             if(elm.name && elm.name == name)
                 r = elm;
         });
@@ -259,26 +320,13 @@ var AJS = {
         return r;
     },
 
-    getBody: function() {
-        return AJS.$bytc('body')[0]
+    getSelectValue: function(select) {
+        var select = AJS.$(select);
+        return select.options[select.selectedIndex].value;
     },
 
-    nodeName: function(elm) {
-        return elm.nodeName.toLowerCase();
-    },
 
-    hasParent: function(elm, parent_to_consider, max_look_up) {
-        if(elm == parent_to_consider)
-            return true;
-        if(max_look_up == 0)
-            return false;
-        return AJS.hasParent(elm.parentNode, parent_to_consider, max_look_up-1);
-    },
-
-    isElementHidden: function(elm) {
-        return elm.style.visibility == "hidden";
-    },
-
+//--- DOM related ----------------------------------------------
     //Shortcut: AJS.DI
     documentInsert: function(elm) {
         if(typeof(elm) == 'string')
@@ -306,6 +354,26 @@ var AJS = {
         return elm;
     },
 
+    appendToTop: function(elm/*, elms...*/) {
+        var args = AJS.forceArray(arguments).slice(1);
+        if(args.length >= 1) {
+            var first_child = elm.firstChild;
+            if(first_child) {
+                while(true) {
+                    var t_elm = args.shift();
+                    if(t_elm)
+                        AJS.insertBefore(t_elm, first_child);
+                    else
+                        break;
+                }
+            }
+            else {
+                AJS.ACN.apply(null, arguments);
+            }
+        }
+        return elm;
+    },
+
     //Shortcut: AJS.RCN
     replaceChildNodes: function(elm/*, elms...*/) {
         var child;
@@ -328,16 +396,6 @@ var AJS = {
         return elm;
     },
 
-    showElement: function(/*elms...*/) {
-        var args = AJS.flattenList(arguments);
-        AJS.map(args, function(elm) { elm.style.display = ''});
-    },
-
-    hideElement: function(elm) {
-        var args = AJS.flattenList(arguments);
-        AJS.map(args, function(elm) { elm.style.display = 'none'});
-    },
-
     swapDOM: function(dest, src) {
         dest = AJS.getElement(dest);
         var parent = dest.parentNode;
@@ -351,20 +409,21 @@ var AJS = {
     },
 
     removeElement: function(/*elm1, elm2...*/) {
-        var args = AJS.flattenList(arguments);
+        var args = AJS.forceArray(arguments);
         AJS.map(args, function(elm) { AJS.swapDOM(elm, null); });
     },
 
     createDOM: function(name, attrs) {
         var i=0, attr;
-        elm = document.createElement(name);
+        var elm = document.createElement(name);
 
+        var first_attr = attrs[0];
         if(AJS.isDict(attrs[i])) {
-            for(k in attrs[0]) {
-                attr = attrs[0][k];
-                if(k == "style")
+            for(k in first_attr) {
+                attr = first_attr[k];
+                if(k == 'style' || k == 's')
                     elm.style.cssText = attr;
-                else if(k == "class" || k == 'className')
+                else if(k == 'c' || k == 'class' || k == 'className')
                     elm.className = attr;
                 else {
                     elm.setAttribute(k, attr);
@@ -373,16 +432,19 @@ var AJS = {
             i++;
         }
 
-        if(attrs[0] == null)
+        if(first_attr == null)
             i = 1;
 
-        AJS.map(attrs, function(n) {
-            if(n) {
-                if(AJS.isString(n) || AJS.isNumber(n))
-                    n = AJS.TN(n);
-                elm.appendChild(n);
+        for(var j=i; j < attrs.length; j++) {
+            var attr = attrs[j];
+            if(attr) {
+                var type = typeof(attr);
+                if(type == 'string' || type == 'number')
+                    attr = AJS.TN(attr);
+                elm.appendChild(attr);
             }
-        }, i);
+        }
+
         return elm;
     },
 
@@ -391,18 +453,39 @@ var AJS = {
                 "ul", "li", "td", "tr", "th",
                 "tbody", "table", "input", "span", "b",
                 "a", "div", "img", "button", "h1",
-                "h2", "h3", "br", "textarea", "form",
-                "p", "select", "option", "iframe", "script",
+                "h2", "h3", "h4", "h5", "h6", "br", "textarea", "form",
+                "p", "select", "option", "optgroup", "iframe", "script",
                 "center", "dl", "dt", "dd", "small",
-                "pre"
+                "pre", 'i'
         ];
         var extends_ajs = function(elm) {
-            var c_dom = "return AJS.createDOM.apply(null, ['" + elm + "', arguments]);";
-            var c_fun_dom = 'function() { ' + c_dom + '    }';
-            eval("AJS." + elm.toUpperCase() + "=" + c_fun_dom);
+            AJS[elm.toUpperCase()] = function() {
+                return AJS.createDOM.apply(null, [elm, arguments]); 
+            };
         }
         AJS.map(elms, extends_ajs);
         AJS.TN = function(text) { return document.createTextNode(text) };
+    },
+    
+    setHTML: function(elm, html) {
+        elm.innerHTML = html;
+        return elm;
+    },
+
+
+//--- CSS related ----------------------------------------------
+    showElement: function(/*elms...*/) {
+        var args = AJS.forceArray(arguments);
+        AJS.map(args, function(elm) { elm.style.display = ''});
+    },
+
+    hideElement: function(elm) {
+        var args = AJS.forceArray(arguments);
+        AJS.map(args, function(elm) { elm.style.display = 'none'});
+    },
+
+    isElementHidden: function(elm) {
+        return ((elm.style.display == "none") || (elm.style.visibility == "hidden"));
     },
 
     getCssDim: function(dim) {
@@ -411,6 +494,7 @@ var AJS = {
         else
             return dim + "px";
     },
+
     getCssProperty: function(elm, prop) {
         elm = AJS.$(elm);
         var y;
@@ -421,33 +505,42 @@ var AJS = {
 	return y;
     },
 
+    setStyle: function(/*elm1, elm2..., property, new_value*/) {
+        var args = AJS.forceArray(arguments);
+        var new_val = args.pop();
+        var property = args.pop();
+        AJS.map(args, function(elm) { 
+            elm.style[property] = AJS.getCssDim(new_val);
+        });
+    },
+
     setWidth: function(/*elm1, elm2..., width*/) {
-        var args = AJS.flattenList(arguments);
-        var w = args.pop();
-        AJS.map(args, function(elm) { elm.style.width = AJS.getCssDim(w)});
+        var args = AJS.forceArray(arguments);
+        args.splice(args.length-1, 0, 'width');
+        AJS.setStyle.apply(null, args);
     },
     setHeight: function(/*elm1, elm2..., height*/) {
-        var args = AJS.flattenList(arguments);
-        var h = args.pop();
-        AJS.map(args, function(elm) { elm.style.height = AJS.getCssDim(h)});
+        var args = AJS.forceArray(arguments);
+        args.splice(args.length-1, 0, 'height');
+        AJS.setStyle.apply(null, args);
     },
     setLeft: function(/*elm1, elm2..., left*/) {
-        var args = AJS.flattenList(arguments);
-        var l = args.pop();
-        AJS.map(args, function(elm) { elm.style.left = AJS.getCssDim(l)});
+        var args = AJS.forceArray(arguments);
+        args.splice(args.length-1, 0, 'left');
+        AJS.setStyle.apply(null, args);
     },
     setTop: function(/*elm1, elm2..., top*/) {
-        var args = AJS.flattenList(arguments);
-        var t = args.pop();
-        AJS.map(args, function(elm) { elm.style.top = AJS.getCssDim(t)});
+        var args = AJS.forceArray(arguments);
+        args.splice(args.length-1, 0, 'top');
+        AJS.setStyle.apply(null, args);
     },
     setClass: function(/*elm1, elm2..., className*/) {
-        var args = AJS.flattenList(arguments);
+        var args = AJS.forceArray(arguments);
         var c = args.pop();
         AJS.map(args, function(elm) { elm.className = c});
     },
     addClass: function(/*elm1, elm2..., className*/) {
-        var args = AJS.flattenList(arguments);
+        var args = AJS.forceArray(arguments);
         var cls = args.pop();
         var add_class = function(o) {
             if(!new RegExp("(^|\\s)" + cls + "(\\s|$)").test(o.className))
@@ -455,20 +548,33 @@ var AJS = {
         };
         AJS.map(args, function(elm) { add_class(elm); });
     },
+    hasClass: function(elm, cls) {
+        if(!elm.className)
+            return false;
+        return elm.className == cls || 
+               elm.className.search(new RegExp(" " + cls + "|^" + cls)) != -1
+    },
     removeClass: function(/*elm1, elm2..., className*/) {
-        var args = AJS.flattenList(arguments);
+        var args = AJS.forceArray(arguments);
         var cls = args.pop();
         var rm_class = function(o) {
-            o.className = o.className.replace(new RegExp("\\s?" + cls), "");
+            o.className = o.className.replace(new RegExp("\\s?" + cls, 'g'), "");
         };
         AJS.map(args, function(elm) { rm_class(elm); });
     },
 
-    setHTML: function(elm, html) {
-        elm.innerHTML = html;
-        return elm;
+    setOpacity: function(elm, p) {
+        elm.style.opacity = p;
+        elm.style.filter = "alpha(opacity="+ p*100 +")";
     },
 
+    resetOpacity: function(elm) {
+        elm.style.opacity = 1;
+        elm.style.filter = "";
+    },
+
+
+//--- Misc ----------------------------------------------
     RND: function(tmpl, ns, scope) {
         scope = scope || window;
         var fn = function(w, g) {
@@ -505,15 +611,6 @@ var AJS = {
 
 
 ////
-// Effects
-////
-    setOpacity: function(elm, p) {
-        elm.style.opacity = p;
-        elm.style.filter = "alpha(opacity="+ p*100 +")";
-    },
-
-
-////
 // Ajax functions
 ////
     getXMLHttpRequest: function() {
@@ -534,23 +631,16 @@ var AJS = {
     },
 
     getRequest: function(url, data, type) {
-        //Extend the privlege so we can make cross host reqs
-        try {
-            netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
-        } catch (e) { }
-
         if(!type)
             type = "POST";
         var req = AJS.getXMLHttpRequest();
 
-        if(url.indexOf("http://") == -1) {
+        if(url.match(/^https?:\/\//) == null) {
             if(AJS.BASE_URL != '') {
                 if(AJS.BASE_URL.lastIndexOf('/') != AJS.BASE_URL.length-1)
                     AJS.BASE_URL += '/';
                 url = AJS.BASE_URL + url;
             }
-            else
-                url = window.location + url;
         }
 
         req.open(type, url, true);
@@ -572,12 +662,13 @@ var AJS = {
                 if(status == 200 || status == 304 || req.responseText == null) {
                     d.callback();
                 }
-                else if(status == 500) {
-                    alert(req.responseText);
-                    d.errback();
-                }
                 else {
-                    d.errback();
+                    if(d.errbacks.length == 0) {
+                        if(AJS.ajaxErrorHandler)
+                            AJS.ajaxErrorHandler(req.responseText, req);
+                    }
+                    else 
+                        d.errback();
                 }
             }
         }
@@ -594,6 +685,24 @@ var AJS = {
         ).replace(/[\r]/g, "\\r");
     },
 
+    _reprDate: function(db) {
+        var year = db.getFullYear();
+        var dd = db.getDate();
+        var mm = db.getMonth()+1;
+
+        var hh = db.getHours();
+        var mins = db.getMinutes();
+
+        function leadingZero(nr) {
+            if (nr < 10) nr = "0" + nr;
+            return nr;
+        }
+        if(hh == 24) hh = '00';
+
+        var time = leadingZero(hh) + ':' + leadingZero(mins);
+        return '"' + year + '-' + mm + '-' + dd + 'T' + time + '"';
+    },
+
     serializeJSON: function(o) {
         var objtype = typeof(o);
         if (objtype == "undefined") {
@@ -605,6 +714,9 @@ var AJS = {
         }
         if (objtype == "string") {
             return AJS._reprString(o);
+        }
+        if(objtype == 'object' && o.getFullYear) {
+            return AJS._reprDate(o);
         }
         var me = arguments.callee;
         if (objtype != "function" && typeof(o.length) == "number") {
@@ -690,15 +802,13 @@ var AJS = {
         var posx = 0;
         var posy = 0;
         if (!e) var e = window.event;
-        if (e.pageX || e.pageY)
-        {
+        if (e.pageX || e.pageY) {
             posx = e.pageX;
             posy = e.pageY;
         }
-        else if (e.clientX || e.clientY)
-        {
-            posx = e.clientX + document.body.scrollLeft;
-            posy = e.clientY + document.body.scrollTop;
+        else if (e.clientX || e.clientY) {
+            posx = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+            posy = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
         }
         return {x: posx, y: posy};
     },
@@ -713,12 +823,17 @@ var AJS = {
         return t;
     },
 
+    //Shortcut: AJS.$AP
     absolutePosition: function(elm) {
         var posObj = {'x': elm.offsetLeft, 'y': elm.offsetTop};
+
         if(elm.offsetParent) {
-            var temp_pos = AJS.absolutePosition(elm.offsetParent);
-            posObj.x += temp_pos.x;
-            posObj.y += temp_pos.y;
+            var next = elm.offsetParent;
+            while(next) {
+                posObj.x += next.offsetLeft;
+                posObj.y += next.offsetTop;
+                next = next.offsetParent;
+            }
         }
         // safari bug
         if (AJS.isSafari() && elm.style.position == 'absolute' ) {
@@ -784,96 +899,102 @@ var AJS = {
         return targ;
     },
 
-    _getRealScope: function(fn, /*optional*/ extra_args, dont_send_event, rev_extra_args) {
-        var scope = window;
-        extra_args = AJS.$A(extra_args);
-        if(fn._cscope)
-            scope = fn._cscope;
+    setEventKey: function(e) {
+        e.key = e.keyCode ? e.keyCode : e.charCode;
 
-        return function() {
-            //Append all the orginal arguments + extra_args
-            var args = [];
-            var i = 0;
-            if(dont_send_event)
-                i = 1;
-
-            AJS.map(arguments, function(arg) { args.push(arg) }, i);
-            args = args.concat(extra_args);
-            if(rev_extra_args)
-                args = args.reverse();
-            return fn.apply(scope, args);
-        };
-    },
-
-    _unloadListeners: function() {
-        if(AJS.listeners)
-            AJS.map(AJS.listeners, function(elm, type, fn) { AJS.REV(elm, type, fn) });
-        AJS.listeners = [];
+        if(window.event) {
+            e.ctrl = window.event.ctrlKey;
+            e.shift = window.event.shiftKey;
+        }
+        else {
+            e.ctrl = e.ctrlKey;
+            e.shift = e.shiftKey;
+        }
+        switch(e.key) {
+            case 63232:
+                e.key = 38;
+                break;
+            case 63233:
+                e.key = 40;
+                break;
+            case 63235:
+                e.key = 39;
+                break;
+            case 63234:
+                e.key = 37;
+                break;
+        }
     },
 
     //Shortcut: AJS.AEV
     addEventListener: function(elm, type, fn, /*optional*/listen_once, cancle_bubble) {
+        var ajs_l_key = 'ajsl_'+type+fn;
         if(!cancle_bubble)
             cancle_bubble = false;
 
+        AJS.listeners = AJS.$A(AJS.listeners);
+
+        //Fix keyCode
+        if(AJS.isIn(type, ['keypress', 'keydown', 'keyup', 'click'])) {
+            var old_fn_1 = fn;
+            fn = function(e) {
+                AJS.setEventKey(e);
+                return old_fn_1.apply(window, arguments);
+            }
+        }
+
+        //Hack since these does not work in all browsers
+        var is_special_type = AJS.isIn(type, ['submit', 'load', 'scroll', 'resize']);
+
         var elms = AJS.$A(elm);
-        AJS.map(elms, function(elmz) {
-            if(listen_once)
-                fn = AJS._listenOnce(elmz, type, fn);
-            
-            //Hack since it does not work in all browsers
-            if(AJS.isIn(type, ['submit', 'load', 'scroll', 'resize'])) {
-                var old = elm['on' + type];
-                elm['on' + type] = function() {
-                    if(old) {
+        AJS.map(elms, function(elm_i) {
+            if(listen_once) {
+                var old_fn_2 = fn;
+                fn = function(e) {
+                    AJS.REV(elm_i, type, fn);
+                    return old_fn_2.apply(window, arguments);
+                }
+            }
+
+            if(is_special_type) {
+                var old_fn = elm_i['on' + type];
+                var wrap_fn = function() {
+                    if(old_fn) {
                         fn(arguments);
-                        return old(arguments);
+                        return old_fn(arguments);
                     }
                     else
                         return fn(arguments);
                 };
-                return;
+                elm_i[ajs_l_key] = wrap_fn;
+                elm_i[ajs_l_key+'old'] = old_fn;
+                elm['on' + type] = wrap_fn;
             }
+            else {
+                elm_i[ajs_l_key] = fn;
 
-            //Fix keyCode
-            if(AJS.isIn(type, ['keypress', 'keydown', 'keyup'])) {
-                var old_fn = fn;
-                fn = function(e) {
-                    e.key = e.keyCode ? e.keyCode : e.charCode;
-                    switch(e.key) {
-                        case 63232:
-                            e.key = 38;
-                            break;
-                        case 63233:
-                            e.key = 40;
-                            break;
-                        case 63235:
-                            e.key = 39;
-                            break;
-                        case 63234:
-                            e.key = 37;
-                            break;
-                    }
-                    return old_fn.apply(null, arguments);
-                }
+                if (elm_i.attachEvent)
+                    elm_i.attachEvent("on" + type, fn);
+                else if(elm_i.addEventListener)
+                    elm_i.addEventListener(type, fn, cancle_bubble);
+                AJS.listeners.push([elm_i, type, fn]);
             }
-
-            if (elmz.attachEvent) {
-                //FIXME: We ignore cancle_bubble for IE... could be a problem?
-                elmz.attachEvent("on" + type, fn);
-            }
-            else if(elmz.addEventListener)
-                elmz.addEventListener(type, fn, cancle_bubble);
-
-            AJS.listeners = AJS.$A(AJS.listeners);
-            AJS.listeners.push([elmz, type, fn]);
         });
     },
 
     //Shortcut: AJS.REV
     removeEventListener: function(elm, type, fn, /*optional*/cancle_bubble) {
+        var ajs_l_key = 'ajsl_'+type+fn;
+
         if(!cancle_bubble)
             cancle_bubble = false;
+
+        fn = elm[ajs_l_key] || fn;
+
+        if(elm['on' + type] == fn) {
+            elm['on' + type] = elm[ajs_l_key + 'old'];
+        }
+
         if(elm.removeEventListener) {
             elm.removeEventListener(type, fn, cancle_bubble);
             if(AJS.isOpera())
@@ -884,9 +1005,9 @@ var AJS = {
     },
 
     //Shortcut: AJS.$b
-    bind: function(fn, scope, /*optional*/ extra_args, dont_send_event, rev_extra_args) {
+    bind: function(fn, scope, /*optional*/ extra_args) {
         fn._cscope = scope;
-        return AJS._getRealScope(fn, extra_args, dont_send_event, rev_extra_args);
+        return AJS._getRealScope(fn, extra_args);
     },
 
     bindMethods: function(self) {
@@ -896,14 +1017,6 @@ var AJS = {
                 self[k] = AJS.$b(func, self);
             }
         }
-    },
-
-    _listenOnce: function(elm, type, fn) {
-        var r_fn = function() {
-            AJS.removeEventListener(elm, type, r_fn);
-            fn(arguments);
-        }
-        return r_fn;
     },
 
     callLater: function(fn, interval) {
@@ -916,181 +1029,33 @@ var AJS = {
     preventDefault: function(e) {
         if(AJS.isIe()) 
             window.event.returnValue = false;
-        else 
+        else {
             e.preventDefault();
-    },
-
-
-////
-// Drag and drop
-////
-    dragAble: function(elm, /*optional*/ handler, args) {
-        if(!args)
-            args = {};
-        if(!AJS.isDefined(args['move_x']))
-            args['move_x'] = true;
-        if(!AJS.isDefined(args['move_y']))
-            args['move_y'] = true;
-        if(!AJS.isDefined(args['moveable']))
-            args['moveable'] = false;
-        if(!AJS.isDefined(args['hide_on_move']))
-            args['hide_on_move'] = true;
-        if(!AJS.isDefined(args['on_mouse_up']))
-            args['on_mouse_up'] = null;
-        if(!AJS.isDefined(args['cursor']))
-            args['cursor'] = 'move';
-        if(!AJS.isDefined(args['max_move']))
-            args['max_move'] = {'top': null, 'left': null};
-
-        elm = AJS.$(elm);
-
-        if(!handler)
-            handler = elm;
-
-        handler = AJS.$(handler);
-        handler.style.cursor = args['cursor'];
-        elm.style.position = 'relative';
-
-        AJS.AEV(handler, 'mousedown', function(e) {
-            AJS._dragInit(e, elm, args);
-        });
-    },
-
-    dropZone: function(elm, args) {
-        elm = AJS.$(elm);
-        var item = {elm: elm};
-        AJS.update(item, args);
-        AJS._drop_zones.push(item);
-    },
-
-    _dragInit: function(e, click_elm, args) {
-        AJS.drag_obj = new Object();
-        AJS.drag_obj.args = args;
-
-        AJS.drag_obj.click_elm = click_elm;
-        AJS.drag_obj.mouse_pos = AJS.getMousePos(e);
-        AJS.drag_obj.click_elm_pos = AJS.absolutePosition(click_elm);
-
-        AJS.AEV(document, 'mousemove', AJS._dragMove, false, true);
-        AJS.AEV(document, 'mouseup', AJS._dragStop, false, true);
-
-        if (AJS.isIe())
-            window.event.cancelBubble = true;
-        AJS.preventDefault(e);
-    },
-
-    _initDragElm: function(elm) {
-        if(AJS.drag_elm && AJS.drag_elm.style.display == 'none')
-            AJS.removeElement(AJS.drag_elm);
-
-        if(!AJS.drag_elm) {
-            AJS.drag_elm = AJS.DIV();
-            var d = AJS.drag_elm;
-            AJS.insertBefore(d, AJS.getBody().firstChild);
-            AJS.setHTML(d, elm.innerHTML);
-
-            d.className = elm.className;
-            d.style.cssText = elm.style.cssText;
-
-            d.style.position = 'absolute';
-            d.style.zIndex = 10000;
-
-            var t = AJS.absolutePosition(elm);
-            AJS.setTop(d, t.y);
-            AJS.setLeft(d, t.x);
         }
     },
 
-    _dragMove: function(e) {
-        var drag_obj = AJS.drag_obj;
-        var click_elm = drag_obj.click_elm;
-
-        AJS._initDragElm(click_elm);
-        var drag_elm = AJS.drag_elm;
-
-        if(drag_obj.args['hide_on_move'])
-            click_elm.style.visibility = 'hidden';
-
-        var cur_pos = AJS.getMousePos(e);
-
-        var mouse_pos = drag_obj.mouse_pos;
-
-        var click_elm_pos = drag_obj.click_elm_pos;
-
-        AJS.map(AJS._drop_zones, function(d_z) {
-            if(AJS.isOverlapping(d_z['elm'], drag_elm)) {
-                if(d_z['elm'] != drag_elm) {
-                    var on_hover = d_z['on_hover'];
-                    if(on_hover)
-                        on_hover(d_z['elm'], click_elm, drag_elm);
-                }
-            }
-        });
-
-        if(drag_obj.args['on_drag'])
-            drag_obj.args['on_drag'](click_elm, drag_elm, e);
-
-        var max_move_top = drag_obj.args['max_move']['top'];
-        var max_move_left = drag_obj.args['max_move']['left'];
-        var p;
-        if(drag_obj.args['move_x']) {
-            p = cur_pos.x - (mouse_pos.x - click_elm_pos.x);
-            if(max_move_left == null || max_move_left <= p)
-                AJS.setLeft(elm, p);
+    _listenOnce: function(elm, type, fn) {
+        var r_fn = function() {
+            AJS.removeEventListener(elm, type, r_fn);
+            fn(arguments);
         }
-
-        if(drag_obj.args['move_y']) {
-            p = cur_pos.y - (mouse_pos.y - click_elm_pos.y);
-            if(max_move_top == null || max_move_top <= p)
-                AJS.setTop(elm, p);
-        }
-        if(AJS.isIe()) {
-            window.event.cancelBubble = true;
-            window.event.returnValue = false;
-        }
-        else
-            e.preventDefault();
+        return r_fn;
     },
 
-    _dragStop: function(e) {
-        var drag_obj = AJS.drag_obj;
-        var click_elm = drag_obj.click_elm;
-        var drag_elm = AJS.drag_elm;
+    _getRealScope: function(fn, /*optional*/ extra_args) {
+        extra_args = AJS.$A(extra_args);
+        var scope = fn._cscope || window;
 
-        AJS.REV(document, "mousemove", AJS._dragMove, true);
-        AJS.REV(document, "mouseup", AJS._dragStop, true);
+        return function() {
+            var args = AJS.$FA(arguments).concat(extra_args);
+            return fn.apply(scope, args);
+        };
+    },
 
-        var dropped = false;
-        AJS.map(AJS._drop_zones, function(d_z) {
-            if(AJS.isOverlapping(d_z['elm'], click_elm)) {
-                if(d_z['elm'] != click_elm) {
-                    var on_drop = d_z['on_drop'];
-                    if(on_drop) {
-                        dropped = true;
-                        on_drop(d_z['elm'], click_elm, drag_elm);
-                    }
-                }
-            }
-        });
-
-        if(drag_obj.args['moveable']) {
-            var t = parseInt(click_elm.style.top) || 0;
-            var l = parseInt(click_elm.style.left) || 0;
-            var drag_elm_xy = AJS.absolutePosition(drag_elm);
-            var click_elm_xy = AJS.absolutePosition(click_elm);
-            AJS.setTop(click_elm, t + drag_elm_xy.y - click_elm_xy.y);
-            AJS.setLeft(click_elm, l + drag_elm_xy.x - click_elm_xy.x);
-        }
-
-        if(!dropped && drag_obj.args['on_mouse_up'])
-            drag_obj.args['on_mouse_up'](click_elm, drag_obj, e);
-
-        if(drag_obj.args['hide_on_move'])
-            drag_obj.click_elm.style.visibility = 'visible';
-
-        AJS._dragObj = null;
-        AJS.hideElement(AJS.drag_elm);
-        AJS.drag_elm = null;
+    _unloadListeners: function() {
+        if(AJS.listeners)
+            AJS.map(AJS.listeners, function(elm, type, fn) { AJS.REV(elm, type, fn) });
+        AJS.listeners = [];
     },
 
 
@@ -1101,6 +1066,14 @@ var AJS = {
         var rval = [];
         for (var prop in obj) {
             rval.push(prop);
+        }
+        return rval;
+    },
+
+    values: function(obj) {
+        var rval = [];
+        for (var prop in obj) {
+            rval.push(obj[prop]);
         }
         return rval;
     },
@@ -1129,6 +1102,10 @@ var AJS = {
         return (typeof obj == 'object');
     },
 
+    isFunction: function(obj) {
+        return (typeof obj == 'function');
+    },
+
     isDict: function(o) {
         var str_repr = String(o);
         return str_repr.indexOf(" Object") != -1;
@@ -1136,18 +1113,22 @@ var AJS = {
 
     exportToGlobalScope: function() {
         for(e in AJS)
-            eval(e + " = AJS." + e);
+            window[e] = AJS[e];
     },
 
     log: function(o) {
-        if(AJS.isMozilla())
+        if(window.console)
             console.log(o);
         else {
-            var div = AJS.DIV({'style': 'color: green'});
-            AJS.ACN(AJS.getBody(), AJS.setHTML(div, ''+o));
+            var div = AJS.$('ajs_logger');
+            if(!div) {
+                div = AJS.DIV({id: 'ajs_logger', 'style': 'color: green; position: absolute; left: 0'});
+                div.style.top = AJS.getScrollTop() + 'px';
+                AJS.ACN(AJS.getBody(), div);
+            }
+            AJS.setHTML(div, ''+o);
         }
     }
-
 }
 
 AJS.Class = function(members) {
@@ -1184,7 +1165,7 @@ AJS.Class.prototype = {
             return cur.apply(this, arguments);
         }
     }
-};
+};//End class
 
 //Shortcuts
 AJS.$ = AJS.getElement;
@@ -1192,6 +1173,7 @@ AJS.$$ = AJS.getElements;
 AJS.$f = AJS.getFormElement;
 AJS.$b = AJS.bind;
 AJS.$p = AJS.partial;
+AJS.$FA = AJS.forceArray;
 AJS.$A = AJS.createArray;
 AJS.DI = AJS.documentInsert;
 AJS.ACN = AJS.appendChildNodes;
@@ -1199,6 +1181,7 @@ AJS.RCN = AJS.replaceChildNodes;
 AJS.AEV = AJS.addEventListener;
 AJS.REV = AJS.removeEventListener;
 AJS.$bytc = AJS.getElementsByTagAndClassName;
+AJS.$AP = AJS.absolutePosition;
 
 AJSDeferred = function(req) {
     this.callbacks = [];
@@ -1235,6 +1218,10 @@ AJSDeferred.prototype = {
         this.callbacks.unshift(fn);
     },
 
+    abort: function() {
+        this.req.abort();
+    },
+
     addCallbacks: function(fn1, fn2) {
         this.addCallback(fn1);
         this.addErrback(fn2);
@@ -1250,7 +1237,7 @@ AJSDeferred.prototype = {
             this.req.send("");
         }
     }
-};
+};//End deferred
 
 //Prevent memory-leaks
 AJS.addEventListener(window, 'unload', AJS._unloadListeners);

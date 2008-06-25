@@ -1,11 +1,12 @@
 var GB_CURRENT = null;
 
-GB_hide = function() {
-    GB_CURRENT.hide();
+GB_hide = function(cb) {
+    GB_CURRENT.hide(cb);
 }
 
 GreyBox = new AJS.Class({
     init: function(options) {
+        this.use_fx = AJS.fx;
         this.type = "page";
         this.overlay_click_close = false;
         this.salt = 0;
@@ -13,6 +14,17 @@ GreyBox = new AJS.Class({
         this.callback_fns = [];
         this.reload_on_close = false;
         this.src_loader = this.root_dir + 'loader_frame.html';
+
+        //Solve the www issue
+        var h_www = window.location.hostname.indexOf('www');
+        var src_www = this.src_loader.indexOf('www');
+        if(h_www != -1 && src_www == -1)
+            this.src_loader = this.src_loader.replace('://', '://www.');
+
+        if(h_www == -1 && src_www != -1)
+            this.src_loader = this.src_loader.replace('://www.', '://');
+
+        this.show_loading = true;
         AJS.update(this, options);
     },
 
@@ -24,10 +36,7 @@ GreyBox = new AJS.Class({
         GB_CURRENT = this;
         this.url = url;
 
-        var elms = [AJS.$bytc("object"), AJS.$bytc("embed")];
-        if(AJS.isIe()) {
-            elms.push(AJS.$bytc("select"));
-        }
+        var elms = [AJS.$bytc("object"), AJS.$bytc("select")];
         AJS.map(AJS.flattenList(elms), function(elm) {
             elm.style.visibility = "hidden";
         });
@@ -36,43 +45,51 @@ GreyBox = new AJS.Class({
         return false;
     },
 
-    hide: function() {
-        this.onHide();
-        if(AJS.fx) {
-            var elm = this.overlay;
-            AJS.fx.fadeOut(this.overlay, {
-                onComplete: function() {
-                    AJS.removeElement(elm);
-                    elm = null;
-                },
-                duration: 300
+    hide: function(cb) {
+        var me = this;
+        //IE SSL fix
+        AJS.callLater(function() {
+            var c_bs = me.callback_fns;
+            if(c_bs != []) {
+                AJS.map(c_bs, function(fn) { 
+                    fn();
+                });
+            }
+
+            me.onHide();
+            if(me.use_fx) {
+                var elm = me.overlay;
+                AJS.fx.fadeOut(me.overlay, {
+                    onComplete: function() {
+                        AJS.removeElement(elm);
+                        elm = null;
+                    },
+                    duration: 300
+                });
+                AJS.removeElement(me.g_window);
+            }
+            else {
+                AJS.removeElement(me.g_window, me.overlay);
+            }
+
+            me.removeFrame();
+
+            AJS.REV(window, "scroll", _GB_setOverlayDimension);
+            AJS.REV(window, "resize", _GB_update);
+
+            var elms = [AJS.$bytc("object"), AJS.$bytc("select")];
+            AJS.map(AJS.flattenList(elms), function(elm) {
+                elm.style.visibility = "visible";
             });
-            AJS.removeElement(this.g_window);
-        }
-        else {
-            AJS.removeElement(this.g_window, this.overlay);
-        }
 
-        this.removeFrame();
+            GB_CURRENT = null;
 
-        AJS.REV(window, "scroll", _GB_setOverlayDimension);
-        AJS.REV(window, "resize", _GB_update);
+            if(me.reload_on_close)
+                window.location.reload();
 
-        if(AJS.isIe()) 
-            AJS.map(AJS.$bytc("select"), function(elm) {elm.style.visibility = "visible"});
-        AJS.map(AJS.$bytc("object"), function(elm) {elm.style.visibility = "visible"});
-
-        var c_bs = this.callback_fns;
-        if(c_bs != []) {
-            AJS.map(c_bs, function(fn) { 
-                fn();
-            });
-        }
-
-        GB_CURRENT = null;
-
-        if(this.reload_on_close)
-            window.location.reload();
+            if(AJS.isFunction(cb))
+                cb();
+        }, 10);
     },
 
     update: function() {
@@ -93,7 +110,7 @@ GreyBox = new AJS.Class({
         this.update();
         
         var me = this;
-        if(AJS.fx) {
+        if(this.use_fx) {
             AJS.fx.fadeIn(this.overlay, {
                 duration: 300,
                 to: 0.7,
@@ -155,6 +172,8 @@ GreyBox = new AJS.Class({
     initFrame: function() {
         if(!this.iframe) {
             var d = {'name': 'GB_frame', 'class': 'GB_frame', 'frameBorder': 0};
+            if(AJS.isIe())
+                d.src = "javascript:false;document.write(\"\");";
             this.iframe = AJS.IFRAME(d);
             this.middle_cnt = AJS.DIV({'class': 'content'}, this.iframe);
 

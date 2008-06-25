@@ -32,6 +32,10 @@
 
    /*
     * History:
+    * 
+    * v 1.34 - update lightbox2 script to v2.04
+    * 
+    * v 1.33 - fix ending img tag for compliance
     *
     * v 1.32 - make available as a skin variable
     *
@@ -58,7 +62,7 @@ class NP_LightBox2 extends NucleusPlugin {
 	function getName() {return 'LightBox2';}
 	function getAuthor()  {return 'Frank Truscott, based on work by Seventoes';}
 	function getURL(){return 'http://www.iai.com/';}
-	function getVersion() {return '1.33';}
+	function getVersion() {return '1.34';}
 	function getDescription() {
 		return 'Simple plugin to enable LightBox2 on Nucleus Blogs';
 	}
@@ -97,7 +101,7 @@ class NP_LightBox2 extends NucleusPlugin {
             echo '</script>'."\n";
             echo '<link rel="stylesheet" title="default" type="text/css" href="'.$lb_root.'css/lightbox.css" />'."\n";
             echo '<script type="text/javascript" src="'.$lb_root.'js/prototype.js"></script>'."\n";
-            echo '<script type="text/javascript" src="'.$lb_root.'js/scriptaculous.js?load=effects"></script>'."\n";
+            echo '<script type="text/javascript" src="'.$lb_root.'js/scriptaculous.js?load=effects,builder"></script>'."\n";
             echo '<script type="text/javascript" src="'.$lb_root.'js/lightbox.js"></script>'."\n";
         }
         else {

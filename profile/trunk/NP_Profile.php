@@ -148,6 +148,10 @@ History:
     * fix: formatting near top of editprofile page
     * add: PostProfileUpdate event for wessite (allows external plugin to subscribe to perform actions each time profile is updated by user)
     * add: editprofileheader config value to allow custom text to be displayed above the form on the editprofile page. (thanks pheser)
+  v2.22 -- 19th release of version 2 adds following to version 2.21
+    * fix: logout after updating profile in certain circumstances (thanks wessite)
+    * add: enhance memberlist to allow sorting by memberid (can use to show newest members) 
+    * add: enhance memberlist to all displaying only members on given blog team
 
 [FUTURE]
 
@@ -179,9 +183,9 @@ class NP_Profile extends NucleusPlugin {
 
 	function getAuthor()  {	return 'Tim Broddin | Edmond Hui (admun) | Frank Truscott';	}
 
-	function getURL()   { return 'http://www.iai.com/';	}
+	function getURL()   { return 'http://www.iai.com/sandbox';	}
 
-	function getVersion() {	return '2.21'; }
+	function getVersion() {	return '2.22'; }
 
 	function getDescription() {
         if (!$this->_optionExists('email_public_deny') && $this->_optionExists('email_public')) {
@@ -1162,11 +1166,27 @@ password
 						}
 						break;
 					case 'memberlist':
-						$this->displayMemberList($param2,intval($param3),$rawparam4);
+						$this->displayMemberList($param2,intval($param3),$rawparam4,'');
 						break;
 					case 'memberlistpager':
 						$this->displayMemberListPager();
 						break;
+/* start of future code for allowing editprofile form to be displayed on special skin part
+					case 'editspecial':
+						global $blog;
+						$blogid = $blog->getID();
+						if ($skinType == 'member' && ($member->id == $pmid || $member->isAdmin())) {
+							if ($isEdit) {
+								//$editlink = $CONF['PluginURL']."profile/editprofile.php?edit=1";
+								//echo '<a class="profileeditlink" href="'.$editlink.'">'._PROFILE_SV_EDITLINK_FORM.'</a>';
+							}
+							else {
+								$editlink = $CONF['PluginURL']."profile/editprofile.php?edit=1&blogid=$blogid&memberid=$pmid";
+								echo '<a class="profileeditlink" href="'.$editlink.'">'._PROFILE_SV_EDITLINK_EDIT.'</a>';
+							}
+						}
+						break;
+*/
 					case 'mail':
 						if ($this->restrictView && !$this->getFieldAttribute($param1,'fpublic')) break;
 						//$result = sql_query("SELECT memail FROM ".sql_table(member)." WHERE mnumber=" . $pmid);
@@ -2159,12 +2179,18 @@ password
             if (!$registering) $memberid = intPostVar('memberid');
 			if (intval($member->id) > 0 && ($member->id == $memberid || $member->isAdmin())) {
 				//$memberid = $member->id;
-                if ($member->id != $memberid && $member->isAdmin()) {
-                    $memberobj = MEMBER::createFromId($memberid);
-                }
-                else {
-                    $memberobj =& $member;
-                }
+                /* following code removed to fix bug where user apparently being logged out after updating in certain circumstances */
+				/*
+				if ($member->id != $memberid && $member->isAdmin()) {
+					$memberobj = MEMBER::createFromId($memberid);
+				}
+				else {
+					$memberobj =& $member;
+				}
+				*/
+				// below is replacement code
+				$memberobj = MEMBER::createFromId($memberid);
+				
 				$vpass = postVar('verifypassword');
 				$opass = postVar('oldpassword');
 
@@ -3133,6 +3159,17 @@ password
 
 		$templatebody = quickQuery("SELECT tbody as result FROM ".sql_table('plugin_profile_templates')." WHERE ttype='memberlist' AND tname='".addslashes(trim($templatename))."'");
 		if ($templatebody == '') return;
+		
+		$blogteam = '';
+		if (strpos($orderby,';')) {
+			$obarr = explode(';',trim($orderby));
+			$short = trim($obarr[1]);
+			$orderby = $obarr[0];
+			if (trim($short) != '') {
+				$btid = intval(getBlogIdFromName(trim($short)));
+				if ($btid > 0) $blogteam = " m.mnumber IN (SELECT tmember FROM ".sql_table('team')." WHERE tblog=$btid)";
+			}
+		}
 
 		$amount = intval($amount);
 		$currentPage = intPostVar('profile_ml_page');
@@ -3148,10 +3185,15 @@ password
 			$ordarr[0] = '';
 			$ordarr[1] = 'RANDOM';
 		}
+		
+		if (strtoupper($ordarr[0]) == 'NEWEST') {
+			$ordarr[0] = 'mnumber';
+			$ordarr[1] = 'DESC';
+		}
 
 		if ($ordarr[0] != '') {
-			if($this->fieldExists(trim($ordarr[0]))) {
-				$ordarr[0] = str_replace(array('mail','nick','realname','url','notes','password'),array('memail','mname','mrealname','murl','mnotes','mpassword'),$ordarr[0]);
+			if($this->fieldExists(trim($ordarr[0])) || $ordarr[0] == 'memberid') {
+				$ordarr[0] = str_replace(array('mail','nick','realname','url','notes','password','memberid'),array('memail','mname','mrealname','murl','mnotes','mpassword','mnumber'),$ordarr[0]);
 			}
 			else return;
 		}
@@ -3167,17 +3209,22 @@ password
                 break;
 		}
 		$query = "SELECT m.mnumber as mid FROM ".sql_table('member')." as m";
-		if (in_array($ordarr[0],array('memail','mname','mrealname','murl','mnotes','mpassword',''))) {
+
+		if (in_array($ordarr[0],array('memail','mname','mrealname','murl','mnotes','mpassword','mnumber',''))) {
+			if ($blogteam != '') $query .= " WHERE $blogteam";
 			if ($theorder == "RAND()") $query .= " ORDER BY $theorder";
 			else $query .= " ORDER BY m.".$ordarr[0]." $theorder";
 		}
 		else {
-			$query .= ", ".sql_table('plugin_profile')." as p WHERE m.mnumber=p.memberid AND p.field='".$ordarr[0]."' AND p.value<>''";
+			$query .= ", ".sql_table('plugin_profile')." as p WHERE";
+			if ($blogteam != '') $query .= " $blogteam AND ";
+			$query .= " m.mnumber=p.memberid AND p.field='".$ordarr[0]."' AND p.value<>''";
 			if ($theorder == "RAND()") $query .= " ORDER BY $theorder";
 			else $query .= " ORDER BY p.value $theorder";
 		}
 		$query .= $limit;
 		$result = sql_query($query);
+
 		$this->mllist_count[0] = $amount;
 		$this->mllist_count[1] = mysql_num_rows($result);
 		if (strtoupper($ordarr[1]) == 'RANDOM') $this->mllist_count[2] = 1;

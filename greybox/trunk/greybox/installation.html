@@ -1,83 +1,19 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
-    <title>GreyBox installation</title>
-
-    <link href="static_files/installation.css" rel="stylesheet" type="text/css" media="all" />
-
-    <script type="text/javascript">
-        var GB_ROOT_DIR = "./greybox/";
-    </script>
+    <title>GreyBox - Installation</title>
 
     <script type="text/javascript" src="greybox/AJS.js"></script>
-    <script type="text/javascript" src="greybox/AJS_fx.js"></script>
-    <script type="text/javascript" src="greybox/gb_scripts.js"></script>
-    <link href="greybox/gb_styles.css" rel="stylesheet" type="text/css" media="all" />
 
-    <style>
-
-    </style>
+    <script type="text/javascript" src="static_files/help.js"></script>
+    <link href="static_files/help.css" rel="stylesheet" type="text/css" media="all" />
 </head>
 <body>
 
-<div id="top">
-<img src="static_files/logo.gif" alt="" />
-<br />
-<span style="font-weight: bold; color: #333">A pop-up window that doesn't suck.</span>
-</div>
-
-<h2>Examples</h2>
-
-<h3>One website</h3>
-<ul>
-    <li>
-        <a href="http://google.com/" title="Google" rel="gb_page_center[640, 480]">Launch google.com in a 640x480 window</a>
-    </li>
-    <li>
-        <a href="http://google.com/" title="Google" rel="gb_page_fs[]">Launch google.com in fullscreen window</a>
-    </li>
-</ul>
-
-<h3>Website gallery</h3>
-<ul>
-    <li>
-        <a href="http://google.com/" title="Google" rel="gb_pageset[search_sites]">Launch Google search</a>
-    </li>
-    <li>
-        <a href="http://search.yahoo.com/" rel="gb_pageset[search_sites]">Launch Yahoo search</a>
-    </li>
-    <li>
-        <a href="http://www.koders.com/" rel="gb_pageset[search_sites]">Launch Koders search</a>
-    </li>
-</ul>
-
-<h3>Image gallery</h3>
-<script type="text/javascript">
-var image_set = [{'caption': 'Flower', 'url': 'http://static.flickr.com/119/294309231_a3d2a339b9.jpg'},
-                 {'caption': 'Nice waterfall', 'url': 'http://www.widerange.org/images/large/plitvicka.jpg'}];
+<script>
+    insertHeader();
+    insertMenu('installation');
 </script>
-
-<ul>
-    <li>
-        <a href="#" onclick="return GB_showImageSet(image_set, 1)">Launch gallery</a>
-    </li>
-
-    <li>
-        <a href="static_files/night_valley.jpg" rel="gb_imageset[nice_pics]" title="Night valley">
-            <img src="static_files/night_valley_thumb.jpg" />
-        </a>
-    </li>
-
-    <li>
-        <a href="static_files/salt.jpg" rel="gb_imageset[nice_pics]" title="Salt flats in Chile">
-            <img src="static_files/salt_thumb.gif" />
-        </a>
-    </li>
-</ul>
-
-<h2>Installation</h2>
-
-<h3>Setup</h3>
 
 <ol>
 <li>
@@ -90,6 +26,7 @@ Append following to your header section (in between <code>&lt;header&gt;...&lt;/
 &lt;/script&gt;</code>
 </pre>
 </li>
+GB_ROOT_DIR should be absolute.
 
 <li>
 Append also following scripts and one stylesheet:
@@ -100,87 +37,13 @@ Append also following scripts and one stylesheet:
 &lt;link href="greybox/gb_styles.css" rel="stylesheet" type="text/css" /&gt;</code>
 </pre>
 
-AJS_fx.js is optional. It's used for effects.
+AJS_fx.js is optional, it's used for effects. If you don't wish effects, then don't include AJS_fx.js in your header section.
+</li>
+
+<li>
+That's it, you are now ready to use GreyBox!
 </li>
 </ol>
-
-<h3>Usage</h3>
-
-<h4>Showing one image:</h4>
-Syntax:
-<pre>
-<code>&lt;a href="URL" title="CAPTION" rel="gb_image[]"&gt;HTML&lt;/a&gt;</code>
-</pre>
-
-Example:
-<pre>
-<code>&lt;a href="http://static.flickr.com/119/294309231_a3d2a339b9.jpg" title="Flower" rel="gb_image[]"&gt;Show flower&lt;/a&gt;</code>
-</pre>
-
-
-<h4>Showing a group of images:</h4>
-Syntax:
-<pre>
-<code>&lt;a href="URL" title="CAPTION" rel="gb_imageset[NAME]"&gt;HTML&lt;/a&gt;</code>
-<code>&lt;a href="URL" title="CAPTION" rel="gb_imageset[NAME]"&gt;HTML&lt;/a&gt;</code>
-</pre>
-
-Example:
-<pre>
-<code>&lt;a href="static_files/salt.jpg" rel="gb_imageset[nice_pics]" title="Salt flats in Chile"&gt;Salt flats&lt;/a&gt;</code>
-<code>&lt;a href="static_files/night_valley.jpg" rel="gb_imageset[nice_pics]" title="Night valley"&gt;Night valley&lt;/a&gt;</code>
-</pre>
-
-<h4>Showing one page:</h4>
-Syntax:
-<pre>
-<code>&lt;a href="URL" title="CAPTION" rel="gb_page[WIDTH, HEIGHT]"&gt;HTML&lt;/a&gt;</code>
-</pre>
-
-Example:
-<pre>
-<code>&lt;a href="http://google.com/" title="Google" rel="gb_page[500, 500]"&gt;Launch Google.com&lt;/a&gt;</code>
-</pre>
-
-<h4>Showing one page as center window:</h4>
-Syntax:
-<pre>
-<code>&lt;a href="URL" title="CAPTION" rel="gb_page_center[WIDTH, HEIGHT]"&gt;HTML&lt;/a&gt;</code>
-</pre>
-
-Example:
-<pre>
-<code>&lt;a href="http://google.com/" title="Google" rel="gb_page_center[WIDTH, HEIGHT]"&gt;Launch Google.com&lt;/a&gt;</code>
-</pre>
-
-<h4>Showing one page in fullscreen:</h4>
-Syntax:
-<pre>
-<code>&lt;a href="URL" title="CAPTION" rel="gb_page_fs[]"&gt;HTML&lt;/a&gt;</code>
-</pre>
-
-Example:
-<pre>
-<code>&lt;a href="http://google.com/" title="Google" rel="gb_page_fs[]"&gt;Launch Google.com&lt;/a&gt;</code>
-</pre>
-
-<h4>Showing a group of pages:</h4>
-Syntax:
-<pre>
-<code>&lt;a href="URL" title="CAPTION" rel="gb_pageset[NAME]"&gt;HTML&lt;/a&gt;</code>
-<code>&lt;a href="URL" title="CAPTION" rel="gb_pageset[NAME]"&gt;HTML&lt;/a&gt;</code>
-</pre>
-
-Example:
-<pre>
-<code>&lt;a href="http://google.com/" title="Google" rel="gb_pageset[search_sites]"&gt;Launch Google search&lt;/a&gt;</code>
-<code>&lt;a href="http://search.yahoo.com/" rel="gb_pageset[search_sites]"&gt;Launch Yahoo search&lt;/a&gt;</code>
-</pre>
-
-
-
-<h2>About</h2>
-This script is made by <a href="http://amix.dk">4mir Salihefendic</a>.
 
 </body>
 </html>

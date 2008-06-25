@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#Last-update: 26/11/06 22:44:06
+#Last-update: 12/05/07 21:02:10
 import re
 import sys
 from sets import Set
@@ -36,7 +36,9 @@ FN_SHORTCUTS = {
     'RCN': 'replaceChildNodes',
     'AEV': 'addEventListener',
     'REV': 'removeEventListener',
-    '$bytc': 'getElementsByTagAndClassName'
+    '$bytc': 'getElementsByTagAndClassName',
+    '$AP': 'absolutePosition',
+    '$FA': 'forceArray'
 }
 
 AJS_TEMPLATE = """//AJS JavaScript library (minify'ed version)
@@ -66,6 +68,8 @@ AJS.RCN = AJS.replaceChildNodes;
 AJS.AEV = AJS.addEventListener;
 AJS.REV = AJS.removeEventListener;
 AJS.$bytc = AJS.getElementsByTagAndClassName;
+AJS.$AP = AJS.absolutePosition;
+AJS.$FA = AJS.forceArray;
 
 AJS.addEventListener(window, 'unload', AJS._unloadListeners);
 AJS._createDomShortcuts();
@@ -73,6 +77,7 @@ AJS._createDomShortcuts();
 %(AJSClass)s
 
 %(AJSDeferred)s
+
 script_loaded = true;
 """
 
@@ -98,8 +103,10 @@ class AjsAnalyzer:
         fns = re.findall("\s+((\w*?):.*?{(.|\n)*?\n\s*})(,|\n+})\n", ajs_code)
         for f in fns:
             self.ajs_fns[f[1]] = f[0]
+        for shortcut in FN_SHORTCUTS:
+            self.ajs_fns[shortcut] = self.ajs_fns[FN_SHORTCUTS[shortcut]]
 
-    def getFnCode(self, fn_name):
+    def getFnCode(self, fn_name, caller=None):
         """
         Returns the code of function and it's dependencies as a list
         """
@@ -108,17 +115,17 @@ class AjsAnalyzer:
         if self.ajs_fns.get(fn_name):
             r.append(self.ajs_fns[fn_name])
             for dep_fn in self.ajs_deps[fn_name]:
-                if fn_name != dep_fn:
-                    r.extend(self.getFnCode(dep_fn))
-        else:
+                if fn_name != dep_fn and dep_fn != caller:
+                    r.extend(self.getFnCode(dep_fn, fn_name))
+        elif fn_name not in ['listeners', 'Class']:
             print 'Could not find "%s"' % fn_name
         return r
 
     def getAjsClassCode(self):
-        return re.search("AJS.Class =(.|\n)*\n};\n", self.code).group(0)
+        return re.search("AJS.Class =(.|\n)*\n};//End class", self.code).group(0)
 
     def getAjsDeferredCode(self):
-        return re.search("AJSDeferred =(.|\n)*\n};\n", self.code).group(0)
+        return re.search("AJSDeferred =(.|\n)*\n};//End deferred", self.code).group(0)
 
     def _findDeps(self):
         """
@@ -131,7 +138,7 @@ class AjsAnalyzer:
         """
         Searches after AJS.fnX( in inner and returns all the fnX in a Set.
         """
-        s = re.findall("AJS\.([\w_$]*?)(?:\(|,)", inner)
+        s = re.findall("AJS\.([\w_$]*?)(?:\(|,|\.)", inner)
         s = list(Set(s))
         return self._unfoldFns(s)
 
@@ -154,9 +161,10 @@ class AjsAnalyzer:
 
 class ExternalCodeAnalyzer:
 
-    def __init__(self, files):
+    def __init__(self, files, ajs_analyzer):
         self.found_ajs_fns = []
         self.files = files
+        self.ajs_analyzer = ajs_analyzer
 
     def findFunctions(self):
         for f in self.files:
@@ -168,19 +176,23 @@ class ExternalCodeAnalyzer:
         Parses the file, looks for AJS functions and returns all the found functions.
         """
         code = open(f).read()
-        return re.findall("AJS\.([\w_$]*?)\(", code)
+        found_fns = []
+        for ajs_fn in self.ajs_analyzer.ajs_fns:
+            if re.search(r"%s\(" % ajs_fn.replace('$', '\\$'), code):
+                found_fns.append(ajs_fn)
+        return found_fns
 
 
 
 class AjsComposer:
 
-    def __init__(self, fn_list):
+    def __init__(self, fn_list, analyzer):
         self.code = getAjsCode()
-        self.analyzer = AjsAnalyzer()
+        self.analyzer = analyzer
         self.fn_list = fn_list
 
         #Append standard functions
-        req = ['_unloadListeners', 'createDOM', '_createDomShortcuts', 'addEventListener']
+        req = ['_unloadListeners', 'createDOM', '_createDomShortcuts', 'log', 'addEventListener']
         self.fn_list.extend(req)
 
         #Append AJSDeferred only if needed
@@ -196,7 +208,7 @@ class AjsComposer:
         d = {}
         d['functions'] = ",\n".join(fns)
         d['AJSDeferred'] = self.deferred
-        d['AJSClass'] = self.analyzer.getAjsClassCode()
+        d['AJSClass'] = self._minify(self.analyzer.getAjsClassCode())
 
         mini_code = AJS_TEMPLATE % d
         writeAjsMini(mini_code)
@@ -246,10 +258,11 @@ Example usage:
 
     print 'Parsing through:\n    %s' % "\n    ".join(FILES)
 
-    code_analyzer = ExternalCodeAnalyzer(FILES)
+    ajs_analyzer = AjsAnalyzer()
+    code_analyzer = ExternalCodeAnalyzer(FILES, ajs_analyzer)
     found_fns = code_analyzer.findFunctions()
     print 'Found following AJS functions:\n    %s' % ("\n    ".join(found_fns))
 
-    composer = AjsComposer(found_fns)
+    composer = AjsComposer(found_fns, ajs_analyzer)
     composer.writeToOutput()
     print "Written the minified code to '%s'" % AJS_MINI_SRC

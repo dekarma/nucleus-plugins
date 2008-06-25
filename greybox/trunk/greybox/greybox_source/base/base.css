@@ -18,6 +18,7 @@
 }
 
 #GB_window .content {
+    width: auto;
     margin: 0;
     padding: 0;
 }

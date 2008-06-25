@@ -73,7 +73,8 @@ GB_Window = GreyBox.extend({
         AJS.ACN(this.header, tbody_header);
         AJS.ACN(this.top_cnt, this.header);
 
-        AJS.AEV(window, 'scroll', AJS.$b(this.setWindowPosition, this));
+        if(this.fullscreen)
+            AJS.AEV(window, 'scroll', AJS.$b(this.setWindowPosition, this));
     },
 
     setFrameSize: function() {

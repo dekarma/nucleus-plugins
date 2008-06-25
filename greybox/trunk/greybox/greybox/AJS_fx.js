@@ -1,13 +1,13 @@
-AJS.fx={highlight:function(_1,_2){
+AJS.fx={_shades:{0:"ffffff",1:"ffffee",2:"ffffdd",3:"ffffcc",4:"ffffbb",5:"ffffaa",6:"ffff99"},highlight:function(_1,_2){
 var _3=new AJS.fx.Base();
 _3.elm=AJS.$(_1);
-_3.setOptions(_2);
 _3.options.duration=600;
-AJS.update(_3,{_shades:{0:"ff",1:"ee",2:"dd",3:"cc",4:"bb",5:"aa",6:"99"},increase:function(){
+_3.setOptions(_2);
+AJS.update(_3,{increase:function(){
 if(this.now==7){
-_1.style.backgroundColor="transparent";
+_1.style.backgroundColor="#fff";
 }else{
-_1.style.backgroundColor="#ffff"+this._shades[Math.floor(this.now)];
+_1.style.backgroundColor="#"+AJS.fx._shades[Math.floor(this.now)];
 }
 }});
 return _3.custom(6,0);
@@ -15,78 +15,43 @@ return _3.custom(6,0);
 _5=_5||{};
 if(!_5.from){
 _5.from=0;
+AJS.setOpacity(_4,0);
 }
 if(!_5.to){
 _5.to=1;
 }
-return this._fade(_4,_5);
-},fadeOut:function(_6,_7){
-_7=_7||{};
-if(!_7.from){
-_7.from=1;
+var s=new AJS.fx.Style(_4,"opacity",_5);
+return s.custom(_5.from,_5.to);
+},fadeOut:function(_7,_8){
+_8=_8||{};
+if(!_8.from){
+_8.from=1;
 }
-if(!_7.to){
-_7.to=0;
+if(!_8.to){
+_8.to=0;
 }
-return this._fade(_6,_7);
-},_fade:function(_8,_9){
-var _a=new AJS.fx.Base();
-_a.elm=AJS.$(_8);
-_9.transition=AJS.fx.Transitions.linear;
-_a.setOptions(_9);
-AJS.update(_a,{start:function(){
-return this.custom(this.options.from,this.options.to);
-},increase:function(){
-AJS.setOpacity(this.elm,this.now);
-}});
-return _a.start();
-},setWidth:function(_b,_c){
-return this._setDimension(_b,"width",_c).start();
+_8.duration=300;
+var s=new AJS.fx.Style(_7,"opacity",_8);
+return s.custom(_8.from,_8.to);
+},setWidth:function(_a,_b){
+var s=new AJS.fx.Style(_a,"width",_b);
+return s.custom(_b.from,_b.to);
 },setHeight:function(_d,_e){
-return this._setDimension(_d,"height",_e).start();
-},_setDimension:function(_f,dim,_11){
-var _12=new AJS.fx.Base();
-_12.elm=AJS.$(_f);
-_12.setOptions(_11);
-_12.elm.style.overflow="hidden";
-_12.dimension=dim;
-if(dim=="height"){
-_12.show_size=_12.elm.scrollHeight;
-}else{
-_12.show_size=_12.elm.offsetWidth;
-}
-AJS.update(_12,{_getTo:function(){
-if(this.dimension=="height"){
-return this.options.to||this.elm.scrollHeight;
-}else{
-return this.options.to||this.elm.scrollWidth;
-}
-},start:function(){
-if(this.dimension=="height"){
-return this.custom(this.elm.offsetHeight,this._getTo());
-}else{
-return this.custom(this.elm.offsetWidth,this._getTo());
-}
-},increase:function(){
-if(this.dimension=="height"){
-AJS.setHeight(this.elm,this.now);
-}else{
-AJS.setWidth(this.elm,this.now);
-}
-}});
-return _12;
+var s=new AJS.fx.Style(_d,"height",_e);
+return s.custom(_e.from,_e.to);
 }};
-AJS.fx.Base=function(){
-AJS.bindMethods(this);
-};
-AJS.fx.Base.prototype={setOptions:function(_13){
-this.options=AJS.update({onStart:function(){
+AJS.fx.Base=new AJS.Class({init:function(_10){
+this.options={onStart:function(){
 },onComplete:function(){
-},transition:AJS.fx.Transitions.sineInOut,duration:500,wait:true,fps:50},_13||{});
+},transition:AJS.fx.Transitions.sineInOut,duration:500,wait:true,fps:50};
+AJS.update(this.options,_10);
+AJS.bindMethods(this);
+},setOptions:function(_11){
+AJS.update(this.options,_11);
 },step:function(){
-var _14=new Date().getTime();
-if(_14<this.time+this.options.duration){
-this.cTime=_14-this.time;
+var _12=new Date().getTime();
+if(_12<this.time+this.options.duration){
+this.cTime=_12-this.time;
 this.setNow();
 }else{
 setTimeout(AJS.$b(this.options.onComplete,this,[this.elm]),10);
@@ -96,14 +61,14 @@ this.now=this.to;
 this.increase();
 },setNow:function(){
 this.now=this.compute(this.from,this.to);
-},compute:function(_15,to){
-var _17=to-_15;
-return this.options.transition(this.cTime,_15,_17,this.options.duration);
+},compute:function(_13,to){
+var _15=to-_13;
+return this.options.transition(this.cTime,_13,_15,this.options.duration);
 },clearTimer:function(){
 clearInterval(this.timer);
 this.timer=null;
 return this;
-},_start:function(_18,to){
+},_start:function(_16,to){
 if(!this.options.wait){
 this.clearTimer();
 }
@@ -111,23 +76,63 @@ if(this.timer){
 return;
 }
 setTimeout(AJS.$p(this.options.onStart,this.elm),10);
-this.from=_18;
+this.from=_16;
 this.to=to;
 this.time=new Date().getTime();
 this.timer=setInterval(this.step,Math.round(1000/this.options.fps));
 return this;
-},custom:function(_1a,to){
-return this._start(_1a,to);
+},custom:function(_18,to){
+return this._start(_18,to);
 },set:function(to){
 this.now=to;
 this.increase();
 return this;
-}};
+},setStyle:function(elm,_1c,val){
+if(this.property=="opacity"){
+AJS.setOpacity(elm,val);
+}else{
+AJS.setStyle(elm,_1c,val);
+}
+}});
+AJS.fx.Style=AJS.fx.Base.extend({init:function(elm,_1f,_20){
+this.parent();
+this.elm=elm;
+this.setOptions(_20);
+this.property=_1f;
+},increase:function(){
+this.setStyle(this.elm,this.property,this.now);
+}});
+AJS.fx.Styles=AJS.fx.Base.extend({init:function(elm,_22){
+this.parent();
+this.elm=AJS.$(elm);
+this.setOptions(_22);
+this.now={};
+},setNow:function(){
+for(p in this.from){
+this.now[p]=this.compute(this.from[p],this.to[p]);
+}
+},custom:function(obj){
+if(this.timer&&this.options.wait){
+return;
+}
+var _24={};
+var to={};
+for(p in obj){
+_24[p]=obj[p][0];
+to[p]=obj[p][1];
+}
+return this._start(_24,to);
+},increase:function(){
+for(var p in this.now){
+this.setStyle(this.elm,p,this.now[p]);
+}
+}});
 AJS.fx.Transitions={linear:function(t,b,c,d){
 return c*t/d+b;
 },sineInOut:function(t,b,c,d){
 return -c/2*(Math.cos(Math.PI*t/d)-1)+b;
 }};
+script_loaded=true;
 
 
 script_loaded=true;

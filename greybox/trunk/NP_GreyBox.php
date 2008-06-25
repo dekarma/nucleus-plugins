@@ -34,7 +34,7 @@ class NP_GreyBox extends NucleusPlugin {
 	function getName() {return 'GreyBox';}
 	function getAuthor()  {return 'Frank Truscott, based on work by Seventoes';}
 	function getURL(){return 'http://www.iai.com/';}
-	function getVersion() {return '1.33';}
+	function getVersion() {return '1.34';}
 	function getDescription() {
 		return 'Simple plugin to enable GreyBox on Nucleus Blogs';
 	}

@@ -125,9 +125,10 @@ where
 <li><i>template</i> is the name of a template defined in the NP_Profile admin page in the NucleusCMS admin area. There is a simple sample template called 'default' that is installed with 2.2x.</li>
 <li><i>amount</i> is the amount of members to list. Should be a positive integer. If left blank, or set to 0, all members will be listed.</li>
 <li><i>orderby</i> is an indication of how to sort the list. It has the format of <i>fieldname</i>|<i>sortType</i>
-	, where <i>fieldname</i> is the name of a defined field, and <i>sortType</i> is one of ASC or DESC, for either ascending sorting, or descending sorting, respectively.
+	, where <i>fieldname</i> is the name of a defined field or the special value of &quot;memberid&quot;, and <i>sortType</i> is one of ASC or DESC, for either ascending sorting, or descending sorting, respectively.
 	To sort the results randomly, just set <i>orderby</i> to <b>random</b>. Default is nick|ASC. 
-	If you decide to sort on one of the NP_Profile fields, and a member has not entered any data for that field, that member will <b>NOT</b> appear in the list.</li>
+	If you decide to sort on one of the NP_Profile fields, and a member has not entered any data for that field, that member will <b>NOT</b> appear in the list. Optionally, a blog name can be appended to the <i>orderby</i> field
+	in this format: <i>fieldname</i>|<i>sortType</i>;<i>shortname</i></li>
 </ul>
 
 <p>More details about the formatting of the list using templates will be given below in the <a href="#manage">Plugin Management</a> section.</p>
@@ -138,6 +139,8 @@ where
 <li><b>&lt;%Profile(memberlist,default,10,random)%&gt;</b> will display 10 random members formatted using the default template.</li>
 <li><b>&lt;%Profile(memberlist,mymembers,10,lastupdated|DESC)%&gt;</b> will display the 10 members who most recently updated their profiles, with the most recent update first. Each list entry will be formatted according to the mymembers template.</li>
 <li><b>&lt;%Profile(memberlistpager)%&gt;</b> when added below a memberlist call, like above,will add paging buttons to page through list.
+<li><b>&lt;%Profile(memberlist,default,10,memberid|DESC)%&gt;</b> will display the 10 newest members formatted using the default template.</li>
+<li><b>&lt;%Profile(memberlist,default,10,nick|ASC;mainblog)%&gt;</b> will display the first 10 members of the blog team for blog with shortname of <b>mainblog</b> formatted using the default template.</li>
 </ul>
 
 <p>For some ideas see the <a href="#tips">Tips and Tricks</a> section below.</p>
