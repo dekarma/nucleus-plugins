@@ -150,8 +150,10 @@ History:
     * add: editprofileheader config value to allow custom text to be displayed above the form on the editprofile page. (thanks pheser)
   v2.22 -- 19th release of version 2 adds following to version 2.21
     * fix: logout after updating profile in certain circumstances (thanks wessite)
-    * add: enhance memberlist to allow sorting by memberid (can use to show newest members) 
+    * add: enhance memberlist to allow sorting by memberid (can use to show newest members)
     * add: enhance memberlist to all displaying only members on given blog team
+  v2.22.01 -fix release of 2.22
+	* fix errors in init() method when installing a fresh install.
 
 [FUTURE]
 
@@ -185,7 +187,7 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://www.iai.com/sandbox';	}
 
-	function getVersion() {	return '2.22'; }
+	function getVersion() {	return '2.22.01'; }
 
 	function getDescription() {
         if (!$this->_optionExists('email_public_deny') && $this->_optionExists('email_public')) {
@@ -864,24 +866,30 @@ password
 		$this->pwd_min_length = intval($this->getOption('pwd_min_length'));
 		$this->pwd_complexity = intval($this->getOption('pwd_complexity'));
 
-		$query = "SELECT * FROM ".sql_table('plugin_profile_types');
-		$res = sql_query($query);
-		while ($row = mysql_fetch_assoc($res)) {
-			$typearr = array();
-			foreach ($row as $key=>$value) {
-				$typearr[$key] = $value;
+		if (mysql_num_rows(sql_query("SHOW TABLES LIKE '%".sql_table('plugin_profile_types')."%'"))) {
+			$query = "SELECT * FROM ".sql_table('plugin_profile_types');
+			$res = sql_query($query);
+			if ($res) {
+				while ($row = mysql_fetch_assoc($res)) {
+					$typearr = array();
+					foreach ($row as $key=>$value) {
+						$typearr[$key] = $value;
+					}
+					$this->profile_types[$row['type']] = $typearr;
+				}
 			}
-			$this->profile_types[$row['type']] = $typearr;
-		}
 
-		$query = "SELECT * FROM ".sql_table('plugin_profile_fields');
-		$res = sql_query($query);
-		while ($row = mysql_fetch_assoc($res)) {
-			$typearr = array();
-			foreach ($row as $key=>$value) {
-				$typearr[$key] = $value;
+			$query = "SELECT * FROM ".sql_table('plugin_profile_fields');
+			$res = sql_query($query);
+			if ($res) {
+				while ($row = mysql_fetch_assoc($res)) {
+					$typearr = array();
+					foreach ($row as $key=>$value) {
+						$typearr[$key] = $value;
+					}
+					$this->profile_fields[$row['fname']] = $typearr;
+				}
 			}
-			$this->profile_fields[$row['fname']] = $typearr;
 		}
 		//print_r($this->profile_fields);
 	}
@@ -2190,7 +2198,7 @@ password
 				*/
 				// below is replacement code
 				$memberobj = MEMBER::createFromId($memberid);
-				
+
 				$vpass = postVar('verifypassword');
 				$opass = postVar('oldpassword');
 
@@ -2615,7 +2623,7 @@ password
 					sql_query("INSERT INTO ".sql_table('plugin_profile')." VALUES($memberid,'lastupdated','$day-$month-$year','0')");
 				}
 			} // end if postvar('memberid') == $member->id
-			
+
 			/* call event for other plugins to update something based on changes made here */
 			unset($this->profile_values[$memberobj->getID()]);
 			$nick = $this->getValue($memberobj->getID(),'nick');
@@ -3159,7 +3167,7 @@ password
 
 		$templatebody = quickQuery("SELECT tbody as result FROM ".sql_table('plugin_profile_templates')." WHERE ttype='memberlist' AND tname='".addslashes(trim($templatename))."'");
 		if ($templatebody == '') return;
-		
+
 		$blogteam = '';
 		if (strpos($orderby,';')) {
 			$obarr = explode(';',trim($orderby));
@@ -3185,7 +3193,7 @@ password
 			$ordarr[0] = '';
 			$ordarr[1] = 'RANDOM';
 		}
-		
+
 		if (strtoupper($ordarr[0]) == 'NEWEST') {
 			$ordarr[0] = 'mnumber';
 			$ordarr[1] = 'DESC';
