@@ -25,6 +25,8 @@
 
 /*
     Version history:
+    * v 0.25 - update to v2.0.20 fto stay current. Some security enhancements
+    * v 0.24 - update to v2.0.13 fto stay current. Some security enhancements
     * v 0.23 - update to v2.0.11 for blacklist fix.
     * v 0.22 - fix bug on log tab of admin page. Use tickets to make v 3.3 happy. Add skinvar (thanks admun).
     * v 0.21 - fix bug in logs on initial page load. Scrub input a bit more in log queries.
@@ -37,7 +39,7 @@ class NP_BadBehavior extends NucleusPlugin {
 	function getName() {	return 'BadBehavior'; 	}
 	function getAuthor()  { return 'Frank Truscott'; 	}
 	function getURL() { return 'http://www.iai.com/'; }
-	function getVersion() {	return '0.23'; }
+	function getVersion() {	return '0.25'; }
 	function getDescription() {
 		return 'Give admin area for bad behavior spam fighting script';
 	}

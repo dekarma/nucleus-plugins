@@ -38,11 +38,13 @@ function bb2_blacklist($package) {
 		"psycheclone",		// spam harvester
 		"PussyCat ",		// misc comment spam
 		"PycURL",		// misc comment spam
-		"Shockwave Flash",	// spam harvester
+//		"Shockwave Flash",	// spam harvester
+//		WP 2.5 now has Flash; FIXME
 		"TrackBack/",		// trackback spam
 		"user",			// suspicious harvester
 		"User Agent: ",		// spam harvester
 		"User-Agent: ",		// spam harvester
+		"Winnie Poh",		// Automated Coppermine hacks
 		"Wordpress",		// malicious software
 		"\"",			// malicious software
 	);
@@ -89,14 +91,14 @@ function bb2_blacklist($package) {
 	$ua = $package['headers_mixed']['User-Agent'];
 
 	foreach ($bb2_spambots_0 as $spambot) {
-		$pos = stripos($ua, $spambot);
+		$pos = strpos($ua, $spambot);
 		if ($pos !== FALSE && $pos == 0) {
 			return "17f4e8c8";
 		}
 	}
 
 	foreach ($bb2_spambots as $spambot) {
-		if (stripos($ua, $spambot) !== FALSE) {
+		if (strpos($ua, $spambot) !== FALSE) {
 			return "17f4e8c8";
 		}
 	}
