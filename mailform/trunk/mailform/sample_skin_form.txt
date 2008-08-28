@@ -1,0 +1,46 @@
+	<%MailForm(status)%><br />
+    <form action="/action.php" method=POST enctype="multipart/form-data">
+    <input type="hidden" name="action" value="plugin" />
+	<input type="hidden" name="name" value="MailForm" />
+	<input type="hidden" name="type" value="submit" />
+	<input type="hidden" name="formname" value="mycontact" />
+	<%MailForm(sticket,mycontact)%></p>
+       <table cellspacing=0 height="100%" width="400" align="center">
+        <tr>
+          <td nowrap colspan="2" height="14"></td>
+        </tr>
+        <tr>
+          <td align=right valign=top nowrap>Full Name:*</td>
+          <td nowrap> <input name="FullName" size="26"></td>
+        </tr>
+        <tr>
+          <td align=right valign=top nowrap>Email Address:*</td>
+          <td nowrap> <input name="EmailAddress" size=""></td>
+        </tr>
+		<tr>
+		  <td width="95" align=right valign=top nowrap><b>Question:</b></td>
+		  <td width="300" nowrap><textarea name="Question" cols=40 rows=8></textarea></td>
+		</tr>
+        <tr>
+          <td align=right valign=top nowrap height="31">Attach File:</td>
+          <td nowrap height="31"> <input type=file name="SupportFile"></td>
+        </tr>
+        <tr>
+            <td colspan="2"><center><%MailForm(captcha,mycontact)%></center></td>
+        </tr>
+        <tr>
+          <td nowrap colspan="2" align="center" height="46">
+            <div align="center">
+              <center>
+                <p><font face="Arial, Helvetica, sans-serif"><br>
+                  <font size="2">
+                  <input class="formbutton" name="B1" type="submit" value="     Submit     ">
+                  </p><p>
+                  <input class="formbutton" name="B2" type="reset" value="     Reset     ">
+                  </font></font></p>
+              </center>
+            </div>
+          </td>
+        </tr>
+      </table>
+      </form>
