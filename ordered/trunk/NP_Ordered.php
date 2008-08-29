@@ -52,9 +52,11 @@
   * Make admin page forms handle all at once instead of one form per line
   * Use the blog offset when getting random items, check if use it elsewhere and be sure to make that correct as well.
   */
-  
+
 /* History:
  *
+ * 1.27 - 08/29/2008 -
+ *  * fix so blog admins can set order on Add Item.
  * 1.26 - 08/08/2008 -
  *  * add special value for category parameter of blog-type skinvar. Use %ALL% to show items from all blogs, regardless of the category being set by URL
  * 1.25.01 - 01/14/2008 -
@@ -110,7 +112,7 @@ class NP_Ordered extends NucleusPlugin {
 
 	// version of the plugin
 	function getVersion() {
-		return '1.26';
+		return '1.27';
 	}
 
 	// a description to be shown on the installed plugins listing
@@ -191,7 +193,10 @@ class NP_Ordered extends NucleusPlugin {
   	}
 
     function event_PostAddItem(&$params) {
-        sql_query("INSERT INTO ".sql_table('plug_ordered_blog')." VALUES('".intval($params['itemid'])."','".intval(postVar('plug_ob_order'))."')");
+		global $member;
+		if ($member->blogAdminRights(getBlogIDFromItemID($params['itemid']))) {
+			sql_query("INSERT INTO ".sql_table('plug_ordered_blog')." VALUES('".intval($params['itemid'])."','".intval(postVar('plug_ob_order'))."')");
+		}
     }
 
     function event_PreUpdateItem(&$params) {
@@ -218,7 +223,7 @@ class NP_Ordered extends NucleusPlugin {
      */
     function event_AddItemFormExtras(&$params)
     {
-        $this->_generateForm();
+        $this->_generateForm('add');
     }
     /**
      * Adds a keywords entry field to the edit item page or bookmarklet.
@@ -538,7 +543,13 @@ class NP_Ordered extends NucleusPlugin {
 		global $member, $itemid;
 
         echo "<h3>NP_Ordered</h3>\n";
-		$blogid = getBlogIDFromItemID($itemid);
+		if ($keywordstring == 'add') {
+			$blogid = intRequestVar('blogid');
+			$keywordstring = '';
+		}
+		else {
+			$blogid = getBlogIDFromItemID($itemid);
+		}
 
 		if ($member->blogAdminRights($blogid)) {
 			printf('<p>Item Order: <input name="plug_ob_order" type="text" size="60" maxlength="256" value="%s" /></p>', $keywordstring);
@@ -560,7 +571,7 @@ class NP_Ordered extends NucleusPlugin {
 // these next three functions are directly taken from the SKIN class of NucleusCMS, SKIN.php
     function _setBlogCategory(&$blog, $catname) {
 		global $catid;
-		if ($catname == '%ALL%') 
+		if ($catname == '%ALL%')
 			$blog->setSelectedCategory(0);
 		elseif ($catname != '')
 			$blog->setSelectedCategoryByName($catname);
