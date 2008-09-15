@@ -55,6 +55,8 @@
 
 /* History:
  *
+ * 1.29.02 - 09/15/2008 -
+ *  * add PreCategoryListItem event to showCategoryList() method. This is a new event coming in a future release of Nucleus
  * 1.29.01 - 09/05/2008 -
  *  * fix item form where specified item only displays if on its own blog or category. Should really display everywhere now.
  * 1.28 - 09/03/2008 -
@@ -118,7 +120,7 @@ class NP_Ordered extends NucleusPlugin {
 
 	// version of the plugin
 	function getVersion() {
-		return '1.29.01';
+		return '1.29.02.001';
 	}
 
 	// a description to be shown on the installed plugins listing
@@ -887,6 +889,13 @@ class NP_Ordered extends NucleusPlugin {
 				}
 			}
 
+			$manager->notify(
+				'PreCategoryListItem',
+				array(
+					'listitem' => &$data
+				)
+			);
+			
 			$temp = TEMPLATE::fill($template['CATLIST_LISTITEM'],$data);
 			echo strftime($temp,$current->itime);
 
