@@ -1,0 +1,244 @@
+<h3>Plugin overview</h3>
+
+<p>This plugin allows a site to be set up to support multiple language translations. 
+NP_MultiLanguage relies on the <a href="http://wiki.nucleuscms.org/text" title="NP_Text">NP_Text</a> plugin 
+to translate in skins and the Item Body part of templates. NP_MultiLanguage allows for translations of items, 
+categories, and templates. It also provides two means for visitors to switch between languages.
+</p>
+<p>Beware that there is still considerable work involved to make a multi-language site, 
+but this plugin provides the tools.</p>
+
+<ul>
+<li><a href="#requirements">Requirements</a></li>
+<li><a href="#upgrading">Upgrading</a></li>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#options">Plugin Options</a></li>
+<li><a href="#skinvars">SkinVars</a></li>
+<li><a href="#def_languages">Defining Languages</a></li>
+<li><a href="#def_templates">Defining Template Mappings</a></li>
+<li><a href="#def_categories">Translating Categories</a></li>
+<li><a href="#def_items">Translating Items</a></li>
+<li><a href="#future">Future Plans</a></li>
+<li><a href="#support">Support and Bugs</a></li>
+<li><a href="#history">Version History</a></li>
+</ul>
+
+<h3><a name="requirements">Requirements</a></h3>
+
+<ul>
+<li>Nucleus CMS v3.33 or higher</li>
+<li>NP_Text v0.53 or higher (provided with download of this plugin)</li>
+<li>A skin that is internationalized using NP_Text (you may need to do this yourself)</li>
+<li>As of Nucleus v3.33, some modifications to a couple core files. This requirement will 
+go away with a future version of Nucleus. (See Installation for details).</li>
+</ul>
+
+<h3><a name="upgrading">Upgrading</a></h3>
+No special upgrade procedure is needed. Just replace the old files with the new files. 
+If a future version of this plugin requires special instructions, they will be detailed here.<p />
+
+<h3><a name="installation">Installation</a></h3>
+
+<p>The NP_MultiLanguage plugin can be downloaded from
+<a href="http://revcetera.com/ftruscot/downloads/nucleus_plugins.html" title="Download NP_MultiLanguage">here</a>.</p>
+
+<p>Download and extract the zip file. Copy the NP_MultiLanguage.php file and the
+multilanguage directory to the nucleus/plugins directory.</p>
+
+<p>For Nucleus version of 3.33, replace nucleus/libs/BLOG.php with the nucleus/plugins/multilanguage/BLOG.php file supplied with the plugin. 
+It is a good idea to backup your file before making the change. This will add a needed plugin API event to allow us access to translate categories 
+in the categorylists. These changes are committed to be included in a future release of Nucleus CMS.</p>
+
+<p>For Nucleus version of 3.33, replace nucleus/libs/TEMPLATE.php with the nucleus/plugins/multilanguage/TEMPLATE.php file supplied with the plugin. 
+It is a good idea to backup your file before making the change. This will add a needed plugin API event to allow us access to use different templates 
+for different languages. These changes are committed to be included in a future release of Nucleus CMS.</p>
+
+<p>Use the Nucleus Admin GUI to register the NP_MultiLanguage plugin into Nucleus.</p>
+
+<p>You will need to edit and save the plugin options before using the plugin.
+The options are described below.</p>
+
+<p>You will need to also visit the admin page for NP_MultiLanguage to define your 
+languages before doing most the other stuff. See <a href="#def_languages">Defining Languages</a></p>
+
+<h3><a name="options">Plugin Options</a></h3>
+<p>There are two options that control the operation of the MultiLanguage plugin.
+These options are set from the &lsquo;edit options&rsquo; link in the Plugin
+Admin area.</p>
+
+<h4>Plugin Options</h4>
+<ul>
+<li><code>Show Admin Area in quick menu</code> : Whether the MultiLanguage admin area
+should be shown in the Quick Menu area. yes or no. (yes)</li>
+<li><code>Delete NP_MultiLanguage data tables on uninstall?</code> : Whether the database
+table should be deleted on an uninstall. This should be set to &lsquo;yes&rsquo;
+only when permanently removing NP_MultiLanguage. yes or no. (no)</li>
+</ul>
+
+<h3><a name="skinvars">SkinVars</a></h3>
+
+<p>The skinvar should be valid in all skin types. It is used to display a language chooser on your page.</p>
+
+<p>The skinvar has the form: <b>&lt;%MultiLanguage(<i>type</i>)%&gt;</b>
+<br />where <i>type</i> is:<br />
+<ul>
+<li><code>dropdown</code> : displays dropdown field used by site visitors to select languages.</li>
+<li><code>list</code> :  displays flags for each language in a list allowing visitors to click a flag to select a language.</li>
+</ul>
+</p>
+
+<p>The list form of the skinvar can be styled using CSS to control how it appears in your skin. For example, I use the 
+following code in the CSS file for the shades skin to display the languages horizontally across the top right of the header.</p>
+
+<pre><code>
+/* for NP_MultiLanguage flag list */
+.mllistli {
+	list-style-image: none;
+	list-style-type: none;
+	display: inline;
+}
+
+.mllistul{	
+	padding: 0px 20px 0px 10px;
+    text-align: right;
+	float: right;
+}
+
+.mllistli a {
+	color: #888;
+	display: inline;
+	line-height: 10px;
+	text-decoration: none;
+	width: 20px;
+}
+
+.mllistli a:hover {
+	color: #888;
+	display: inline;
+	line-height: 10px;
+	text-decoration: none;
+	width: 20px;
+	background-color: transparent;
+}
+</code></pre>
+
+<h3><a name="def_languages">Defining Languages</a></h3>
+
+<p>Each language you want to use on your site must be defined on the admin page for NP_MultiLanguage. 
+Defining languages is easy. You will need to click on the Languages tab of the admin page. It is best 
+to define the native language of your site first. This is the language used in the original items and categories. 
+If you don't define it, it will not appear in the language selectors output by the skinvar.</p>
+
+<p>To add a new language, click the Add New Language button. You will need to complete the following fields: </p>
+<ul>
+<li><code>Language</code> : This is the name of the language file (without the extension) used for this language 
+by <a href="http://wiki.nucleuscms.org/text" title="NP_Text">NP_Text</a>. For example, if NP_Text is using french-utf8.php, 
+the name of the language here should be french-utf8, english.php would be english, etc... This is important so that the 
+cookie used by NP_Text will be set correctly by the NP_MultiLanguage skinvars.</li>
+<li><code>Display Name</code> : A friendly name for this language to be used in the dropdown language selector and other 
+places in the plugin admin page.</li>
+<li><code>Flag</code> : Select a flag to associate with a language. Needed for the list type of language selector.</li>
+<li><code>Character Set</code> : Advanced. Most users shouldn't try to set this, but if you understand character sets and 
+want to have your languages use different ones, set the name here. It works best if you use the same character set, 
+say UTF-8, or unicode, for all languages.</li>
+<li><code>Native Language</code> : Set to yes for your native language and no for all other languages.</li>
+</ul>
+
+<h3><a name="def_templates">Defining Template Mappings</a></h3>
+
+<p>NP_Text is used to provide translations in the skins and parts of the templates, but some areas like 
+archives and search results, as well as locale (for dates) are not. It is probably good practice on a 
+multi-language blog to be minimalistic to avoid the need to translate and maintain too many pieces. However, 
+Some things will remain after NP_Text to translate. These are in templates.</p>
+
+<p>Before you can define template mappings, you must first create the translated templates. The best way to 
+do this is to clone the templates used by your skin (i.e. default/index and default/item for the item skin 
+and shades/index and shades/item for the shades skin). Clone each skin once for each language. Then rename 
+the clones in a way to identify them (i.e. default/indexFR for french, and default/indexSP for spanish, etc...).</p>
+
+<p>Now you go through each template you cloned and renamed to translate it to the appropriate language. 
+Also, be sure to set the Locale field near the bottom to an appropriate locale to format and translate dates 
+properly for that language.<p>
+
+<p>Finally, you will need to map the cloned templates to the original template name used by your skin. 
+This is done on the Templates tab of the NP_MultiLanguage admin page. Just select the original template 
+from the list of templates in the Add New Template field. You will be brought to a Add Template form. 
+Complete the form as follows: </p>
+<ul>
+<li><code>Language</code> : The language that this mapping is for. Select a language from the list.</li>
+<li><code>Template Name</code> : Name of the template to be used whenever you skin calls the original 
+template shown in the Original Value column. For example, if the original template is default/index and you 
+choose default/indexFR here, and french for the Language, NP_MultiLanguage will use default/indexFR for 
+visitors who select french wherever your skin calls for the default/index template.</li>
+</ul>
+
+<h3><a name="def_categories">Translating Categories</a></h3>
+
+<p>You can give translations of your category names and descriptions into each language. The translated names 
+and descriptions will appear in the output of the categorylist skin variable and the output of the category 
+template variable</p>
+
+<p>To translate the categories of a blog, you must have blog admin rights to that blog, i.e. only site and 
+blog admins can translate categories. The translations are done for the categories on the Categories tab of 
+the MultiLanguage admin page. If there are multiple blogs, you will be required to select the blog before 
+you can add or edit category translations.</p>
+
+<p>The page will display a table with any existing category translations. The first column displays the 
+category id and the name of the category in the native language. The rest of the columns show information 
+about the translation. There are edit and delete actions for each translation. To change a translation, 
+click the edit link for that translation. The fields used for editing are the same as those used for adding 
+a translation and are described below.</p>
+
+<p>To add a new translation, use the Add New Category dropdown field above the table of translations to 
+select the native category for which you wish to add a translation. Once the category is selected, you will 
+be taken to a translation form. On this form, you simply select the language of this translation, then 
+translate the category name and description in the appropriate fields. For your convenience, the native 
+category name and description is shown on the form.</p>
+
+<p><b>Note:</b> Only the languages without a current translation for the given category will show up in the 
+language list. If you need to edit an existing translation, use the edit link on the main Categories tab.</p>
+
+
+<h3><a name="def_items">Translating Items</a></h3>
+
+<p>You can give translations of each of your items. The translated items will appear in the output of the 
+blog skin variable, as well as the output of the NP_Ordered (v1.29.02+) skin variables. Other plugins that 
+output items, like NP_ShowBlogs or NP_MultipleCategories will need to be modified to work with NP_MultiLanguage.</p>
+
+<p>To translate the items of a blog, you must have blog team rights to that blog. The translations are done 
+for the items on the Items tab of the MultiLanguage admin page. If there are multiple blogs, you will be 
+required to select the blog before you can add or edit item translations.</p>
+
+<p>The page will display a table with any existing item translations. The first column displays the native
+item id of the translated item. The rest of the columns show information about the translation. There are 
+edit and delete actions for each translation. To change a translation, click the edit link for that 
+translation. The fields used for editing are the same as those used for adding a translation and are 
+described below.</p>
+
+<p>To add a new translation, use the Select Item to Translate dropdown field above the table of translations to 
+select the native item for which you wish to add a translation. Once the item is selected, you will 
+be taken to a translation form. Before you are shown the form, you need to select the language of this 
+translation from a drop down list. Once the language is selected, you will see the translation form. You need to 
+provide translations of the Title, Body, and Extended fields in the appropriate fields. For your convenience, 
+the native values of these fields are shown on the form. The Title is at the top and the More and Extended fields 
+are at the bottom. You should be able to insert any html code or NucleusCMS variables in the translations as you 
+would the native item.</p>
+
+<p><b>Note:</b> Only the languages without a current translation for the given item will show up in the 
+language list. If you need to edit an existing translation, use the edit link on the main Items tab.</p>
+
+
+<h3><a name="future">Future Plans</a></h3>
+
+<p>None yet, but suggestions being taken at the support forum.</p>
+
+<h3><a name="support">Support and Bug reports</a></h3>
+
+<p>For additional support and/or bug reports please use this forum thread:
+<a href="http://forum.nucleuscms.org/viewtopic.php?t=18060">
+http://forum.nucleuscms.org/viewtopic.php?t=18060</a></p>
+
+<h3><a name="history">Version History</a></h3>
+<ul>
+<li>Version 1.0: (2008-10-03) initial version</li>
+</ul>
