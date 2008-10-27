@@ -156,6 +156,8 @@ History:
 	* fix errors in init() method when installing a fresh install.
   v2.22.02 -fix release of 2.22.01
 	* fix errors in how lastupdated field stored.
+  v2.23 -- 20th release of version 2 adds the following to v 2.22.02
+          * add API events for other plugins to add data variables to memberlist templates
 *
 [FUTURE]
 
@@ -189,7 +191,7 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://revcetera.com/ftruscot';	}
 
-	function getVersion() {	return '2.22.02'; }
+	function getVersion() {	return '2.23'; }
 
 	function getDescription() {
         if (!$this->_optionExists('email_public_deny') && $this->_optionExists('email_public')) {
@@ -3168,6 +3170,7 @@ password
 	}
 
 	function displayMemberList($templatename='',$amount=0,$orderby='nick|ASC') {
+		global $manager;
 
 		$templatebody = quickQuery("SELECT tbody as result FROM ".sql_table('plugin_profile_templates')." WHERE ttype='memberlist' AND tname='".addslashes(trim($templatename))."'");
 		if ($templatebody == '') return;
@@ -3243,6 +3246,7 @@ password
 		else $this->mllist_count[2] = 0;
 		while ($row = mysql_fetch_assoc($result)) {
 			$mid = intval($row['mid']);
+/*
 			$fromarr = array();
 			$toarr = array();
 			$fromarr[] = '%memberlink%';
@@ -3255,6 +3259,33 @@ password
 					$toarr[] = $this->doSkinVar('returnValue',$key,'show','raw',$mid);
 				}
 			}
+*/
+			$mvalues = array();
+			$mvalues['memberlink'] = createMemberLink($mid);
+			$mvalues['memberid'] = $mid;
+			foreach ($this->profile_fields as $key=>$value) {
+				if ($key != 'password') {
+					$mvalues[$key] = $this->doSkinVar('returnValue',$key,'show','raw',$mid);
+				}
+			}
+			
+			/* call event for other plugins to add variables to memberlist template */
+			$manager->notify(
+				'PreProfileMemberListItem',
+				array(
+					'memberid' => $mid,
+					'listitem' => &$mvalues
+				)
+			);
+			/* end code to call PostProfileUpdate event */
+
+			$fromarr = array();
+			$toarr = array();
+			foreach ($mvalues as $key=>$value) {
+				$fromarr[] = '%'.$key.'%';
+				$toarr[] = $value;
+			}
+			
 			echo str_replace($fromarr,$toarr,$templatebody);
 		}
 	}
