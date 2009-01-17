@@ -158,7 +158,7 @@ class NP_MultiLanguage extends NucleusPlugin {
 		global $CONF, $member;
 		$lid = intval(cookieVar('NP_MultiLanguage'));
 		if ($lid < 1) return;
-		$lang = getLanguageDef($lid);
+		$lang = $this->getLanguageDef($lid);
 		$language = $lang['mllanguage'];
 		if ($member->isLoggedIn()) {
 			$member->setLanguage($language);
