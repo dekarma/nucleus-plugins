@@ -1,0 +1,85 @@
+<%init%>
+
+<form id="addform" method="post" action="<%contents(actionurl)%>" >
+
+<div>
+
+<input type="hidden" name="action" value="plugin" />
+<input type="hidden" name="name" value="MultiLanguage" />
+<input type="hidden" name="type" value="additem" />
+<input type="hidden" name="mllangid" value="<%contents(mllangid)%>" />
+<input type="hidden" name="mlauthorid" value="<%contents(mlauthorid)%>" />
+<input type="hidden" name="mlitemid" value="<%contents(mlitemid)%>" />
+<input name="blogid" value="<%blogid%>" type="hidden" />
+<%ticket%>
+
+<table>
+	<tr>
+		<th colspan="2"><img src="<%contents(mlflag)%>" alt="<%contents(mllanguage)%>" /> <%contents(mllanguage)%> - <%contents(title)%></th>
+	</tr><tr>
+		<td><%text(_ADD_TITLE)%></td>
+		<td><input
+			<%jsinput(mltitle)%>
+			tabindex="10"
+			size="60"
+			maxlength="160"
+			value="<%contents(mltitle)%>"
+			/></td>
+	</tr><tr>
+		<td>
+			<%text(_ADD_BODY)%> <%helplink(additem)%>
+		</td>
+		<td>
+			<%jsbuttonbar(media+preview)%>
+			<textarea
+				<%jsinput(mlbody)%>
+				tabindex="20"
+				cols="60"
+				rows="20"><%contents(mlbody)%></textarea>
+		</td>
+	</tr><tr id="edit" style="display:none;">
+		<td><%text(_ADD_PREVIEW)%></td>
+		<td><b><span id="prevtitle">&#160;</span></b><br />
+			<span id="prevbody">&#160;</span><br />
+			<span id="prevmore">&#160;</span><br />
+		</td>
+	</tr><tr>
+		<td><%text(_SUBMIT)%></td>
+		<td>
+			<input tabindex="60" type="submit" value="<%text(_ADD_ADDITEM)%>"
+				onclick="return checkSubmit();" />
+		</td>
+	</tr>
+    <tr>
+    	<th colspan="2"><%text(_ADD_MORE)%></th>
+	</tr><tr>
+		<td><%text(_ADD_MORE)%>
+			<br /><%helplink(extended)%>
+		</td>
+		<td>
+			<%jsbuttonbar(media+preview)%>
+			<textarea
+				<%jsinput(mlmore)%>
+				tabindex="70"
+				cols="60"
+				rows="20"
+				><%contents(mlmore)%></textarea>
+		</td>
+	</tr><tr>
+		<td><%text(_SUBMIT)%></td>
+		<td>
+			<input tabindex="60" type="submit" value="<%text(_ADD_ADDITEM)%>"
+				onclick="return checkSubmit();" />
+		</td>
+	</tr>
+</table>
+
+</div>
+</form>
+<div style="text-align:left">
+<h3>Body</h3>
+<%contents(body)%>
+<br /><h3>Extended</h3>
+<%contents(more)%>
+
+</div>
