@@ -156,10 +156,11 @@ class NP_MultiLanguage extends NucleusPlugin {
 
 	function event_PostAuthentication(&$data) {
 		global $CONF, $member;
+		if (intval($CONF['UsingAdminArea'])) return;
 		$lid = intval(cookieVar('NP_MultiLanguage'));
 		if ($lid < 1) return;
-		$lang = $this->getLanguageDef($lid);
-		$language = $lang['mllanguage'];
+		$language = $this->getLanguageFromId($lid);
+
 		if ($member->isLoggedIn()) {
 			$member->setLanguage($language);
 		}
