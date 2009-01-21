@@ -25,6 +25,7 @@
 
 /*
     Version history:
+    * v 1.02  - adds global variable $np_bb_off to allow external php programs that include nucleus pages to not run badbehavior
     * v 1.01  - adds link in logs to ip whois lookup at ip-lookup.net 
 		fixes display of errors when not sufficient privileges
     * v 1.00 - Requires total and complete uninstall of previous versions, including the include statement in the config.php file
@@ -65,7 +66,7 @@ class NP_BadBehavior extends NucleusPlugin {
 	function getName() {	return 'BadBehavior'; 	}
 	function getAuthor()  { return 'Frank Truscott'; 	}
 	function getURL() { return 'http://www.iai.com/'; }
-	function getVersion() {	return '1.01'; }
+	function getVersion() {	return '1.02'; }
 	function getDescription() {
 		return 'Give admin area for bad behavior spam fighting script';
 	}
@@ -146,7 +147,8 @@ class NP_BadBehavior extends NucleusPlugin {
   	}
 
 	function event_PostAuthentication(&$data) {
-		global $DIR_PLUGINS,$CONF;
+		global $DIR_PLUGINS,$CONF,$np_bb_off;
+		if (isset($np_bb_off) && intval($np_bb_off)) return;
 		if ($this->getOption('bb_enabled') == 'yes') {
 			if (!defined('BB2_CORE')) {
 				includephp($DIR_PLUGINS.'badbehavior/bad-behavior-nucleuscms.php');
