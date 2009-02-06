@@ -28,6 +28,7 @@ PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 /* History
   * 
+  * v 1.04 - (06 Feb 2009) - Fix TableList() method
   * v 1.03 - (20 Jan 2009) - Additions to enhance usability
   *  * Enable internationalized plugins to output in correct language by using standard plugin language files, 
 	also sets language properly for things like comment form and login form,
@@ -51,13 +52,13 @@ class NP_MultiLanguage extends NucleusPlugin {
 		{ return 'http://revcetera.com/ftruscot'; }
 
 	function getVersion()
-		{ return '1.03'; }
+		{ return '1.04'; }
 
 	function getDescription()
 		{ return 'This plugin allows you to have a multi-language site. Requires NP_Text and a skin that is multi-language capable.'; }
 
 	function getTableList()
-		{ return array(sql_table('plugin_multilanguage','plugin_multilanguage_languages','plugin_multilanguage_templates','plugin_multilanguage_categories')); }
+		{ return array(sql_table('plugin_multilanguage'),sql_table('plugin_multilanguage_languages'),sql_table('plugin_multilanguage_templates'),sql_table('plugin_multilanguage_categories')); }
 
 	function getEventList()
 		{ return array('PreItem','QuickMenu','PostDeleteItem','PreCategoryListItem','PostDeleteCategory','PreSendContentType','PreTemplateRead','EditItemFormExtras','PostAuthentication','EditorAdminPrePageHead'); }
