@@ -1,0 +1,327 @@
+<h3>Plugin overview</h3>
+
+<p>This plugin allows a blog administrator to set the order in which each item appears.
+Each item can be assigned an order number. When the blog form of the skinvar is used,
+the posts will be displayed in the order designated. Posts that are not given an order,
+are not shown when using the default form of the skinvar. An alternate form of the
+skinvar will display just the unordered posts ordered by post time. The skinvar also
+accepts an optional blogname parameter to display ordered posts from a different blog.
+</p>
+<p>Additionally, a blog administator can set orders to categories in a blog for use
+with the categorylist form of this skinvar. A template can be designated, as well,
+to be used when displaying items in a given category when using the blog form of
+this skinvar. A category's items can also be excluded from the main page when using
+the blog form of this skinvar.</p>
+
+<ul>
+<li><a href="#requirements">Requirements</a></li>
+<li><a href="#upgrading">Upgrading</a></li>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#options">Plugin Options</a></li>
+<li><a href="#skinvars">SkinVars</a></li>
+<li><a href="#usage">Usage</a></li>
+<li><a href="#api">API</a></li>
+<li><a href="#future">Future Plans</a></li>
+<li><a href="#support">Support and Bugs</a></li>
+<li><a href="#history">Version History</a></li>
+</ul>
+<h3><a name="requirements">Requirements</a></h3>
+
+<p>This plugin should work on any system that meets the minimum requirements of
+Nucleus CMS v3.2 or higher, but may work on earlier versions as well. It requires
+PHP v 4.0.6 or higher. It has only been tested using MySQL version 4.1.16 and
+higher, but should theoretically work on all MySQL versions supported by
+Nucleus CMS 3.2+.</p>
+
+<h3><a name="upgrading">Upgrading</a></h3>
+To upgrade to version 1.3x from 1.2x or older, you need to uninstall the old version before installing the new version.<p />
+
+To upgrade to version 1.2x from version 1.2x, simply copy the new files over the existing files.<p />
+
+To upgrade to version 1.2x from 1.1x or 1.0x, you need to uninstall the old version before installing the new version.<p />
+
+To upgrade to version 1.1 from version 1.0, simply copy the new files over the existing files.<p />
+
+<h3><a name="installation">Installation</a></h3>
+
+<p>The NP_Ordered plugin can be downloaded from
+<a href="http://revcetera.com/ftruscot/downloads/nucleus_plugins.html#ordered" title="Download NP_Ordered">here</a>.</p>
+
+<p>Download and extract the zip file. Copy the NP_Ordered.php file and the
+ordered directory to the nucleus/plugins directory.</p>
+
+<p>Use the Nucleus Admin GUI to register the NP_Ordered plugin into Nucleus.
+Be sure to click the &lsquo;Update subscription list&rsquo; button.</p>
+
+<p>You will need to edit and save the plugin options before using the plugin.
+The options are described below.</p>
+
+<p>You then need to add the NP_Ordered skin variables to you skin, according to what you are trying to do. The skin variables are described below.</p>
+
+<h3><a name="options">Plugin Options</a></h3>
+<p>There are two options that control the operation of the Ordered plugin.
+These options are set from the &lsquo;edit options&rsquo; link in the Plugin
+Admin area.</p>
+
+<h4>Plugin Options</h4>
+<ul>
+<li><code>Show Admin Area in quick menu</code> : Whether the Ordered admin area
+should be shown in the Quick Menu area. yes or no. (yes)</li>
+<li><code>Delete NP_Ordered data tables on uninstall?</code> : Whether the database
+table should be deleted on an uninstall. This should be set to &lsquo;yes&rsquo;
+only when permanently removing NP_Ordered. yes or no. (no)</li>
+</ul>
+
+<h3><a name="skinvars">SkinVars</a></h3>
+
+<p>These skinvars should be valid in all skin types except member, error, and imagepopup. The setnavigation skinvar is valid only in the Item Details skin part.</p>
+
+<p>There are five forms of this skinvar &mdash; blog, categorylist, bloglist, item, and setnavigation.</p>
+<p>The blog form of the skinvar is used to replace the blog and otherblog skinvars. Its general form is as follows:</p>
+<b>&lt;%Ordered(blog,<i>show,templatename,amount,category,blogname</i>)%&gt;</b>
+<br />where:<br />
+<ul>
+<li><code>show</code> : ordered,unordered or all. Optional. Sets which items to show, the ordered ones, the unordered ones, or all (ordered then unordered). Defaults to ordered. Advanced - Accepts parameters of form (field-order) where <i>field</i> is time, title, author, category, authorname, or views (requires NP_Views) and where <i>order</i> is asc, desc or random, for custom sorting. See examples for a sample.</li>
+<li><code>templatename</code> : string. Required. Name of template to use to display items. To force the template to be used in all cases append '(strict)' to templatename, e.g. default/index(strict).</li>
+<li><code>amount</code> : string. Optional. The amount of items to show (default = 10). Can also contain an offset telling Nucleus to start only from the given item. e.g. 10(5) shows 10 items starting from item 5</li>
+<li><code>category</code> : string. Optional. Name of the category to show. Defaults to current category, if set.</li>
+<li><code>blogname</code> : string. Optional. Short name of the blog to show. Defaults to current blog.</li>
+</ul>
+
+<p>The categorylist form of the skinvar is used to replace the categorylist skinvar. Its general form is as follows:</p>
+<b>&lt;%Ordered(categorylist,<i>show,templatename,blogname</i>)%&gt;</b>
+<br />where:<br />
+<ul>
+<li><code>show</code> : ordered,unordered or all. Optional. Sets which categories to show, the ordered ones, the unordered ones, or all (ordered then unordered). Defaults to ordered. Advanced - Accepts parameters of form (field-order) where <i>field</i> is either name or desc and where <i>order</i> is asc, desc, or random, for custom sorting by name or description. See examples for a sample.</li>
+<li><code>templatename</code> : string. Required. Name of template to use to display categorylist</li>
+<li><code>blogname</code> : string. Optional. Short name of the blog to show. Defaults to current blog.</li>
+</ul>
+
+<p>The bloglist form of the skinvar is used to replace the bloglist skinvar (v1.30). Its general form is as follows:</p>
+<b>&lt;%Ordered(bloglist,<i>show,templatename,amount,itemtemplate,itemamount</i>)%&gt;</b>
+<br />where:<br />
+<ul>
+<li><code>show</code> : ordered,unordered or all. Optional. Sets which items to show, the ordered ones, the unordered ones, or all (ordered then unordered). Defaults to ordered. 
+Advanced - Accepts parameters of form (<i>special_sort</i>) where <i>special_sort</i> is newestblog, oldestblog, lastentry, itemcount, or random. 
+newestblog sorts blogs from most recently created to first created. oldestblog is the opposite of newestblog. lastentry puts the most recently updated blog first. itemcount puts the blog with the most items first, and random sorts the blogs randomly. See examples for a sample.</li>
+<li><code>templatename</code> : string. Required. Name of template to use to display blogs. Three template variables are added to the Blog List Item field, &lt;%lastentry%&gt; displays an integer representing how long ago, in days or hours, the last entry in the blog was posted. &lt;%hoursago%&gt; displays english words indicating if the lastentry time is in hours ago or days ago. &lt;%itemcount%&gt; displays integer representing how many items in in the blog.</li>
+<li><code>amount</code> : string. Optional. The amount of blogs to show (default = 0, meaning all blogs). </li>
+<li><code>itemtemplate</code> : string. Optional. Name of template used to show items with the blog. Defaults to same template used to display bloglist. Can be used, for example, to show the most recent 2 items from each blog as they are listed. List in same order as &lt;Ordered(blog,all,<i>itemtemplate</i>,<i>itemamount</i>)%&gt;. 
+Advanced - Accepts parameters of form (<i>pre-tag</i>|<i>post-tag</i>) where <i>pre-tag</i> and <i>post-tag</i> are the html tags (or text) to preceed and follow the list of items. See examples for usage.</li>
+<li><code>itemamount</code> : string. Optional. The amount of items to show for each blog (default = 0, meaning no items). </li>
+</ul>
+
+<p>The item form of the skinvar is used to replace the item skinvar. It has two general forms as follows:</p>
+<b>&lt;%Ordered(item,<i>templatename</i>,<i>itemid</i>)%&gt;</b>
+<br />where:<br />
+<ul>
+<li><code>templatename</code> : string. Required. Name of template to use to display items. To force the template to be used in all cases append '(strict)' to templatename, e.g. default/index(strict).</li>
+<li><code>itemid</code> : integer. Optional. item id of the item you want to show. Useful for showing a specific item (using a special template) in the sidebar, or other part of your page.</li>
+</ul>
+<br />
+<b>&lt;%Ordered(item,<i>templatename</i>,random,<i>hints</i>)%&gt;</b>
+<br />where:<br />
+<ul>
+<li><code>templatename</code> : string. Required. Name of template to use to display items. To force the template to be used in all cases append '(strict)' to templatename, e.g. default/index(strict).</li>
+<li><code>random</code> : contant string. Required. Indicates that you want to display a random item. Useful for showing a random item (using a special template) in the sidebar, or other part of your page.</li>
+<li><code>hints</code> : formatted string. Optional. Gives some hints or restrictions to the items that will be randomly chosen. For example, it can be used to only get item from a ceratin blog, or to not get items from a certain category, or to get items from a certain time period. The gerneral form is <i>blog</i>|<i>category</i>|<i>time</i> where the formats for each are described below:
+<ul>
+<li><code>blog</code> : -1 for all blogs, 0 for current blog, and #:#:# for only those blogids, or !#:#:# for all but these blogids, where # (integer) is the blog id of a blog. Default is 0 (current blog).</li>
+<li><code>category</code> : -1 for all categories, 0 for current category, and #:#:# for only those catids or !#:#:# for all but these catids, where # (integer) is the category id of a category. Default is 0 (current category).</li>
+<li><code>time</code> : number of days back to grab items (+# will get items newer than # days and -# will get items older than # days) and 0 means no time limit. Default is 0 (no time limit).</li>
+</ul>
+</li>
+</ul>
+
+<p>The setnavigation form of the skinvar is used to set the nextlink and prevlink to the proper values according to the sorting of the blog form of this skinvar. It should generally be placed in the head section of your skin before the first call to &lt;%nextlink%&gt; or &lt;%prevlink%&gt;. Its general form is as follows:</p>
+<b>&lt;%Ordered(setnavigation,<i>show,amount,setcat</i>)%&gt;</b>
+<br />where:<br />
+<ul>
+<li><code>show</code> : ordered,unordered or all. Optional. Sets which items to show, the ordered ones, the unordered ones, or all (ordered then unordered). Defaults to ordered. Advanced - Accepts parameters of form (field-order) where <i>field</i> is time, title, author, category, authorname, or views (requires NP_Views) and where <i>order</i> is asc, desc, or random, for custom sorting. See examples for a sample.</li>
+<li><code>amount</code> : string. Optional. The amount of items to show (default = 10). Can also contain an offset telling Nucleus to start only from the given item. e.g. 10(5) shows 10 items starting from item 5</li>
+<li><code>setcat</code> : yes or no. Optional. If yes, then the catid variable will be set to the category of the displayed item, even if not set in URI. Default is no.</li>
+</ul>
+
+<h3><a name="usage">Usage</a></h3>
+
+<p>Use the item edit form or the plugin admin page to set the order of the items you wish to order.
+Then add the skinvar described above to your skins (usually the Main Index part) where you want the
+posts displayed. Will usually take the place of the &lt;%blog(templatename,amount)%&gt; skinvar.</p>
+
+<p>Some usage examples are given below:</p>
+
+<ul>
+<li><b>&lt;%Ordered(blog,ordered,default/index,10)%&gt;</b>: Displays the first 10 ordered items.</li>
+<li><b>&lt;%Ordered(blog,all,default/headlines(strict),10)%&gt;</b>: Displays all items sorted by order, then the unordered items sorted by post time, up to a total of 10 posts. The default/headlines template is used for all items, regardless of category settings.</li>
+<li><b>&lt;%Ordered(blog,all,default/index,10)%&gt;</b>: Displays ordered items sorted by order, then the unordered items sorted by post time, up to a total of 10 posts.</li>
+<li><b>&lt;%Ordered(blog,all(title-asc),default/index,10)%&gt;</b>: Displays ordered items sorted by order, then the unordered items sorted alphabetically by post <b>title</b>, up to a total of 10 posts.</li>
+<li><b>&lt;%Ordered(blog,ordered,default/index,3,Announcements)%&gt;</b>: Displays the first 3 ordered items from the Announcements category.</li>
+<li><b>&lt;%Ordered(blog,unordered,default/index,10)%&gt;</b>: Displays the first 10 unordered items.</li>
+<li><b>&lt;%Ordered(blog,ordered,default/index,10,,Static)%&gt;</b>: Displays the first 10 ordered items from the blog with shortname of Static.</li>
+<li><b>&lt;%Ordered(blog,all(views-desc),default/index,10)%&gt;</b>: Displays ordered items sorted by order, then the unordered items sorted by number of views (measured by the NP_Views plugin), with most viewed first, up to a total of 10 posts.</li>
+<li><b>&lt;%Ordered(categorylist,ordered,default/index)%&gt;</b>: Lists the ordered categories using the Category List format in the default/index template.</li>
+<li><b>&lt;%Ordered(categorylist,unordered,default/index)%&gt;</b>: Lists the unordered categories using the Category List format in the default/index template.</li>
+<li><b>&lt;%Ordered(categorylist,all,default/index)%&gt;</b>: Lists the ordered categories sorted by order followed by the unordered categories sorted by name.</li>
+<li><b>&lt;%Ordered(categorylist,all(desc-asc),default/index)%&gt;</b>: Lists the ordered categories sorted by order followed by the unordered categories sorted alphabetically by description.</li>
+<li><b>&lt;%Ordered(categorylist,ordered,default/index,Static)%&gt;</b>: Lists the ordered categories from the blog with shortname of Static, using the Category List format in the default/index template.</li>
+<li><b>&lt;%Ordered(item,default/item)%&gt;</b>: Displays the set item on its detail page using the default/item template, unless another template is specified for its category.</li>
+<li><b>&lt;%Ordered(item,default/box,35)%&gt;</b>: Displays item 35 anywhere using a custom template called default/box, unless another template is specified for its category.</li>
+<li><b>&lt;%Ordered(item,default/box,random,0|3:8|45)%&gt;</b>: Displays a random item from the current blog, and from either category 3 or 8, and which is newer than 45 days old. Displays it using a custom template called default/box.</li>
+<li><b>&lt;%Ordered(item,default/box,random,0|!3:8|-45)%&gt;</b>: Displays a random item from the current blog, but not from either category 3 or 8, and which is older than 45 days old. Displays it using a custom template called default/box.</li>
+<li><b>&lt;%Ordered(item,default/box,random,-1|-1|0)%&gt;</b>: Displays a random item from the any blog, and from any category, and from any time. Displays it using a custom template called default/box.</li>
+<li><b>&lt;%Ordered(item,default/box,random,!3|!2:7:8:22|45)%&gt;</b>: Displays a random item from any blog except blog 3, and from any category except from 2, 7, 8, or 22, and which is newer than 45 days old. Displays it using a custom template called default/box.</li>
+<li><b>&lt;%Ordered(setnavigation,all,10)%&gt;</b>: Sets the next and previous items based on the Ordered order.</li>
+<li><b>&lt;%Ordered(setnavigation,all(title-asc),10)%&gt;</b>: Sets the next and previous items based on the Ordered order (unordered items being sorted aplhabetically by title).</li>
+<li><b>&lt;%Ordered(bloglist,all,default/index,0,bare/headlines,2)%&gt;</b>: Displays all blogs (ordered ones first) using the default/index template and including 2 of the most recent items of each blog formatted according to a template called bare/headlines.</li>
+<li><b>&lt;%Ordered(bloglist,all(itemcount),default/index,10,bare/headlines(&lt;ul class=&quot;headlines&quot;&gt;|&lt;/ul&gt;),2)%&gt;</b>: Displays the 10 blogs with the most items using the default/index template and including 2 of the most recent items of each blog formatted according to a template called bare/headlines.</li>
+<li><b>&lt;%Ordered(bloglist,ordered,default/index,0,,0)%&gt;</b>: Displays all ordered blogs using the default/index template and not including any items.</li>
+</ul>
+
+<p>In your Category List template, use &lt;%catiscurrent%&gt;, to set the CSS class of the link for the current category like this:
+<pre><code>&lt;a class="catcurr_&lt;%catiscurrent%&gt;" href="&lt;%catlink%&gt;" title="Category: &lt;%catname%&gt;"&gt;&lt;%catname%&gt;&lt;/a&gt;
+</code></pre>
+
+<p>There are lots of ways to use this plugin to do things like sticky some important announcements or posts (like an About item), to order
+the items in a fairly static category, but leaving the other categories as dynamic, blog-like categories. The possibilities are endless, but most
+uses might require some clever uses of the &lt;%if(category,catname,<i>CategoryName</i>)%&gt; skinvar and tweaks in templates to get the
+desired affect. If anyone wants to submit examples use cases, I will be happy to include them in this document. Submit to the
+forum thread linked below.</p>
+
+<p>The NP_Ordered plugin admin page allows blog administrators to manage item order and category order. In addition to ordering categories,
+blog administrators can set a template to be used to display items from each category when using the blog form of this skinvar. If no template
+is given, the template set in the blog form of the skinvar is used. Categories can also be set to not show on the main page when using the
+blog form of the skinvar.</p>
+
+<h3><a name="api">API</a></h3>
+
+<p>A simple public method has been added so other plugins can get the ordered mysql results to manipulate as they please. It takes basically the same parameters as the skinvars, minus the unneeded templatename.</p>
+
+<pre><code>resource getQueryResult('blog',show,amount,category,blogname)
+</code></pre>
+<pre><code>resource getQueryResult('categorylist',show,blogname)
+</code></pre>
+<p>Example of use. This outputs the catid of each category of the current blog then the itemid of each item in the order set by NP_Ordered
+<pre><code>/* example use of API function getQueryResult()*/
+    $plugin =& $manager->getPlugin('NP_Ordered');
+	$b =& $manager->getBlog(intval($blogid));
+	$bname = $b->getShortName();
+	$res = $plugin->getQueryResult('categorylist','all',$bname);
+	while ($row = mysql_fetch_object($res)) {
+		echo $row->catid."&lt;br /&gt;";
+	}
+	echo "&lt;br /&gt;&lt;br /&gt;";
+	$res = $plugin->getQueryResult('blog','all',10,'',$bname);
+	while ($row = mysql_fetch_object($res)) {
+		echo $row->itemid."&lt;br /&gt;";
+	}
+</code></pre>
+<p>The fields available for the categorylist lind are catid, catdesc, catname, myorder, mytemplate, myshowonmainpage, mysortcol. Where myorder is the order you set for the category, mytemplate is the template you set to use for that category, myshowonmainpage is 1 or 0 depending on how you set that category, and mysortcol is either 1 (is ordered) or 2 (is unordered).</p>
+<p>The fields available for the blog kind are itemid, title, body, author, authorname, itime, more, authorid, authormail, authorurl, category, catid, closed, myorder, otemplate, ocnumber, mysortcol. Where myorder is the set order of the item, otemplate is the template set for that category, ocnumber is the set order of the item's category, and mysortcol is either 1 (is ordered) or 2 (is unordered).</p>
+
+<p>For plugin developers who would like to add or modify the template variables available in the categorylist or bloglist item body fields, two new API events are avaiable in this plugin that are coming in a future (3.4x) version of Nucleus CMS. These will only work if using Ordered to list the categories or blogs, but will work on the core categorylist and bloglist variables in the future. See description below: </p>
+<table>
+<tr>
+		<th>Name</th><th>When</th><th>Parameters</th>
+	</tr>
+<tr>
+		<td>PreBlogListItem</td>
+
+		<td>Immediately before a bloglist item is output</td>
+		<td><dl>
+			<dt class="ref">itemlist</dt>
+			<dd>associative array of variables and values representing the item being listed</dd>
+			</dl>
+		</td>
+	</tr>
+<tr>
+		<td>PreCategoryListItem</td>
+
+		<td>Immediately before a categorylist item is output</td>
+		<td><dl>
+			<dt class="ref">itemlist</dt>
+			<dd>associative array of variables and values representing the item being listed</dd>
+			</dl>
+		</td>
+	</tr>
+
+</table>
+
+<p>Examples of using the PreBlogListItem event to replace vowels in blogname variable and to add a new variable displaying number of vowels removed.</p>
+<pre><code>/* Silly example of using PreBlogListItem event */
+	function event_PreBlogListItem(&$data) {
+	
+		$mylist =& $data['listitem'];	
+		/*
+		keys in this array should be 'bloglink', 'blogdesc', 'blogname', 'blogid', 'blogurl'
+		and for NP_Ordered: 'lastentry','hoursago','itemcount'
+		*/	
+		$vowels = 0;
+		$ilength = strlen($mylist['blogname']);
+		$mylist['blogname'] = str_replace(array('a','e','i','o','u'), '', $mylist['blogname']);
+		$rlength = strlen($mylist['blogname']);
+		$vowels = $vowels + ($ilength - $rlength);			
+		
+		$mylist['numvowels'] = $vowels;	
+	}
+</code></pre>
+ 
+<h3><a name="future">Future Plans</a></h3>
+
+<p>Some added features under consideration, if there is interest, are the following:</p>
+<ul>
+<li>Improve the plugin admin area. Suggestions welcome.</li>
+<li>Let the blogname parameter in the skinvar accept a list of blogs, and/or a keyword of 'all'</li>
+<li>Internationalize the plugin.</li>
+</ul>
+
+<h3><a name="support">Support and Bug reports</a></h3>
+<ul>
+<li>Offset was not being handled properly. Fixed in 1.1.</li>
+</ul>
+<p>For additional support and/or bug reports please use this forum thread:
+<a href="http://forum.nucleuscms.org/viewtopic.php?t=14070">
+http://forum.nucleuscms.org/viewtopic.php?t=14070</a></p>
+
+<h3><a name="history">Version History</a></h3>
+<ul>
+<li>Version 1.30, released 30 Decemeber 2008, add bloglist variable, add PreBlogListItem event, add PreCategoryListItem event, add plug_ordered_bloglist table, add item sorting by page views (using NP_Views)
+</li>
+<li>Version 1.29.01, released 05 September 2008, fix item form where specified item displays only if on its own blog or category. Should really display everywhere now.
+</li>
+<li>Version 1.28, released 03 September 2008, fix so does not use sscanf() function. Some PHP installs block it for security reason. Only somewhat useful since the Nucleus CMS core files use sscanf() in a number of places.
+</li>
+<li>Version 1.27, released 29 August 2008, fix bug where blog admins could not set order of item during createitem
+</li>
+<li>Version 1.26, released 08 August 2008, add special value for category parameter of blog-type skinvar. Use %ALL% to show items from all blogs, regardless of the category being set by URL
+</li>
+<li>Version 1.25: (2007-11-19) Add random sort capabilities to all skinvar types (blog,categorylist,item,setnavigation)
+</li>
+<li>Version 1.24: (2007-09-20) XHTML compliance fix, add itemid parameter to item type
+<ul>
+<li>Can now use NP_Ordered to display any specific item in your skin.</li>
+</ul>
+</li>
+
+<li>Version 1.23: (2007-05-21) minor bug fixes, add advanced parameters to show parameter
+<ul>
+<li>Can now use NP_Ordered to sort your items in reverse time order or alphabetically by name.</li>
+</ul>
+</li>
+
+<li>Version 1.2: (2006-12-01) add item form of skinvar
+<ul>
+<li>added item skinvar form to replace item skinvar. This is to allow the template to be used to display items be set by category on Item Details pages.</li>
+</ul>
+</li>
+
+<li>Version 1.1: (2006-11-16) some added features and bug fixes
+<ul>
+<li>added setnavigation skinvar form to set next and prev links properly</li>
+<li>fixed offset bug.</li>
+<li>added optional templatemode to templatename paramater, ie default/index(strict), to force the given template for all items.</li>
+<li>added &lt;%catiscurrent%&gt; template var to Category List Body field. Outputs 'yes' if category being listed is the current category and 'no' if it is not.</li>
+<li>added a getQueryResult() method as API to get the mysql result without the templated output.</li>
+</ul>
+</li>
+<li>Version 1.0: (2006-11-10) initial version by Frank Truscott</li>
+</ul>
