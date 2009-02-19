@@ -188,7 +188,7 @@ class NP_Ordered extends NucleusPlugin {
         $oarr = array();
         $ores = sql_query("SELECT * FROM ".sql_table('plug_ordered_bloglist'));
         while ($item = mysql_fetch_object($ores)) {
-            $oarr[$item->oiblogid] = $item->onumber;
+            $oarr[$item->oblogid] = $item->onumber;
         }
         $ires = sql_query("SELECT bnumber FROM ".sql_table('blog'));
         while ($item = mysql_fetch_object($ires)) {
