@@ -55,11 +55,11 @@
 
 /* History:
  *
- * 1.32 - 02/18/2009 -
+ * 1.32 - 02/18/2009 - 
  *  * fix bug where items created by blog team members not getting order set and causing errors in display (thanks senderf)
- * 1.31 - 01/12/2009 -
+ * 1.31 - 01/12/2009 - 
  *  * adjust bloglist skinvar parameters to allow for better control over how items are displayed under each blog
- * 1.30 - 12/30/2008 -
+ * 1.30 - 12/30/2008 - 
  *  * add bloglist ordering
  *  * add special views ordering for blog variable to order by number of views in NP_Views
  * 1.29.02 - 09/15/2008 -
@@ -181,7 +181,7 @@ class NP_Ordered extends NucleusPlugin {
                 sql_query("INSERT INTO ".sql_table('plug_ordered_cat')." VALUES($item->catid,'0','','','1')");
             }
         }
-
+		
 // create and populate table for bloglist order
         sql_query("CREATE TABLE IF NOT EXISTS ".sql_table('plug_ordered_bloglist')." (`oblogid` int(11) NOT NULL, `onumber` int(11) NOT NULL default '0', PRIMARY KEY(`oblogid`), UNIQUE KEY `oblogid` (`oblogid`)) TYPE=MyISAM;");
 
@@ -228,12 +228,13 @@ class NP_Ordered extends NucleusPlugin {
 		if ($member->blogAdminRights(getBlogIDFromItemID($params['itemid']))) {
 			sql_query("INSERT INTO ".sql_table('plug_ordered_blog')." VALUES('".intval($params['itemid'])."','".intval(postVar('plug_ob_order'))."')");
 		}
-		else {
+		else {			
 			sql_query("INSERT INTO ".sql_table('plug_ordered_blog')." VALUES('".intval($params['itemid'])."','0')");
 		}
     }
 
     function event_PreUpdateItem(&$params) {
+		global $member;
 		if ($member->blogAdminRights(getBlogIDFromItemID($params['itemid']))) {
 			sql_query("UPDATE ".sql_table('plug_ordered_blog')." SET onumber='".intval(postVar('plug_ob_order'))."' WHERE oitemid='".intval($params['itemid'])."'");
 		}
@@ -250,7 +251,7 @@ class NP_Ordered extends NucleusPlugin {
     function event_PreDeleteCategory(&$params) {
         sql_query("DELETE FROM ".sql_table('plug_ordered_cat')." WHERE ocatid='".intval($params['catid'])."'");
     }
-
+	
 	function event_PostDeleteBlog(&$params) {
         sql_query("DELETE FROM ".sql_table('plug_ordered_bloglist')." WHERE oblogid='".intval($params['blogid'])."'");
     }
@@ -280,9 +281,9 @@ class NP_Ordered extends NucleusPlugin {
         //echo '<pre>';print_r($params);echo '</pre>';
         $itemid = $params['itemid'];
         $myres = sql_query("SELECT onumber FROM ".sql_table('plug_ordered_blog')." WHERE oitemid='$itemid'");
-        if (mysql_num_rows($myres))
+        if (mysql_num_rows($myres) 
 			$currentorder = intval(mysql_result($myres,0));
-		else
+		else 
 			$currentorder = 0;
         $this->_generateForm($currentorder);
     }
@@ -342,7 +343,7 @@ class NP_Ordered extends NucleusPlugin {
             }
 
 //			list($limit, $offset) = sscanf($amount, '%d(%d)');
-			list($limit, $offset) = explode("(",str_replace(")","",$amount));
+			list($limit, $offset) = explode("(",str_replace(")","",$amount));			
 			if (!is_numeric($limit)) $limit = 10;
 			if (!is_numeric($offset)) $offset = '';
 			list($template,$tmode) = explode("(",$template);
@@ -438,10 +439,10 @@ class NP_Ordered extends NucleusPlugin {
 				$iid = $this->getRandomItem($amount);
 				$this->respectCategory = 0;
 				$this->showItem = 1;
-			}
+			}			
 			elseif (intval($template) > 0) {
 				$iid = intval($template);
-				$this->respectCategory = 0;
+				$this->respectCategory = 0;				
 				$this->showItem = 1;
 			}
 			else {
@@ -588,7 +589,7 @@ class NP_Ordered extends NucleusPlugin {
 					$sortby = 'RAND()';
 				break;
 				default:
-
+					
 					$sortby = 'bname ASC';
 				break;
 			}
@@ -596,7 +597,7 @@ class NP_Ordered extends NucleusPlugin {
 			$blogamount = intval($amount);
 			$amount = intval($blogname);
 			$itemtemplate = $category;
-
+			
 //if ($blogamount > 0) $sortby .= " LIMIT $blogamount";
 //echo "blogamount: $blogamount <br />";
 //echo "amount: $amount <br />";
@@ -999,7 +1000,7 @@ class NP_Ordered extends NucleusPlugin {
 					'listitem' => &$data
 				)
 			);
-
+			
 			$temp = TEMPLATE::fill($template['CATLIST_LISTITEM'],$data);
 			echo strftime($temp,$current->itime);
 
@@ -1053,14 +1054,14 @@ class NP_Ordered extends NucleusPlugin {
         }
 		return $query;
 	}
-
+	
 /* Functions for bloglist */
 	function showBlogList($template, $bnametype = 'blogname', $sortby = 'lastentry DESC', $itemplate = '', $amount = 0, $blogamount = 0) {
 		global $CONF, $manager, $DB_NAME;
 
 		if (strpos($template,'feeds') !== false) $isRSS = true;
 		else $isRSS = false;
-
+		
 		list($itemplate,$listtags) = explode("(",$itemplate);
 		$listtags = str_replace(")","",$listtags);
 		list($pretag,$posttag) = explode('|',$listtags);
@@ -1115,7 +1116,7 @@ class NP_Ordered extends NucleusPlugin {
 			}
 
 			$list['itemcount'] = $data['itemcount'];
-
+			
 			$manager->notify(
 				'PreBlogListItem',
 				array(
@@ -1148,7 +1149,7 @@ class NP_Ordered extends NucleusPlugin {
 							));
 
 	}
-
+	
 	function _getBlogListQuery($theorder = 'bname ASC', $blogamount = 0) {
 		$blogamount = intval($blogamount);
         if ($this->getshowWhat() == 2) {
@@ -1163,7 +1164,7 @@ class NP_Ordered extends NucleusPlugin {
 			$this->setshowWhat(2);
 		}
 		else $query = $this->getSqlbloglist($theorder,$blogamount);
-
+		
 		if ($blogamount > 0) $query .= " LIMIT $blogamount";
 //echo $query;
 
@@ -1174,7 +1175,7 @@ class NP_Ordered extends NucleusPlugin {
 		$query = 'SELECT b.bnumber AS bnumber, b.bname AS bname, b.bshortname AS shortname, b.bdesc AS bdesc, b.burl AS burl, o.onumber as myorder, ';
 		$query .= "(SELECT (UNIX_TIMESTAMP() - UNIX_TIMESTAMP(itime)) FROM ".sql_table('item')." WHERE iblog=b.bnumber ORDER BY itime DESC LIMIT 1) AS lastentry, ";
 		$query .= "(SELECT COUNT(*) FROM ".sql_table('item')." WHERE iblog=b.bnumber) AS itemcount ";
-
+		
 		if ($this->getshowWhat() == 1 ) {
 			$query .= ', 1 as mysortcol';
 		}
