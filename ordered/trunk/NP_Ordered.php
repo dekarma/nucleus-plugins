@@ -281,7 +281,7 @@ class NP_Ordered extends NucleusPlugin {
         //echo '<pre>';print_r($params);echo '</pre>';
         $itemid = $params['itemid'];
         $myres = sql_query("SELECT onumber FROM ".sql_table('plug_ordered_blog')." WHERE oitemid='$itemid'");
-        if (mysql_num_rows($myres) 
+        if (mysql_num_rows($myres)) 
 			$currentorder = intval(mysql_result($myres,0));
 		else 
 			$currentorder = 0;
