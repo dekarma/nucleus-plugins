@@ -66,7 +66,7 @@ class NP_MailForm extends NucleusPlugin {
 		}
 	}
 
-    function getEventList() { return array('QuickMenu','PreItem'); }
+    function getEventList() { return array('QuickMenu','PreItem','TemplateExtraFields'); }
 	
 	function getTableList() { return array(sql_table('plug_mailform')); }
 
@@ -151,7 +151,7 @@ class NP_MailForm extends NucleusPlugin {
 				"'FullName,EmailAddress,Question','0','pdf,doc','1','$cp','1','Question,FullName','<start>','<end>',".
 				"'$body','Question','[ec]','','0','','<span style=\"color:red;font-weight:bold\">Thank you for your request. It has been successfully submitted.</span>')");
 		}
-		/* need to do some code to update the db for the few beta users. For all exisitng forms, bodystarttag should be set to '<start>', bodyendtag to '<end>', mlineendtag to '[ec]'
+		/* need to do some code to update the db for the few beta users. For all existing forms, bodystarttag should be set to '<start>', bodyendtag to '<end>', mlineendtag to '[ec]'
 
 		*/
 		$pres = sql_query("SHOW COLUMNS FROM ".sql_table('plug_mailform')." LIKE 'formbody'");
@@ -342,7 +342,9 @@ class NP_MailForm extends NucleusPlugin {
                 $bodytext = '';
                 $error = '';
                 $noprocess = array('action', 'type', 'name', 'submit', 'ver_sol', 'ver_key', 'sticket', 'formname', 'B1', 'B2', 'B3');
-                $formname = trim(postVar("formname"));
+                $body_template = trim(postVar("body_template"));
+				$subject_template = trim(postVar("subject_template"));
+				$formname = trim(postVar("formname"));
                 //$formname = quickQuery('SELECT formname as result FROM '.sql_table('plug_mailform').' WHERE formname="'.addslashes($formname).'"');
                 if (!$this->formExists($formname)) doError('Invalid form. Cannot process.');
                 $query = "SELECT subject, mailfrom, mailto, required, filesize, filetype, sticket, captcha, spamcheck, spamcheckbody, bodystarttag, bodyendtag, formbody, fieldprefix, blogs, desturl FROM ".sql_table('plug_mailform')." WHERE formname='".addslashes($formname)."'";
@@ -362,17 +364,31 @@ class NP_MailForm extends NucleusPlugin {
 				$mlfields = explode(",",$formdata->mlinefields);
 				$mltag = $formdata->mlineendtag;
                 $fp = $formdata->fieldprefix;
+				
+				$body = array();
+				$body['remote_ip'] = stringStripTags(serverVar('REMOTE_ADDR'));
+				$body['user_agent'] = stringStripTags(serverVar('HTTP_USER_AGENT'));
+				$body['referer'] = stringStripTags(serverVar('HTTP_REFERER'));
+				$body['formname'] = $formname;
+				$body['header'] = "--------------------------------------------------\n";
+				$body['header'] .= $fp."UserAgent: ".stringStripTags(serverVar('HTTP_USER_AGENT'))."\n";
+				$body['header'] .= $fp."Referer: ".stringStripTags(serverVar('HTTP_REFERER'))."\n";
+				$body['header'] .= $fp."FormUsed: $formname\n";
+				$body['header'] .= "--------------------------------------------------\n";
+				
+				$bodytext .= $formdata->bodystarttag."\n";
+				// Now add some info about the form submitter, like ip, user agent and referer
+				/*
+				$bodytext .= "--------------------------------------------------\n";
+				$bodytext .= $fp."RemoteIP: ".stringStripTags(serverVar('REMOTE_ADDR'))."\n";
+				$bodytext .= $fp."UserAgent: ".stringStripTags(serverVar('HTTP_USER_AGENT'))."\n";
+				$bodytext .= $fp."Referer: ".stringStripTags(serverVar('HTTP_REFERER'))."\n";
+				$bodytext .= $fp."FormUsed: $formname\n";
+				$bodytext .= "--------------------------------------------------\n";
+				*/
+				$bodytext = $body['header'];
 
-                $bodytext .= $formdata->bodystarttag."\n";
-                // Now add some info about the form submitter, like ip, user agent and referer
-                $bodytext .= "--------------------------------------------------\n";
-                $bodytext .= $fp."RemoteIP: ".stringStripTags(serverVar('REMOTE_ADDR'))."\n";
-                $bodytext .= $fp."UserAgent: ".stringStripTags(serverVar('HTTP_USER_AGENT'))."\n";
-                $bodytext .= $fp."Referer: ".stringStripTags(serverVar('HTTP_REFERER'))."\n";
-                $bodytext .= $fp."FormUsed: $formname\n";
-                $bodytext .= "--------------------------------------------------\n";
-
-                for ($i=0;$i<count($keys);$i++) {
+				for ($i=0;$i<count($keys);$i++) {
 					// Process all vars except action, type, name, submit, ver_sol, ver_key, sticket, formname
 					if (!in_array($keys[$i], $noprocess)) {
 						$field = trim($keys[$i]);
@@ -381,30 +397,33 @@ class NP_MailForm extends NucleusPlugin {
 							$valuearr = $value;
 							$value = trim(implode("::",$valuearr));
 						}
-                        if (strpos(strtolower($field),'comment') !== false || in_array($field,$mlfields)) {
+						if (strpos(strtolower($field),'comment') !== false || in_array($field,$mlfields)) {
 							$value = nl2br($value);
-                            $allowedTags = ''; // this would be a null separated list like <hr><i><b>
-                            $value = $this->_myStringStripTags($value,'<br>'.$allowedTags);
-                            $value = $this->_br2nl($value);
-                            $value .= "\n".$mltag."\n";
-                        }
-                        else {
-                            $value = stringStripTags($value);
-                        }
-                        //$value = stringStripTags($value);
-                        if (in_array($field,$required) && trim($value) == '') {
-                            $error .= "$field is a required field.<br />";
-                        }
-                        if (strpos(strtolower($field),'email') !== false) {
-                            if (!isValidMailAddress($value)) $error .= "Email address not valid. <br />";
-                        }
+							$allowedTags = ''; // this would be a null separated list like <hr><i><b>
+							$value = $this->_myStringStripTags($value,'<br>'.$allowedTags);
+							$value = $this->_br2nl($value);
+							$value .= "\n".$mltag."\n";
+						}
+						else {
+							$value = stringStripTags($value);
+						}
+						//$value = stringStripTags($value);
+						if (in_array($field,$required) && trim($value) == '') {
+							$error .= "$field is a required field.<br />";
+						}
+						if (strpos(strtolower($field),'email') !== false) {
+							if (!isValidMailAddress($value)) $error .= "Email address not valid. <br />";
+						}
 						if (in_array($field,$scfields)) {
 							$scbody .= $value." ";
 						}
-                        $bodytext .= $fp."$field: $value\n";
+						$body[$field] = $value;
+						$body['fields'] = $fp."$field: $value\n";
+						$bodytext .= $fp."$field: $value\n";						
 					}
+
+					$bodytext .= $formdata->bodyendtag."\n";
 				}
-                $bodytext .= $formdata->bodyendtag."\n";
 
                 if ($formdata->filesize >= 0) {
                     // Now, let's handle the (possible) file uploads
@@ -488,8 +507,16 @@ class NP_MailForm extends NucleusPlugin {
 						$manager->notify('SpamCheck', array ('spamcheck' => & $spamcheck));
 						if ($spamcheck['result'] === true ) doError("Unable to submit. This might be spam");
 					}
-                    $mail->setSubject($formdata->subject);
-                    $mail->setText($bodytext);
+					
+					if ($subject_template) 
+						//use TEMPLATE::fill() to fill template. May need to catch buffer
+					else
+						$mail->setSubject($formdata->subject);
+					
+					if ($body_template) 
+						//use TEMPLATE::fill() to fill template. May need to catch buffer
+					else
+						$mail->setText($bodytext);
 					
 					if (strpos($formdata->mailfrom,';') === false) {
 						$mailfrom = $formdata->mailfrom;
@@ -575,7 +602,7 @@ class NP_MailForm extends NucleusPlugin {
         }
     }
 
-    function event_PreItem($data) {
+    function event_PreItem(&$data) {
         $this->currentItem = &$data["item"];
 		$parts=array('body','more');
 
@@ -583,6 +610,13 @@ class NP_MailForm extends NucleusPlugin {
 			$this->currentItem->$part = str_replace(array("!%MailForm(",")%!"),array("<%MailForm(",")%>"),$this->currentItem->$part);
             $this->currentItem->$part = preg_replace_callback("#<\%MailForm\((.*?)\)%\>#", array(&$this, 'parse'), $this->currentItem->$part);
 		} //foreach ($parts as $part)
+	}
+	
+	function event_TemplateExtraFields(&$data) {
+		$data['fields']['NP_MailForm'] = array(
+               'mailform_subject'=>'MailForm Subject',
+               'mailform_body'=>'MailForm Body'
+            ); 
 	}
 
     function parse($matches) {
@@ -598,7 +632,7 @@ class NP_MailForm extends NucleusPlugin {
 					if ($formname && $this->formExists($formname)) {
 						$stext = quickQuery("SELECT statustext as result FROM ".sql_table('plug_mailform')." WHERE formname='".addslashes($formname)."'");
 						if ($stext != '')
-							$r = "$stext \n";
+							$r = htmlspecialchars_decode($stext). "\n";
 						else
 							$r = "<span style=\"color:red;font-weight:bold\">Thank you for your request. It has been successfully submitted.</span>\n";
 					}

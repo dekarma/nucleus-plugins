@@ -32,6 +32,8 @@
 
    /*
     * History:
+	*
+	* v 1.36 - add parameter to show only one thumbnail image from a folder (unreleased)
     * 
     * v 1.35 - use cacheing of thumbnails when appropriate to save on CPU (thanks sawo)
     *
@@ -66,7 +68,7 @@ class NP_LightBox2 extends NucleusPlugin {
 	function getName() {return 'LightBox2';}
 	function getAuthor()  {return 'Frank Truscott, based on work by Seventoes';}
 	function getURL(){return 'http://www.iai.com/';}
-	function getVersion() {return '1.35';}
+	function getVersion() {return '1.36';}
 	function getDescription() {
 		return 'Simple plugin to enable LightBox2 on Nucleus Blogs';
 	}
@@ -132,6 +134,9 @@ class NP_LightBox2 extends NucleusPlugin {
         $media_reldir = $this->getOption('relPath');
 
 		$sections = explode("|", $matches[1]);
+		list($temp_section,$numtoshow) = explode("(",$sections[0]);
+		$numtoshow = str_replace(")","",$numtoshow);
+		$sections[0] = $temp_section;
 		if (substr($sections[0],0,1) == "/") $sections[0] = substr($sections[0],1);
 		if (substr($sections[0],-1) == "/") $sections[0] = substr($sections[0],0,strlen($sections[0]) -1);
 		$imagename = $sections[0];
@@ -148,6 +153,8 @@ class NP_LightBox2 extends NucleusPlugin {
             $images = array($imagename);
         }
         $r = '';
+		$k = 1;
+		$numtoshow = intval($numtoshow);
         natcasesort($images);
         foreach ($images as $image) {
             if ($this->getOption('defaultCaption') == "LB_imageName") {
@@ -169,14 +176,20 @@ class NP_LightBox2 extends NucleusPlugin {
                 $r .= '</a>';
             }
             else {
-                $r .= '<a href="'.$this->getOption('imageURL').$image.'" rel="'.$reltext.'" title="'.$caption.'">';
-                if ($this->getOption('thumbnails') == 'yes') {
+				if ($numtoshow && $k > $numtoshow) {
+					$r .= '<a href="'.$this->getOption('imageURL').$image.'" rel="'.$reltext.'" title="'.$caption.'" style="display:none">';
+                }
+				else {
+					$r .= '<a href="'.$this->getOption('imageURL').$image.'" rel="'.$reltext.'" title="'.$caption.'">';
+				}				
+				if ($this->getOption('thumbnails') == 'yes') {					
                     $r .= '<img src="'.$this->getAdminURL().'thumbnail.php?path='.$thumb_path.'&amp;image='.$image.'&amp;size='.$this->getOption('maxSize').'" alt="'.$caption.'"  style="border:0px solid" />';
                 } else {
                     $r .= $caption;
                 }
                 $r .= "</a>\n";
             }
+			$k = $k + 1;
         }
 		return $r;
 	}

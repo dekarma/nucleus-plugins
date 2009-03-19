@@ -282,7 +282,7 @@ border-bottom: 1px solid #778;
 		echo "<td>This string will be inserted before each field label (field label is fieldname:). Useful for processing fields in external program.</td></tr>\n";
         echo '<tr><td class="e">Redirect URL</td><td class="v"><input size="60" name="desturl" value="'.$row['desturl'].'" />'."</td>";
 		echo "<td>This string will be the landing page after a user submits a form. Should be a full url including the http://. If left blank (the default) the user will be directed to the form's page upon submitting.</td></tr>\n";
-        echo '<tr><td class="e">Status Text</td><td class="v"><input size="75" name="statustext" value="'.$row['statustext'].'" />'."</td>";
+        echo '<tr><td class="e">Status Text</td><td class="v"><input size="75" name="statustext" value="'.htmlspecialchars($row['statustext']).'" />'."</td>";
 		echo "<td>This string will be the status message shown after a user submits a form. If you want any color or styling, include the html tags to give this styling. If no text given here, a default message will be used.</td></tr>\n";
 		//
 		echo '<tr><td class="e">Form Body:</td><td class="v"><textarea name="formbody" cols=40 rows=20>'.$row['formbody'].'</textarea></td>';
