@@ -34,7 +34,7 @@ class NP_ThickBox extends NucleusPlugin {
 	function getName() {return 'ThickBox';}
 	function getAuthor()  {return 'Frank Truscott, based on work by Seventoes';}
 	function getURL(){return 'http://revcetera.com/ftruscot/';}
-	function getVersion() {return '1.36';}
+	function getVersion() {return '1.36.01';}
 	function getDescription() {
 		return 'Simple plugin to enable ThickBox on Nucleus Blogs';
 	}

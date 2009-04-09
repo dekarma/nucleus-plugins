@@ -112,15 +112,19 @@ if ($img) {
 			switch ($imgtype) {
 			case 'jpg':
 				imagejpeg($img,$cache_file);
+				chmod($cache_file,0666);
 			break;
 			case 'png':
 				imagepng($img,$cache_file);
+				chmod($cache_file,0666);
 			break;
 			case 'gif':
 				imagegif($img,$cache_file);
+				chmod($cache_file,0666);
 			break;
 			case 'bmp':
 				imagewbmp($img,$cache_file);
+				chmod($cache_file,0666);
 			break;
 			default:
 			break;

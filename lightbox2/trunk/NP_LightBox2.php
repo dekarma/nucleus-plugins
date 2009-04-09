@@ -33,7 +33,9 @@
    /*
     * History:
     *
-    * v 1.36 - add parameter to show only one thumbnail image from a folder (unreleased)
+    * v 1.36.01 - remove title attribute from lightbox css tag, set permissions explicitly on cached thumbnails
+    *
+    * v 1.36 - add parameter to show only one thumbnail image from a folder 
     * 
     * v 1.35 - use cacheing of thumbnails when appropriate to save on CPU (thanks sawo)
     *
@@ -53,7 +55,7 @@
     *
     * v 1.21 - fix bug where character in commented line causing parse error in some environments
     *
-	* v 1.2 - make so replace popup and replace normal image links work
+    * v 1.2 - make so replace popup and replace normal image links work
     *
     * v 1.11 - make so thumbnails work when allow_url_open is false
     *
@@ -105,7 +107,7 @@ class NP_LightBox2 extends NucleusPlugin {
             echo '<script type="text/javascript">'."\n";
             echo 'var LB_ROOT_DIR = "'.$lb_root.'"';
             echo '</script>'."\n";
-            echo '<link rel="stylesheet" title="default" type="text/css" href="'.$lb_root.'css/lightbox.css" />'."\n";
+            echo '<link rel="stylesheet" type="text/css" href="'.$lb_root.'css/lightbox.css" />'."\n";
             echo '<script type="text/javascript" src="'.$lb_root.'js/prototype.js"></script>'."\n";
             echo '<script type="text/javascript" src="'.$lb_root.'js/scriptaculous.js?load=effects,builder"></script>'."\n";
             echo '<script type="text/javascript" src="'.$lb_root.'js/lightbox.js"></script>'."\n";
