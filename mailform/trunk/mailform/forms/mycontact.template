@@ -1,6 +1,8 @@
 <%MailForm(status,mycontact)%><br />
 <%MailForm(startform,mycontact)%>
 <%MailForm(sticket,mycontact)%>
+<input type="hidden" name="subject_template" value="" />
+<input type="hidden" name="body_template" value="" />
 <p align="left">
 <b>Name (Required)</b><br />
 <input name="FullName" size="30" value="<%formdata(FullName)%>" />
