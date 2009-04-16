@@ -29,6 +29,7 @@ class NP_MailForm extends NucleusPlugin {
 	  */
 
 	var $existingForms = array();
+	var $bcount = 0;
 
 	// name of plugin
 	function getName() {
@@ -49,7 +50,7 @@ class NP_MailForm extends NucleusPlugin {
 
 	// version of the plugin
 	function getVersion() {
-		return '1.00';
+		return '1.10';
 	}
 
 	// a description to be shown on the installed plugins listing
@@ -113,34 +114,34 @@ class NP_MailForm extends NucleusPlugin {
 
 		if (!intval(quickQuery("SELECT count(*) as result FROM ".sql_table('plug_mailform')." WHERE formname = 'mycontact'"))) {
 			$body = '&lt;%MailForm(status)%&gt;&lt;br /&gt;
-&lt;%MailForm(startform,mycontact)%&gt;
+&lt;%MailForm(javascript)%&gt;
+&lt;%MailForm(startform,mycontact,yes)%&gt;
 &lt;%MailForm(sticket,mycontact)%&gt;
-&lt;input type="hidden" name="subject_template" value="" /&gt;
-&lt;input type="hidden" name="body_template" value="" /&gt;
+&lt;%MailForm(field,subject_template,hidden,)%&gt;
+&lt;%MailForm(field,body_template,hidden,)%&gt;
 &lt;p align="left"&gt;
 &lt;b&gt;Name (Required)&lt;/b&gt;&lt;br /&gt;
-&lt;input name="FullName" size="30"&gt;
+&lt;input name="FullName" size="30" /&gt;
 &lt;/p&gt;
 &lt;p align="left"&gt;
 &lt;b&gt;Email Address (Required)&lt;/b&gt;&lt;br /&gt;
-&lt;input name="EmailAddress" size="30"&gt;
+&lt;%MailForm(field,EmailAddress,text,30)%&gt;
 &lt;/p&gt;
 
 &lt;p&gt;
 &lt;b&gt;Question (Required)&lt;/b&gt;&lt;br /&gt;
-&lt;textarea name="Question" cols="50" rows="10"&gt;&lt;/textarea&gt;
+&lt;%MailForm(field,Question,textarea,10:30)%&gt;
 &lt;/p&gt;
 &lt;p&gt;
 &lt;b&gt;Attachment&lt;/b&gt;&lt;br /&gt;
-&lt;input type="file" name="SupportFile"&gt;
+&lt;%MailForm(field,SupportFile,file)%&gt;
 &lt;/p&gt;
 &lt;p&gt;
 &lt;%MailForm(captcha,mycontact)%&gt;&lt;/p&gt;
 &lt;p&gt;
 &lt;font size="2"&gt;
-&lt;input class="formbutton" name="B1" type="submit" value="     Submit     "&gt;
-
-&lt;input class="formbutton" name="B2" type="reset" value="     Reset     "&gt;
+&lt;%MailForm(button,submit,Submit)%&gt;
+&lt;%MailForm(button,reset,Reset)%&gt;
 &lt;/font&gt;&lt;/p&gt;
 
 &lt;/form&gt;';
@@ -189,11 +190,17 @@ class NP_MailForm extends NucleusPlugin {
 		}
 	}
 
-	function doSkinVar($skinType,$mode = '',$formname = '',$param3 = '') {
+	function doSkinVar($skinType,$mode = '',$formname = '',$param3 = '',$param4 = '',$param5 = '') {
 		if ($formname == '' && strpos($mode,"|") !== false) {
 			$sections = explode("|", $mode);
 			$mode = trim($sections[0]);
 			$formname = trim($sections[1]);
+			if (isset($sections[2])) $param3 = $sections[2];
+			else $param3 = '';
+			if (isset($sections[3])) $param4 = $sections[3];
+			else $param4 = '';
+			if (isset($sections[4])) $param5 = trim($sections[4]);
+			else $param5 = '';
 		}
 		switch ($mode) {
             case 'status':
@@ -215,7 +222,9 @@ class NP_MailForm extends NucleusPlugin {
                 break;
 			case 'startform':
 				if ($formname) {
-                    echo $this->parse(array(&$this,"startform|$formname"));
+					if (strtolower(trim($param3)) == 'yes') $param3 = 'yes';
+					else $param3 = 'no';
+                    echo $this->parse(array(&$this,"startform|$formname|$param3"));
                 }
                 else echo "No Form Specified";
 				break;
@@ -225,6 +234,9 @@ class NP_MailForm extends NucleusPlugin {
                 }
                 else echo "No Form Specified";
 				break;
+			case 'javascript':				
+                echo $this->parse(array(&$this,"javascript"));
+				break;
 			case 'template':
 				if ($formname) {
 					if (strtolower(trim($param3)) == 'yes') $param3 = 'yes';
@@ -233,7 +245,13 @@ class NP_MailForm extends NucleusPlugin {
                 }
                 else echo "No Form Specified";
 				break;
-            default:
+            case 'field':				
+                echo $this->parse(array(&$this,"field|$formname|$param3|$param4|$param5"));
+				break;
+			case 'button':				
+                echo $this->parse(array(&$this,"button|$formname|$param3|$param4|$param5"));
+				break;
+			default:
                 //do nothing
         }
 	}
@@ -652,8 +670,24 @@ class NP_MailForm extends NucleusPlugin {
         $r = '';
 		$matches[1] = str_replace(",","|",$matches[1]);
 		$sections = explode("|", $matches[1]);
-        $formname = trim($sections[1]);
-		$param3 = trim($sections[2]);
+        if (isset($sections[1])) $formname = trim($sections[1]);
+		else $formname = '';
+		if (isset($sections[2])) $param3 = trim($sections[2]);
+		else $param3 = '';
+		if (isset($sections[3])) $param4 = trim($sections[3]);
+		else $param4 = '';
+		if (isset($sections[4])) $param5 = trim($sections[4]);
+		else $param5 = '';
+/*
+if ($sections[0] == 'field') {
+	echo "<hr />".print_r($sections,true)."<br />";
+	echo "formname: $formname <br />";
+	echo "param3: $param3 <br />";
+	echo "param4: $param4 <br />";
+	echo "param5: $param5 <br />";
+	echo "<hr />";
+}
+*/
 		switch ($sections[0]) {
             case 'status':
                 if (intRequestVar('status') > 0) {
@@ -703,8 +737,19 @@ class NP_MailForm extends NucleusPlugin {
 			case 'startform':
 				if ($formname) {
 					if ($this->formExists($formname)) {
-						$r = '<form action="'.$CONF['ActionURL'].'" method="post" enctype="multipart/form-data">
-    <input type="hidden" name="action" value="plugin" />
+						if (strtolower(trim($param3)) == 'yes') $param3 = 'yes';
+						else $param3 = 'no';
+						if ($param3 == 'yes') {
+							$formdef = mysql_fetch_object($this->getFormDef($formname));
+							$formdef->required = str_replace(array(",",", "," ,","; "," ;",";"),array(":",":",":",":",":",":"),$formdef->required);
+//echo "<hr />".$formdef->required."<hr />";
+							$r = '<form name="'.$formname.'" action="'.$CONF['ActionURL'].'" method="post" enctype="multipart/form-data" onsubmit="return ValidateRequiredFields(\''.$formname.'\',\''.$formdef->required.'\');">';
+						}
+						else {
+							$r = '<form name="'.$formname.'" action="'.$CONF['ActionURL'].'" method="post" enctype="multipart/form-data">';
+						}
+						$r .= '
+	<input type="hidden" name="action" value="plugin" />
 	<input type="hidden" name="name" value="MailForm" />
 	<input type="hidden" name="type" value="submit" />
 	<input type="hidden" name="formname" value="'.$formname.'" />';
@@ -744,20 +789,20 @@ class NP_MailForm extends NucleusPlugin {
 
 						$formdata = array();
 						if ($memberid > 0 && is_object($memberinfo)) {
-							$formdata['<%formdata(memberid)%>'] => intval($memberid);
-							$formdata['<%formdata(realname)%>'] => $memberinfo->realname;
-							$formdata['<%formdata(displayname)%>'] => $memberinfo->displayname;
-							$formdata['<%formdata(email)%>'] => $memberinfo->email;
-							$formdata['<%formdata(url)%>'] => $memberinfo->url;
-							$formdata['<%formdata(language)%>'] => $memberinfo->language;
+							$formdata['<%formdata(memberid)%>'] = intval($memberid);
+							$formdata['<%formdata(realname)%>'] = $memberinfo->realname;
+							$formdata['<%formdata(displayname)%>'] = $memberinfo->displayname;
+							$formdata['<%formdata(email)%>'] = $memberinfo->email;
+							$formdata['<%formdata(url)%>'] = $memberinfo->url;
+							$formdata['<%formdata(language)%>'] = $memberinfo->language;
 						}
 						else {
-							$formdata['<%formdata(memberid)%>'] => 0;
-							$formdata['<%formdata(realname)%>'] => '';
-							$formdata['<%formdata(displayname)%>'] => '';
-							$formdata['<%formdata(email)%>'] => '';
-							$formdata['<%formdata(url)%>'] => '';
-							$formdata['<%formdata(language)%>'] => '';
+							$formdata['<%formdata(memberid)%>'] = 0;
+							$formdata['<%formdata(realname)%>'] = '';
+							$formdata['<%formdata(displayname)%>'] = '';
+							$formdata['<%formdata(email)%>'] = '';
+							$formdata['<%formdata(url)%>'] = '';
+							$formdata['<%formdata(language)%>'] = '';
 						}
 						$key = array_keys($_GET);
 						// Loop through all POST vars
@@ -807,7 +852,69 @@ class NP_MailForm extends NucleusPlugin {
 					$r = "No Form Specified.";
 				}
 				break;
-            default:
+			case 'javascript':
+				$r = $this->displayJavascript();
+				break;
+            case 'field':
+				if ($formname) {
+					switch ($param3) {
+						case 'text':
+							if (intval($param4) > 0) $param4 = intval($param4);
+							else $param4 = 30;
+							$r = '<input class="formfield" name="'.$formname.'" size="'.$param4.'" value="'.$param5.'" />';
+						break;
+						case 'textarea':
+							$dims = explode("|", $param4);
+							if (intval($dims[0]) > 0) $rows = intval($dims[0]);
+							else $rows = 10;
+							if (isset($dims[1]) && intval($dims[1]) > 0) $cols = intval($dims[1]);
+							else $cols = 50;
+							$r = '<textarea name="'.$formname.'" rows="'.$rows.'" cols="'.$cols.'">'.$param5.'</textarea>';
+						break;
+						case 'file':
+							$r = '<input class="formfield" type="file" name="'.$formname.'" />';
+						break;
+						case 'hidden':
+							$r = '<input type="hidden" name="'.$formname.'" value="'.$param4.'" />';
+						break;
+						default:
+							$r = "Unknown Field Type: $param3";
+						break;
+					}
+				}
+				else $r = '';
+				break;
+			case 'button':
+				$r = '';
+				if (!$formname) $formname = 'submit';
+				switch (strtolower($formname)) {
+					case 'submit':
+						if (trim($param3)) $param3 = trim($param3);
+						else $param3 = 'submit';
+						if (trim($param4)) $param4 = trim($param4);
+						else {
+							$this->bcount += 1;
+							$param4 = 'B'.$this->bcount;
+						}
+						$r = '<input class="formbutton" name="'.$param4.'" type="submit" value="'.$param3.'">';
+					break;
+					case 'reset':
+						if (trim($param3)) $param3 = trim($param3);
+						else $param3 = 'reset';
+						if (trim($param4)) $param4 = trim($param4);
+						else {
+							$this->bcount += 1;
+							$param4 = 'B'.$this->bcount;
+						}
+						$r = '<input class="formbutton" name="'.$param4.'" type="reset" value="'.$param3.'">';
+					break;
+					default:
+						$r = "Unknown Button Type: $param3";
+					break;
+				}
+				
+				break;
+			default:
                 $r = '';
                 break;
         }
@@ -906,6 +1013,52 @@ class NP_MailForm extends NucleusPlugin {
 		$ext = explode(".", $filename);
 		$extention = $ext[sizeof($ext)-1];
 		return $extention;
+	}
+	
+	function displayJavascript() {
+		return '<script type="text/javascript" language="JavaScript">
+<!-- Copyright 2005 Bontrager Connection, LLC
+
+function ValidateRequiredFields(FormName,RequiredFields)
+{
+var FieldList = RequiredFields.split(":")
+var BadList = new Array();
+for(var i = 0; i < FieldList.length; i++) {
+	var s = eval(\'document.\' + FormName + \'.\' + FieldList[i] + \'.value\');
+	s = StripSpacesFromEnds(s);
+	if(s.length < 1) { BadList.push(FieldList[i]); }
+	else {
+		var name = FieldList[i];
+		if (name.toLowerCase().indexOf(\'email\') >= 0) {
+			var reg = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/;
+			if(reg.test(s) == false) {
+				BadList.push(FieldList[i] + \': Invalid Email Address\');
+			}
+		}
+	}
+}
+if(BadList.length < 1) { return true; }
+var ess = new String();
+if(BadList.length > 1) { ess = \'s\'; }
+var message = new String(\'\n\nThe following field\' + ess + \' are required:\n\');
+for(var i = 0; i < BadList.length; i++) { message += \'\n\' + BadList[i]; }
+alert(message);
+return false;
+}
+
+function StripSpacesFromEnds(s)
+{
+while((s.indexOf(\' \',0) == 0) && (s.length> 1)) {
+	s = s.substring(1,s.length);
+	}
+while((s.lastIndexOf(\' \') == (s.length - 1)) && (s.length> 1)) {
+	s = s.substring(0,(s.length - 1));
+	}
+if((s.indexOf(\' \',0) == 0) && (s.length == 1)) { s = \'\'; }
+return s;
+}
+// -->
+</script>';
 	}
 
 /*

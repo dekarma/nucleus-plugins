@@ -1,8 +1,9 @@
-<%MailForm(status,mycontact)%><br />
-<%MailForm(startform,mycontact)%>
+<%MailForm(status)%><br />
+<%MailForm(javascript)%>
+<%MailForm(startform,mycontact,yes)%>
 <%MailForm(sticket,mycontact)%>
-<input type="hidden" name="subject_template" value="" />
-<input type="hidden" name="body_template" value="" />
+<%MailForm(field,subject_template,hidden,)%>
+<%MailForm(field,body_template,hidden,)%>
 <p align="left">
 <b>Name (Required)</b><br />
 <input name="FullName" size="30" value="<%formdata(FullName)%>" />
@@ -18,15 +19,14 @@
 </p>
 <p>
 <b>Attachment</b><br />
-<input type="file" name="SupportFile">
+<%MailForm(field,SupportFile,file)%>
 </p>
 <p>
 <%MailForm(captcha,mycontact)%></p>
 <p>
 <font size="2">
-<input class="formbutton" name="B1" type="submit" value="     Submit     ">
-
-<input class="formbutton" name="B2" type="reset" value="     Reset     ">
+<%MailForm(button,submit,Submit)%>
+<%MailForm(button,reset,Reset)%>
 </font></p>
 
 </form>
