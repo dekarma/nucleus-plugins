@@ -1,0 +1,12 @@
+Parameter				Value
+Form Name				mycontact
+Subject					.:Contact Form From MySite:.
+From Address			webmaster@mysite.com
+Recipients				me@somedomain.com
+Required Fields			FullName,EmailAddress
+Max File Size			0
+Allowed File Types		doc,pdf,txt
+Enable Sticket			Yes
+Enable Captcha			Yes
+Enable SpamCheck API	No
+Field Prefix			
