@@ -158,6 +158,8 @@ History:
 	* fix errors in how lastupdated field stored.
   v2.23 -- 20th release of version 2 adds the following to v 2.22.02
           * add API events for other plugins to add data variables to memberlist templates
+  v2.23.01 -- fix release of v 2.23
+          * fix big where not normalizing forder and fpublic as integers causing mysql errors in certain situations
 *
 [FUTURE]
 
@@ -191,7 +193,7 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://revcetera.com/ftruscot';	}
 
-	function getVersion() {	return '2.23'; }
+	function getVersion() {	return '2.23.01'; }
 
 	function getDescription() {
         if (!$this->_optionExists('email_public_deny') && $this->_optionExists('email_public')) {
@@ -2017,9 +2019,9 @@ password
 								'ffiletype'=>str_replace(',',';',postVar('ffiletype')),
 								'foptions'=>postVar('foptions'),
 								'fformatnull'=>postVar('fformatnull'),
-                                'forder'=>postVar('forder'),
+                                'forder'=>intPostVar('forder'),
                                 'fdefault'=>postVar('fdefault'),
-                                'fpublic'=>postVar('fpublic')
+                                'fpublic'=>intPostVar('fpublic')
 								);
 			if (strtolower($ofname) == strtolower($fname)) {
 				$this->updateFieldDef($fname, $valuearray);
@@ -2057,9 +2059,9 @@ password
 								'ffiletype'=>str_replace(',',';',postVar('ffiletype')),
 								'foptions'=>postVar('foptions'),
 								'fformatnull'=>postVar('fformatnull'),
-                                'forder'=>postVar('forder'),
+                                'forder'=>intPostVar('forder'),
                                 'fdefault'=>postVar('fdefault'),
-                                'fpublic'=>postVar('fpublic')
+                                'fpublic'=>intPostVar('fpublic')
 								);
 			if ($this->fieldExists($fname)) {
 				doError("$fname - "._PROFILE_ACTION_DUPLICATE_FIELD);
