@@ -1,11 +1,9 @@
 /**
  * Style sheet for CalendarPickerControl
  * System-colors theme
- * A pseudo-patched version for mozilla in linux (where captiontext and active caption
- * are defined as buttonface and black always)
  */
 
-.calendarbutton{
+div.calendarbutton{
 	position: absolute;
 	width: 15px;
 	height: 16px;
@@ -26,6 +24,14 @@
 }
 
 #CalendarPickerControl td.monthname{
+	width: 100%;
+	font: normal 13px Verdana;
+	color: captiontext;
+	font-weight: bold;
+	background-color: activecaption;
+}
+
+#CalendarPickerControl td.monthnameLNX{
 	width: 100%;
 	font: normal 13px Verdana;
 	color: highlighttext;
@@ -64,6 +70,13 @@
 }
 
 #CalendarPickerControl td.dayname{
+	font: normal 11px Verdana;
+	color: captiontext;
+	font-weight: bold;
+	background-color: activecaption;
+}
+
+#CalendarPickerControl td.daynameLNX{
 	font: normal 11px Verdana;
 	color: highlighttext;
 	font-weight: bold;

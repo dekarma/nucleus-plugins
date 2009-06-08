@@ -1,0 +1,32 @@
+<%MailForm(status)%><br />
+<%MailForm(javascript)%>
+<%MailForm(startform,mycontact,yes)%>
+<%MailForm(sticket,mycontact)%>
+<%MailForm(field,subject_template,hidden,)%>
+<%MailForm(field,body_template,hidden,)%>
+<p align="left">
+<b>Name (Required)</b><br />
+<input name="FullName" size="30" value="<%formdata(FullName)%>" />
+</p>
+<p align="left">
+<b>Email Address (Required)</b><br />
+<input name="EmailAddress" size="30" value="<%formdata(EmailAddress)%>" />
+</p>
+
+<p>
+<b>Question (Required)</b><br />
+<textarea name="Question" cols="50" rows="10"><%formdata(Question)%></textarea>
+</p>
+<p>
+<b>Attachment</b><br />
+<%MailForm(field,SupportFile,file)%>
+</p>
+<p>
+<%MailForm(captcha,mycontact)%></p>
+<p>
+<font size="2">
+<%MailForm(button,submit,Submit)%>
+<%MailForm(button,reset,Reset)%>
+</font></p>
+
+</form>
