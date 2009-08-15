@@ -50,7 +50,7 @@ class NP_MailForm extends NucleusPlugin {
 
 	// version of the plugin
 	function getVersion() {
-		return '1.12';
+		return '1.13';
 	}
 
 	// a description to be shown on the installed plugins listing
@@ -229,21 +229,21 @@ class NP_MailForm extends NucleusPlugin {
 		}
 		switch ($mode) {
             case 'status':
-                echo $this->parse(array(&$this,'status'));
+                echo $this->parse(array(&$this,"status|$formname"));
                 break;
             case 'sticket':
                 if ($formname) {
                     $sticket = intval(quickQuery('SELECT sticket as result FROM '.sql_table('plug_mailform').' WHERE formname="'.addslashes($formname).'"'));
                     if ($sticket) echo $this->parse(array(&$this,"sticket|$formname"));
                 }
-                else echo $this->parse(array(&$this,'sticket'));
+                else echo $this->parse(array(&$this,"sticket|$formname"));
                 break;
             case 'captcha':
                 if ($formname) {
                     $captcha = intval(quickQuery('SELECT captcha as result FROM '.sql_table('plug_mailform').' WHERE formname="'.addslashes($formname).'"'));
                     if ($captcha) echo $this->parse(array(&$this,"captcha|$formname"));
                 }
-                else echo $this->parse(array(&$this,'captcha'));
+                else echo $this->parse(array(&$this,"captcha|$formname"));
                 break;
 			case 'startform':
 				if ($formname) {
@@ -466,8 +466,9 @@ class NP_MailForm extends NucleusPlugin {
 							$value = nl2br($value);
 							$allowedTags = ''; // this would be a null separated list like <hr><i><b>
 							$value = $this->_myStringStripTags($value,'<br>'.$allowedTags);
-							$value = $this->_br2nl($value);
-							$value .= "\n".$mltag."\n";
+							//$value = $this->_br2nl($value);
+							//$value .= "\n".$mltag."\n";
+							$value .= "<br />$mltag <br />";
 						}
 						else {
 							$value = stringStripTags($value);
@@ -592,14 +593,24 @@ class NP_MailForm extends NucleusPlugin {
 						//use TEMPLATE::fill() to fill template. May need to catch buffer
 						$template =& $manager->getTemplate($body_template);
 						if (trim($template['mailform_body']) == '') {
-							$mail->setText($bodytext);
+							$htmltext = $bodytext;
+							$texttext = strip_tags($this->_br2nl($bodytext));
+							//$mail->setText($bodytext);
+							$mail->setHtml($htmltext,$texttext);
 						}
 						else {
-							$mail->setText(TEMPLATE::fill($template['mailform_body'],$body));
+							$htmltext = TEMPLATE::fill($template['mailform_body'],$body);
+							$texttext = strip_tags($this->_br2nl($htmltext));
+							$mail->setHtml($htmltext,$texttext);
+							//$mail->setText(TEMPLATE::fill($template['mailform_body'],$body));
 						}
 					}
-					else
-						$mail->setText($bodytext);
+					else {
+						$htmltext = $bodytext;
+						$texttext = strip_tags($this->_br2nl($bodytext));
+						//$mail->setText($bodytext);
+						$mail->setHtml($htmltext,$texttext);
+					}
 					
 					if (strpos($formdata->mailfrom,';') === false) {
 						$mailfrom = $formdata->mailfrom;
@@ -763,8 +774,12 @@ if ($sections[0] == 'field') {
 				if (intval($status) > 0) {
 					if ($formname && $this->formExists($formname)) {
 						$stext = quickQuery("SELECT statustext as result FROM ".sql_table('plug_mailform')." WHERE formname='".addslashes($formname)."'");
-						if ($stext != '')
-							$r = htmlspecialchars_decode($stext). "\n";
+						if ($stext != '') {
+							if (function_exists('htmlspecialchars_decode'))
+								$r = htmlspecialchars_decode($stext). "\n";
+							else
+								$r = html_entity_decode($stext). "\n";							
+						}
 						else
 							$r = "<span style=\"color:red;font-weight:bold\">Thank you for your request. It has been successfully submitted.</span>\n";
 					}
