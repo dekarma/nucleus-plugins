@@ -47,12 +47,12 @@ class NP_ShowComments extends NucleusPlugin {
 	// an URL to the author's website
 	function getURL()
 	{
-		return "http://www.iai.com";
+		return "http://revcetera.com/ftruscot/";
 	}
 
 	// version of the plugin
 	function getVersion() {
-		return '1.2';
+		return '1.20';
 	}
 
 	// a description to be shown on the installed plugins listing
@@ -78,32 +78,32 @@ class NP_ShowComments extends NucleusPlugin {
 
 	function doSkinVar($skinType,$template,$NumToShow = -1,$sord = 'asc', $pages = 'no', $iid = 0) {
 
-	if (!is_numeric($NumToShow)) $NumToShow = -1;
-        if (strtolower($pages) == 'yes') {
-            $pages = 1;
+		if (!is_numeric($NumToShow)) $NumToShow = -1;
+		if (strtolower($pages) == 'yes') {
+			$pages = 1;
 			if (requestVar('scbegin') == '') $start = 1;
 			else {
 				$start = intval(requestVar('scbegin'));
 				// if ($start == 0) $start = 1;
 			}
-            if ($NumToShow < 1) $NumToShow = 20;
-        }
-        else {
-            $pages = 0;
-            $start = 1;
-        }
-        switch (strtolower($sord)) {
-            case 'desc':
-                $sord = 'DESC';
-                break;
-            case 'random':
-                $sord = 'RAND()';
-                $pages = 0;
-                break;
-            default:
-                $sord = 'ASC';
-                break;
-        }
+			if ($NumToShow < 1) $NumToShow = 20;
+		}
+		else {
+			$pages = 0;
+			$start = 1;
+		}
+		switch (strtolower($sord)) {
+			case 'desc':
+				$sord = 'DESC';
+				break;
+			case 'random':
+				$sord = 'RAND()';
+				$pages = 0;
+				break;
+			default:
+				$sord = 'ASC';
+				break;
+		}
 		$iid = intval($iid);
         if ($skinType == 'item' || ($skinType == 'template' && $iid > 0)) {
             // this is mostly the parse_comments() function of Nucleus' ACTIONS class (in SKIN.php)

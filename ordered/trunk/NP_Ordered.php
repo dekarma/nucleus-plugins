@@ -55,8 +55,10 @@
 
 /* History:
  *
+ * 1.34.01 - 08/06/2009 -
+ *  * fix bug for PHP4 using get_class() that kept blog and categorylist from showing anything
  * 1.34 - 06/11/2009 -
- *  * fix bug where call to member function on non-object errors displayed on error and member pages *  * 
+ *  * fix bug where call to member function on non-object errors displayed on error and member pages
  * 1.33 - 02/28/2009 -
  *  * fix bug where blogs created after installation of NP_Ordered do not get inserted into plug_ordered_bloglist
  *  * add reversename, short, reverseshort to special sort orders for bloglist type.
@@ -135,7 +137,7 @@ class NP_Ordered extends NucleusPlugin {
 
 	// version of the plugin
 	function getVersion() {
-		return '1.34';
+		return '1.34.01';
 	}
 
 	// a description to be shown on the installed plugins listing
@@ -383,7 +385,8 @@ class NP_Ordered extends NucleusPlugin {
 				$useSP = 1;
 			}
 			
-			if (!is_object($b) || get_class($b) != 'BLOG') return "";
+			//if (!is_object($b) || strtoupper(get_class($b)) != 'BLOG') return "";
+			if (!is_object($b) || !(strtoupper(get_class($b)) == 'BLOG' || is_subclass_of($b,'blog'))) return "";
 
 			if (strtolower($show) == 'unordered') $this->setshowWhat(0);
 			elseif (strtolower($show) == 'all') $this->setshowWhat(2);
@@ -457,7 +460,7 @@ class NP_Ordered extends NucleusPlugin {
 				$b =& $manager->getBlog(getBlogIDFromName($blogname));
 			}
 			
-			if (!is_object($b) || get_class($b) != 'BLOG') return "";
+			if (!is_object($b) || !(strtoupper(get_class($b)) == 'BLOG' || is_subclass_of($b,'blog'))) return "";
 
             if ($this->getresult) {
                 $oquery = $this->_getCatQuery($b,$theorder);
