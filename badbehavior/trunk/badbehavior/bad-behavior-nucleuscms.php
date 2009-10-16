@@ -54,6 +54,7 @@ $bb2_settings_defaults = array(
 	'httpbl_key' => '',
 	'httpbl_threat' => '25',
 	'httpbl_maxage' => '30',
+	'offsite_forms' => false
 );
 
 // Bad Behavior callback functions.
