@@ -1,18 +1,15 @@
 Googlebot
-YahooFeedSeeker
 Syndic8
 Technoratibot
 Yahoo-MMCrawler
-Technorati Feed Engine
-FeedLounge
 Yahoo! Slurp
-Rojo
 msnbot
 ichiro
-YahooSeeker
 Bloglines
-Feedster
 FeedFetcher
 Hatena
 Feedfetcher-Google
-NewsGatorOnline
+AideRSS
+FreshReader
+friendfeed
+PostRank
