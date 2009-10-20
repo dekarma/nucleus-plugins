@@ -54,7 +54,7 @@ class NP_BROverride extends NucleusPlugin {
 	?>
 		<h3>Auto linebreak-BR conversion</h3>
 		<p>
-		<input type="checkbox" name="br_flag" <? if (true) echo "checked=\"checked\""; ?>/>Convert linebreak to &lt;br&gt;
+		<input type="checkbox" name="br_flag" <?php if (true) echo "checked=\"checked\""; ?>/>Convert linebreak to &lt;br&gt;
 		</p>
 	<?php
 	}
