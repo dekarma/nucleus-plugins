@@ -55,7 +55,7 @@ NEW   - Comment: with last release of the plugin you can choice to add a comment
      This plugin utilize existing <%image%> and <%popup%> function from Nucleus to construct the image.
      This is somewhat intruding if user still want to use existing popup, and image function.
 
-     The new Image skinVar mode allow user to preserve the exiting function while still get the thumbnail/popup
+     The new Image skinVar mode allow user to preserve the existing function while still get the thumbnail/popup
      full image function.
 
      To insert a image in a post
@@ -109,6 +109,7 @@ NEW   - Comment: with last release of the plugin you can choice to add a comment
 **************************************************************************
   Release history:
 
+	  - 0.13: added title in <IMG>
 	  - 0.12: a much better flush thumbnail implementation
 	  - 0.11: fixed space in image file name problem
 	  - 0.10b: fixed Image mode $comment bug
@@ -197,7 +198,7 @@ class NP_PopupImageNetPBM extends NucleusPlugin
         ------------------------*/
         function getVersion()
         {
-                return '0.12';
+                return '0.13';
         }
 
         /* Minimum Nucleus version required to install the plugin
@@ -442,7 +443,7 @@ class NP_PopupImageNetPBM extends NucleusPlugin
 
                 $winX = ($xSize > $this->maxWinX) ? $this->maxWinX : $xSize;
                 $winY = ($ySize > $this->maxWinY) ? $this->maxWinY : $ySize;
-                return ('<a href="'.$this->mediaURL.$srcPath.'"onclick="window.open(this.href,\'imagepopup\',\'status=no,toolbar=no,scrollbars='.$this->sBar.',resizable=no,width='.$winX .',height='.$winY.'\'); return false;" ><img src="'.$this->mediaURL.$thumbnail.'" alt="'.$comment.'" /></a>');
+                return ('<a href="'.$this->mediaURL.$srcPath.'" onclick="window.open(this.href,\'imagepopup\',\'status=no,toolbar=no,scrollbars='.$this->sBar.',resizable=no,width='.$winX .',height='.$winY.'\'); return false;" ><img src="'.$this->mediaURL.$thumbnail.'" title="'.$comment.'" alt="'.$comment.'" /></a>');
         }
 
 
