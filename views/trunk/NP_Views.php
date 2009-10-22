@@ -33,6 +33,8 @@
       - Admin page enhancement to preserve order and sort info
     v1.9
       - Added item title in admin menu
+    v1.9.1
+      - ignore draft in admin menu
 */
 class NP_Views extends NucleusPlugin {
 
@@ -54,7 +56,7 @@ class NP_Views extends NucleusPlugin {
       return 'http://www.tipos.com.br';
    }
    function getVersion() {
-      return '1.9';
+      return '1.9.1';
    }
    function getDescription() {
       return 'This plugin counts how many times an entry has been displayed.';
