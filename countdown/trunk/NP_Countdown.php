@@ -1,4 +1,4 @@
-<? 
+<?php
 /*
   History:
     v2.0 - initial release
