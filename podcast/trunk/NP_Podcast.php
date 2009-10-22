@@ -1,4 +1,4 @@
-<? 
+<?php
 /*
   NP_Podcast - provide support for podcasting in Nucleus
 
