@@ -65,6 +65,7 @@
         - remove subscription when item deleted
         - fix FancyURL link
   v0.67 - fix <%image%> stripped text and URL
+        - fix grammer typo
 
   admun TODO:
   - re-work the delete menu, add "select all" 
@@ -88,7 +89,8 @@
 
   - add post comment auto subscribe function (added a checkbox in comment posting template)
   - tested &$comment passed from the PostAddComment event
-  - captcha for NotifyMe
+  - captcsha for NotifyMe
+  - integrate subscribe/unscribe into the blog, instead of white page (suggestion)
 
 Other ideas
 =============
@@ -279,14 +281,14 @@ class NP_NotifyMe extends NucleusPlugin {
         // Some user suggested this might help for those having problem sending email with this...
         $headers .= "\nReturn-Path: " . $CONF['AdminEmail'] . "\n";
 
-        ACTIONLOG::add(INFO, 'NotifyMe add item: Sending notification to ' . $sender);
+        ACTIONLOG::add(INFO, 'NotifyMe add item: Sending notification to ' . $sender . " blog post: " . $url);
         $return = @mail("$sender","$title","$body","$headers"); 
       } 
       else
       {
-        ACTIONLOG::add(INFO, 'NotifyMe add item: Skipping email notification (send_email=' . $send_email . ' draft=' . $this->draft 
+        ACTIONLOG::add(INFO, 'NotifyMe add item: Skipping email notification (url=' . $url . ' send_email=' . $send_email . ' draft=' . $this->draft 
                              . ' future=' . $future . 
-                             ' itime='. $this->itime . ' time=' . $time .
+                             ' itime='. $this->itime . ' time=' . $this->time .
                              ')');
       }
     }
@@ -377,7 +379,7 @@ class NP_NotifyMe extends NucleusPlugin {
 				<input type="checkbox" id="plug_send_email" name="send_email" />
 				<label for="plug_send_email">Send notification to subscribers</label>
 			<br />
-				<input type="checkbox" <? if ($con=="yes") { echo 'checked="checked"';} ?> id="plug_send_comm_email" name="sub_comm" />
+				<input type="checkbox" <?php if ($con=="yes") { echo 'checked="checked"';} ?> id="plug_send_comm_email" name="sub_comm" />
 				<label for="plug_send_comm_email">Subscribe to comment notification</label>
 			</p>
 		<?
@@ -391,10 +393,10 @@ class NP_NotifyMe extends NucleusPlugin {
 	<h3>NotifyMe</h3>
 
 			<p>
-				<input type="checkbox" <? if ($on=="yes") { echo 'checked="checked"';} ?> id="plug_send_email" name="send_email" />
+				<input type="checkbox" <?php if ($on=="yes") { echo 'checked="checked"';} ?> id="plug_send_email" name="send_email" />
 				<label for="plug_send_email">Send notification to subscribers</label>
 			<br />
-				<input type="checkbox" <? if ($con=="yes") { echo 'checked="checked"';} ?> id="plug_send_comm_email" name="sub_comm" />
+				<input type="checkbox" <?php if ($con=="yes") { echo 'checked="checked"';} ?> id="plug_send_comm_email" name="sub_comm" />
 				<label for="plug_send_comm_email">Subscribe to comment notification</label>
 			</p>
 		<?
@@ -524,7 +526,7 @@ class NP_NotifyMe extends NucleusPlugin {
           sql_query($query);
         }
 
-        echo "Thanks for subscribing, enjoy.";
+        echo "Thanks for subscribing. Enjoy.";
         return;
       }
 
@@ -663,9 +665,9 @@ class NP_NotifyMe extends NucleusPlugin {
 	  // display subscribe/unsubscribe message
 	  if ($sub != '' && $subType != '' && $subType == $form) {
 	    if ($sub == '0')
-	      $message = '<i>Thank you, ' . $add . ' subscribes successfully</i><br /><br />';
+	      $message = '<i>Thank you, ' . $add . ' subscribed successfully</i><br /><br />';
 	    else if ($sub == '1')
-	      $message = '<i>Thank you, ' . $add . ' unsubscribes successfully</i><br /><br />';
+	      $message = '<i>Thank you, ' . $add . ' unsubscribed successfully</i><br /><br />';
 	    else
 	      $message = '<i>No action perfromed</i><br />';
 

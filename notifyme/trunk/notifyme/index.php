@@ -8,6 +8,7 @@
             v0.5 (v0.52) - add unauth user list/remove
             v0.6 (v0.60) - fixed user/admin check
 	    v0.7 (v0.66) - fixed blog/item url on table
+            v0.8 (v0.67) - fixed grammer typo
 	*/
 
 	// if your 'plugin' directory is not in the default location,
@@ -40,7 +41,7 @@
         $res = mysql_query($query);
         $row = mysql_fetch_object($res);
 
-        echo "There are " . $row->total . " unauthenicate subscribers [<a href=\"". $CONF['PluginURL'] . "notifyme/deleteauth.php" . "\">delete all unauth subscribers]</a><p />";
+        echo "There are " . $row->total . " unauthenicated subscribers [<a href=\"". $CONF['PluginURL'] . "notifyme/deleteauth.php" . "\">delete all unauth subscribers]</a><p />";
 
         echo "<a href=\"". $CONF['PluginURL'] . "notifyme/delete.php\">Click here to Mass delete subscrption</a>";
 
