@@ -1,4 +1,4 @@
-<? 
+<?php 
 /* This plugin display drafts written by a user
 
    History:
