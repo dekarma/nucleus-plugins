@@ -20,8 +20,8 @@
 	* ==========================================================================================
         * admun TODO:
 	*   - delete blocked tb older than x days
-	*   - clear tb lookup cache
-	*   - tb url auto discovery via rel="trackback" (like in Wordpress)
+	*   - clear tb lookup cache periodically
+	*
 	*/
 
 
@@ -186,7 +186,7 @@
 				
 				// Detect trackback
 				case 'detect':
-					list($url, $title) = 
+					list($link, $url, $title, $type) = 
 						$this->getURIfromLink(html_entity_decode(requestVar('tb_link')));
 					
 					$url = addslashes($url);
@@ -195,7 +195,7 @@
 					$title = addslashes($title);
 					$title = $this->_utf8_to_javascript($title);
 					
-					echo "tbDone('" . requestVar('tb_link') . "', '" . $url . "', '" . $title . "');";
+					echo "tbDone('" . requestVar('tb_link') . "', '" . $url . "', '" . $title . "', '" . $type . "');";
 					break;
 
 				// Send ping triggered by tb ping form for a post
@@ -474,6 +474,81 @@
 	 */
 
 		/* 
+		 *  Send a Pingback to another website
+		 */
+		function sendPingback($sourceURI , $targetURI, $pingURL) {
+			ACTIONLOG::add(WARNING, "$sourceURI - $targetURI - $pingURL");
+			if (!$this->canSendPing()) {
+				return 'You\'re not allowed to send pings';
+			}
+			
+			if ($this->getOption('SendPings') == 'no') {
+				return 'Sending pingback is disabled';
+			}
+			
+			$parsed_url = parse_url($pingURL);
+			
+			if ($parsed_url['scheme'] != 'http' || $parsed_url['host'] == '') {
+				return 'Bad pingback URL';
+			}
+			
+			$port = ($parsed_url['port']) ? $parsed_url['port'] : 80;
+			
+			// 3. Create the XML-RPC
+			$content = "<?xml version=\"1.0\"?>
+					<methodCall>
+					   <methodName>pingback.ping</methodName>
+					   <params>
+					      <param>
+						 <value>$sourceURI</value>
+					      </param>
+					      <param>
+						 <value>$targetURI</value>
+					      </param>
+					   </params>
+					</methodCall>";
+
+			$user_agent = 'NucleusCMS NP_TrackBack plugin';
+			
+			// 4. Prepare HTTP request
+			$request  = 'POST ' . $parsed_url['path'];
+			
+			if ($parsed_url['query'] != '')
+				$request .= '?' . $parsed_url['query'];
+				
+			$request .= " HTTP/1.1\r\n";
+			$request .= "Accept: */*\r\n";
+			$request .= "User-Agent: " . $user_agent . "\r\n";
+			$request .= "Host: " . $parsed_url['host'] . ":" . $port . "\r\n";
+			$request .= "Cache-Control: no-cache\r\n";
+			$request .= "Content-Length: " . strlen( $content ) . "\r\n";
+			$request .= "Content-Type: application/x-www-form-urlencoded; charset="._CHARSET."\r\n";
+			$request .= "Connection: Close\r\n";
+			$request .= "\r\n";
+			$request .= $content;
+			
+			$socket = fsockopen( $parsed_url['host'], $port, $errno, $errstr );
+			if ( ! $socket )
+				return 'Could not send pingback: '.$errstr.' ('.$errno.')';
+			
+			// 5. Execute HTTP request
+			fputs($socket, $request);
+			
+			// 6. Receive response
+			$result = '';
+			while (!feof($socket)) {
+				$result .= fgets($socket, 4096);
+			}
+			
+			fclose($socket);
+			
+			// instead of parsing the XML, just check for the error string
+			// [TODO] extract real error message and return that
+			if ( strstr($result,'<name>faultCode</name>') )
+				return 'An error occurred: '.htmlspecialchars($result);
+		}
+
+		/* 
 		 *  Send a Trackback ping to another website
 		 */
 		function sendPing($itemid, $title, $url, $excerpt, $blog_name, $ping_url) 
@@ -495,7 +570,7 @@
 			$parsed_url = parse_url($ping_url);
 			
 			if ($parsed_url['scheme'] != 'http' || $parsed_url['host'] == '')
-				return 'Bad ping URL';
+				return 'Bad trackback URL';
 			
 			$port = ($parsed_url['port']) ? $parsed_url['port'] : 80;
 			
@@ -711,10 +786,10 @@
 			}
 			
 			// 7. Send notification e-mail if needed
-                        if (($block == false || $this->getOption('NoNotifyBlocked') == 'no')
-                            && $this->getOption('Notify') == 'yes')
+                        if (($block == false || $this->getBlogOption(getBlogIDFromItemID($tb_id), 'NoNotifyBlocked') == 'no')
+                            && $this->getBlogOption(getBlogIDFromItemID($tb_id), 'Notify') == 'yes')
 			{
-				$destAddress = $this->getOption('NotifyEmail');
+				$destAddress = $this->getBlogOption(getBlogIDFromItemID($tb_id), 'NotifyEmail');
 				
 				$vars = array (
 					'tb_id'    => $tb_id,
@@ -769,6 +844,7 @@
     	 * EVENTS
 	 */
 		
+		// TODO What trigger this??
 		function event_SendTrackback($data) {
 			global $manager;
 		
@@ -795,6 +871,7 @@
 			$CONF['ItemURL'] = preg_replace('/\/$/', '', $blog->getURL());   
 			$url = createItemLink($itemid);
 	
+			ACTIONLOG::add(INFO, "Trackback: Dead code invoked");
 			while (list(,$url) = each($data['urls'])) {
 				$res = $this->sendPing($itemid, $title, $url, $excerpt, $blog_name, $url);
 				if ($res) ACTIONLOG::add(WARNING, 'TrackBack Error:' . $res . ' (' . $url . ')');
@@ -831,8 +908,9 @@
 
 
 		function event_BookmarkletExtraHead($data) {
-			global $NP_TB_URL;
-			list ($NP_TB_URL,) = $this->getURIfromLink(requestVar('loglink'));
+			global $NP_TB_URL, $NP_TYPE;
+			// $NP_TITLE is unused
+			list ($NP_LINK, $NP_TB_URL, $NP_TITLE, $NP_TYPE) = $this->getURIfromLink(requestVar('loglink'));
 		} 
 
 		function event_PrepareItemForEdit($data) {
@@ -851,7 +929,7 @@
 			$this->pingTrackback($data);
 		}
 	
-		function event_PreUpdateItem($data) {
+		function event_PostUpdateItem($data) {
 			$this->pingTrackback($data);
 		}
 
@@ -860,20 +938,21 @@
 		 */
 		function event_AddItemFormExtras($data) {
 		
-			global $NP_TB_URL;
+			global $NP_TB_URL,$NP_TYPE;
 			
+				// TODO only use the box if no link is found, need some javascript magic here
 			?>
 				<h3>TrackBack</h3>
 				<p>
 					<label for="plug_tb_url">TrackBack Ping URL:</label>
-					<input type="text" value="<?php if (isSet($NP_TB_URL)) {echo $NP_TB_URL;} ?>" id="plug_tb_url" name="trackback_ping_url" size="60" /><br />
+					<input type="text" value="<?php if (isSet($NP_TB_URL) && $NP_TYPE=="trackback") {echo $NP_TB_URL;} ?>" id="plug_tb_url" name="trackback_ping_url" size="60" /><br />
 	
 			<?php
 				if ($this->getOption('AutoXMLHttp'))
 				{
 			?>
 					<div id="tb_auto">
-						Auto Discovered Ping URL's: <img id='tb_busy' src='<?php echo $this->getAdminURL(); ?>busy.gif' /><br />
+						Auto Discovered Ping URL<!-- -1 -->: <img id='tb_busy' src='<?php echo $this->getAdminURL(); ?>busy.gif' /><br />
 						<input type="hidden" id="tb_url_amount" name="tb_url_amount" value="0" /> 
 					</div>
 					
@@ -900,7 +979,7 @@
 				{
 			?>
 					<div id="tb_auto">
-						Auto Discovered Ping URL's: <img id='tb_busy' src='<?php echo $this->getAdminURL(); ?>busy.gif' /><br />
+						Auto Discovered Ping URL <!-- -2 -->: <img id='tb_busy' src='<?php echo $this->getAdminURL(); ?>busy.gif' /><br />
 						<input type="hidden" id="tb_url_amount" name="tb_url_amount" value="0" /> 
 					</div>
 					
@@ -912,17 +991,17 @@
 					if (count($this->larray) > 0) 
 					{
 			?>
-					Auto Discovered Ping URL's:<br />
+					Auto Discovered Ping URL <!-- -3 -->:<br />
 			<?php
 						echo '<input type="hidden" name="tb_url_amount" value="'.count($this->larray).'" />';
 	
 						$i = 0;
 						
-						while (list($url, $title) = each ($this->larray))
+						while (list($lk, $url, $title, $type) = each ($this->larray))
 						{
 							echo '<input type="checkbox" name="tb_url_'.$i.
-								 '" value="'.$url.'" id="tb_url_'.$i.
-								 '" /><label for="tb_url_'.$i.'" title="'.$url.'">'.$title.'</label><br />';
+								 '" value="'."$type#!#$lk#!#$url".'" id="tb_url_'.$i.
+								 '" /><label for="tb_url_'.$i.'" title="'.$url.'">'.$title.' ('.$type.')</label><br />';
 							
 							$i++;
 						}
@@ -956,19 +1035,21 @@
 			
 			$ping_url = requestVar('trackback_ping_url');
 			if ($ping_url) {
-				$ping_urls[0] = $ping_url;
+				$ping_urls[] = "trackback#!#xxx#!#$ping_url";
 				$ping_urls_count++;
 			}
 	
-			$tb_url_amount = requestVar('tb_url_amount');
-			for ($i=0;$i<$tb_url_amount;$i++) {
+			for ($i=0;;$i++) {
 				$tb_temp_url = requestVar('tb_url_'.$i);
 				if ($tb_temp_url) {
-					$ping_urls[$ping_urls_count] = $tb_temp_url;
+					$ping_urls[] = $tb_temp_url;
 					$ping_urls_count++;
+				} else {
+					break;
 				}
 			}
 	
+			// TODO This didn't work in edit draft -> add case???
 			if ($ping_urls_count <= 0) {
 				return;
 			}
@@ -994,8 +1075,15 @@
 	
 			// send the ping(s) (add errors to actionlog)
 			for ($i=0; $i<count($ping_urls); $i++) {
-				$res = $this->sendPing($itemid, $title, $url, $excerpt, $blog_name, $ping_urls[$i]);
-				if ($res) ACTIONLOG::add(WARNING, 'TrackBack Error:' . $res . ' (' . $ping_urls[$i] . ')');
+				preg_match("/(.*)#!#(.*)#!#(http:\/\/.*)/", $ping_urls[$i], $matches);
+				if ($matches[1] == 'trackback') {
+					$res = $this->sendPing($itemid, $title, $url, $excerpt, $blog_name, $matches[3]);
+					if ($res) ACTIONLOG::add(WARNING, 'TrackBack Error:' . $res . ' (' . $matches[2] . ',' . $matches[3] . ')');
+				} else {
+					$res = $this->sendPingback($url, $matches[2], $matches[3]);
+					if ($res) ACTIONLOG::add(WARNING, 'Pingback Error:' . $res . ' (' . $matches[2] . ',' . $matches[3] . ')');
+				}
+				unset($matches);
 			}
 		}
 
@@ -1004,7 +1092,7 @@
 	
     	/**************************************************************************************
     	 * AUTO-DISCOVERY
-		 */
+	 */
 
 		/*
 		 * Auto-Discovery of TrackBack Ping URLs based on HTML story
@@ -1016,10 +1104,10 @@
 	
 			for ($i = 0; $i < count($links); $i++)
 			{
-				list ($url, $title) = $this->getURIfromLink($links[$i]);
+				list ($l, $url, $title, $type) = $this->getURIfromLink($links[$i]);
 				
 				if ($url != '')
-					$result[$url] = $title;
+					$result[$url] = array('title' => $title, 'type' => $type);
 			}
 			
 			return $result;
@@ -1031,20 +1119,20 @@
 		function getURIfromLink($link) 
 		{
 			// Check to see if the cache contains this link
-			$res = sql_query('SELECT url, title FROM '.sql_table('plugin_tb_lookup').' WHERE link="'.$link.'"');
+			$res = sql_query('SELECT url, title, type FROM '.sql_table('plugin_tb_lookup').' WHERE link="'.$link.'"');
 
 			if ($row = mysql_fetch_array($res)) 
 			{
 				if ($row['title'] != '')
 				{
 					return array (
-						$row['url'], $row['title']
+						$row['link'], $row['url'], $row['title'], $row['type']
 					);
 				}
 				else
 				{
 					return array (
-						$row['url'], $row['url']
+						$row['link'], $row['url'], $row['url'], $row['type']
 					);
 				}
 			}
@@ -1068,10 +1156,10 @@
 						$title = $this->_decode_entities($title);
 	
 						// Store in cache
-						$res = sql_query("INSERT INTO ".sql_table('plugin_tb_lookup')." (link, url, title) VALUES ('".addslashes($link)."','".addslashes($uri)."','".addslashes($title)."')");
+						$res = sql_query("INSERT INTO ".sql_table('plugin_tb_lookup')." (link, url, title, type) VALUES ('".addslashes($link)."','".addslashes($uri)."','".addslashes($title)."','trackback')");
 	
 						return array (
-							$uri, $title
+							'', $uri, $title, 'trackback'
 						);
 					}
 					else
@@ -1079,19 +1167,28 @@
 						$uri = html_entity_decode($uri, ENT_COMPAT);
 	
 						// Store in cache
-						$res = sql_query("INSERT INTO ".sql_table('plugin_tb_lookup')." (link, url, title) VALUES ('".addslashes($link)."','".addslashes($uri)."','')");
+						$res = sql_query("INSERT INTO ".sql_table('plugin_tb_lookup')." (link, url, title, type) VALUES ('".addslashes($link)."','".addslashes($uri)."','', 'trackback')");
 	
 						return array (
-							$uri, $uri
+							'', $uri, $uri, 'trackback'
 						);
 					}
 				}
 			}
 			
+			// Pingback discovery
+			$pingback = $this->getPBFromLink($link);
+			if (!empty($pingback)) {
+				$url = $this->_decode_entities($pingback['url']);
+				$title = $this->_decode_entities($pingback['title']);
+				$res = sql_query("INSERT INTO ".sql_table('plugin_tb_lookup')." (link, url, title, type) VALUES ('".addslashes($link)."','".$url."','".$title."','pingback')");
+				return array ($link, $url, $title, 'pingback');
+			}
+
 			// Store in cache
-			$res = sql_query("INSERT INTO ".sql_table('plugin_tb_lookup')." (link, url, title) VALUES ('".addslashes($link)."','','')");
+			$res = sql_query("INSERT INTO ".sql_table('plugin_tb_lookup')." (link, url, title, type) VALUES ('".addslashes($link)."','','','')");
 	
-			return array ('', '');
+			return array ('', '', '', '');
 		}
 	
 		/*
@@ -1137,6 +1234,31 @@
 					// No need to check the identifier
 					return $rdfs[0][1];
 				}
+			}
+			
+			return false;
+		}
+
+		/*
+		 * Retrieve pingback link
+		 */
+		function getPBFromLink($link) 
+		{
+			if ($content = $this->getContents($link))
+			{
+				preg_match('/rel="pingback".*href="(http:\/\/.*)"/i', $content, $matches);
+				if (!empty($matches))
+				{
+					$url = $matches[1];
+				}
+				unset($matches);
+				preg_match('/<title>(.*)<\/title>/i', $content, $matches);
+				if (!empty($matches))
+				{
+					$title = $matches[1];
+				}
+
+				return array('title' => $title, 'url' => $url);
 			}
 			
 			return false;
@@ -1882,14 +2004,15 @@
 		function getName()   	  { 		return 'TrackBack';   }
 		function getAuthor() 	  { 		return 'rakaz, mod by admun (Edmond Hui), and others'; }
 		function getURL()    	  { 		return 'http://edmondhui.homeip.net/nudn'; }
-		function getVersion()	  { 		return '2.1.1'; }
+		function getVersion()	  { 		return '2.1.2'; }
 		function getDescription() { 		return 'Send trackbacks to other weblogs and receive tracbacks from others.'; }
 	
 		function getTableList()   { 		
 			// return array(sql_table("plugin_tb"), sql_table("plugin_tb_lookup"), sql_table("plugin_tb_key")); 
 			return array(sql_table("plugin_tb"), sql_table("plugin_tb_key")); 
 		}
-		function getEventList()   { 		return array('QuickMenu','PostAddItem','AddItemFormExtras','EditItemFormExtras','PreUpdateItem','PrepareItemForEdit', 'BookmarkletExtraHead', 'RetrieveTrackback', 'SendTrackback', 'InitSkinParse'); }
+		// TODO need to add delete trackbacks on post deletion
+		function getEventList()   { 		return array('QuickMenu','PostAddItem','AddItemFormExtras','EditItemFormExtras','PostUpdateItem','PrepareItemForEdit', 'BookmarkletExtraHead', 'RetrieveTrackback', 'SendTrackback', 'InitSkinParse'); }
 		function getMinNucleusVersion() {	return 200; }
 	
 		function supportsFeature($feature) {
@@ -1910,7 +2033,13 @@
 			global $member, $nucleus, $blogid;
 			
 			// only show to admins
-			if (!$member->isLoggedIn() || !$member->isAdmin()) return;
+			if (preg_match("/MD$/", $nucleus['version'])) {
+				$isblogadmin = $member->isBlogAdmin(-1);
+			} else {
+				$isblogadmin = $member->isBlogAdmin($blogid);
+			}
+
+			if (!($member->isLoggedIn() && ($member->isAdmin() || $isblogadmin))) return;
 
 			array_push(
 				$data['options'],
@@ -1928,10 +2057,10 @@
 			$this->createOption('AutoXMLHttp', 'Auto-detect Trackback URLs as you type', 'yesno', 'yes');
 			$this->createOption('CheckIDs',	   'Only allow valid itemids as trackback-ids','yesno','yes');
 
-			$this->createOption('tplHeader',   'Header', 'textarea', "<div class='tb'>\n\t<div class='head'>Trackback</div>\n\n");
-			$this->createOption('tplEmpty',	   'Empty', 'textarea', "\t<div class='empty'>\n\t\tThere are currently no trackbacks for this item.\n\t</div>\n\n");
-			$this->createOption('tplItem',	   'Item', 'textarea', "\t<div class='item'>\n\t\t<div class='name'><%name%></div>\n\t\t<div class='body'>\n\t\t\t<a href='<%url%>' rel='nofollow'><%title%>:</a> <%excerpt%>\n\t\t</div>\n\t\t<div class='date'>\n\t\t\t<%date%>\n\t\t</div>\n\t</div>\n\n");
-			$this->createOption('tplFooter',   'Footer', 'textarea', "\t<div class='info'>\n\t\tUse this <a href='<%action%>'>TrackBack url</a> to ping this item (right-click, copy link target).\n\t\tIf your blog does not support Trackbacks you can manually add your trackback by using <a href='<%form%>' onclick='window.open(this.href, \"trackback\", \"scrollbars=yes,width=600,height=340,left=10,top=10,status=yes,resizable=yes\"); return false;'>this form</a>.\n\t</div>\n</div>");
+			$this->createOption('tplHeader',   'Header', 'textarea', "<div class=\"tb\">\n\t<div class='head'>Trackback</div>\n\n");
+			$this->createOption('tplEmpty',	   'Empty', 'textarea', "\t<div class=\"empty\">\n\t\tThere are currently no trackbacks for this item.\n\t</div>\n\n");
+			$this->createOption('tplItem',	   'Item', 'textarea', "\t<div class='item'>\n\t\t<div class=\"name\"><%name%></div>\n\t\t<div class=\"body\">\n\t\t\t<a href='<%url%>' rel=\"nofollow\"><%title%>:</a> <%excerpt%>\n\t\t</div>\n\t\t<div class=\"date\">\n\t\t\t<%date%>\n\t\t</div>\n\t</div>\n\n");
+			$this->createOption('tplFooter',   'Footer', 'textarea', "\t<div class=\"info\">\n\t\tUse this <a href=\"<%action%>\">TrackBack url</a> to ping this item (right-click, copy link target).\n\t\tIf your blog does not support Trackbacks you can manually add your trackback by using <a href=\"<%form%>\" onclick='window.open(this.href, \"trackback\", \"scrollbars=yes,width=600,height=340,left=10,top=10,status=yes,resizable=yes'); return false;\">this form</a>.\n\t</div>\n</div>");
 
 			$this->createOption('tplTbNone',   'Trackback count (none)', 'text', "No Trackbacks");
 			$this->createOption('tplTbOne',    'Trackback count (one)', 'text', "1 Trackback");
@@ -1963,7 +2092,7 @@
 					`timestamp` DATETIME, 
 					
 					PRIMARY KEY (`id`)
-				);
+				)
 			");
 			
 			sql_query("
@@ -1987,14 +2116,19 @@
 					PRIMARY KEY (`link` (100))
 				)
 			");
+
+			// TODO TEST THIS
+			sql_query("
+				ALTER TABLE " . sql_table('plugin_tb_lookup') . " ADD `type` ENUM( 'trackback', 'pingback' ) NOT NULL
+			");
 		}
 	
 		function uninstall() {
 			if ($this->getOption('DropTable') == 'yes') {
 	 			sql_query ('DROP TABLE '.sql_table('plugin_tb'));
-				sql_query ('DROP TABLE '.sql_table('plugin_tb_lookup'));
-				sql_query ('DROP TABLE '.sql_table('plugin_tb_key'));
 			}
+			sql_query ('DROP TABLE '.sql_table('plugin_tb_lookup'));
+			sql_query ('DROP TABLE '.sql_table('plugin_tb_key'));
 		}
 
 		function init() {
@@ -2056,12 +2190,12 @@
 				if (count($autoDiscoveryRes) > 0) {
 
 			?>
-			<td>Auto Discovered URL</td>
+			<td>Auto Discovered Ping URL</td>
 			<td>
 		<?php
 				echo '<input type="hidden" name="tb_url_amount" value="' . count($autoDiscoveryRes) . '" />';
 				for($i = 0;$i < count($autoDiscoveryRes);$i++) {
-				echo '<input type="checkbox" name="tb_url_' . $i . '" value="' . $autoDiscoveryRes[$i] . '" id="tb_url_' . $i . '" /><label for="tb_url_' . $i . '">' . $autoDiscoveryRes[$i] . '</label><br />';
+				echo '<input type="checkbox" name="tb_url_' . $i . '" value="' . $autoDiscoveryRes[$i] . '" id="tb_url_' . $i . '" /><label for="tb_url_' . $i . '">' . $autoDiscoveryRes[$i]['title'] . ' (' . $autoDiscoveryRes[$i]['type'] . ')</label><br />';
 			}
 		?>
 		       </td>

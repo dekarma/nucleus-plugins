@@ -99,7 +99,7 @@
 		}
 	}
 
-	function tbDone(source, url, name)
+	function tbDone(source, url, name, type)
 	{
 		TrackbackSource.push(source);
 		TrackbackURL.push(url);
@@ -116,13 +116,13 @@
 			checkbox.type = 'checkbox';
 			checkbox.name = "tb_url_" + count;
 			checkbox.id = "tb_url_" + count;
-			checkbox.value = url;
+			checkbox.value = type+"#!#"+url;
 
 			label =	document.createElement("label"); 
 			label.htmlFor = "tb_url_" + count;
-			label.title = source;
+			label.title = source + " (" + type + ")";
 			
-			text = document.createTextNode(name);
+			text = document.createTextNode(name + " (" + type + ")");
 			label.appendChild(text);
 			
 			br = document.createElement("br"); 

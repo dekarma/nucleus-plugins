@@ -131,3 +131,6 @@
 		   filled)
         2.1.1 (admun)
 		- Add <%TrackBack(latest)%> (thanks faceh for the code)
+		- Merged multi-blog patch from fishy (Thanks!)
+        2.1.2 (admun)
+		- Add Pingback support (auto detect (tested w/ WP) and send only)
