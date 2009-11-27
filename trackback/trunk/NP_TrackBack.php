@@ -786,7 +786,7 @@
 			}
 			
 			// 7. Send notification e-mail if needed
-                        if (($block == false || $this->getBlogOption(getBlogIDFromItemID($tb_id), 'NoNotifyBlocked') == 'no')
+                        if (($block == false || $this->getBlogOption(getBlogIDFromItemID($tb_id), 'NotifyBlocked') == 'yes')
                             && $this->getBlogOption(getBlogIDFromItemID($tb_id), 'Notify') == 'yes')
 			{
 				$destAddress = $this->getBlogOption(getBlogIDFromItemID($tb_id), 'NotifyEmail');
@@ -2057,9 +2057,9 @@
 			$this->createOption('AutoXMLHttp', 'Auto-detect Trackback URLs as you type', 'yesno', 'yes');
 			$this->createOption('CheckIDs',	   'Only allow valid itemids as trackback-ids','yesno','yes');
 
-			$this->createOption('tplHeader',   'Header', 'textarea', "<div class=\"tb\">\n\t<div class='head'>Trackback</div>\n\n");
+			$this->createOption('tplHeader',   'Header', 'textarea', "<div class=\"tb\">\n\t<div class=\"head\">Trackback</div>\n\n");
 			$this->createOption('tplEmpty',	   'Empty', 'textarea', "\t<div class=\"empty\">\n\t\tThere are currently no trackbacks for this item.\n\t</div>\n\n");
-			$this->createOption('tplItem',	   'Item', 'textarea', "\t<div class='item'>\n\t\t<div class=\"name\"><%name%></div>\n\t\t<div class=\"body\">\n\t\t\t<a href='<%url%>' rel=\"nofollow\"><%title%>:</a> <%excerpt%>\n\t\t</div>\n\t\t<div class=\"date\">\n\t\t\t<%date%>\n\t\t</div>\n\t</div>\n\n");
+			$this->createOption('tplItem',	   'Item', 'textarea', "\t<div class=\"item\">\n\t\t<div class=\"name\"><%name%></div>\n\t\t<div class=\"body\">\n\t\t\t<a href=\"<%url%>\" rel=\"nofollow\"><%title%>:</a> <%excerpt%>\n\t\t</div>\n\t\t<div class=\"date\">\n\t\t\t<%date%>\n\t\t</div>\n\t</div>\n\n");
 			$this->createOption('tplFooter',   'Footer', 'textarea', "\t<div class=\"info\">\n\t\tUse this <a href=\"<%action%>\">TrackBack url</a> to ping this item (right-click, copy link target).\n\t\tIf your blog does not support Trackbacks you can manually add your trackback by using <a href=\"<%form%>\" onclick='window.open(this.href, \"trackback\", \"scrollbars=yes,width=600,height=340,left=10,top=10,status=yes,resizable=yes'); return false;\">this form</a>.\n\t</div>\n</div>");
 
 			$this->createOption('tplTbNone',   'Trackback count (none)', 'text', "No Trackbacks");
@@ -2068,7 +2068,7 @@
 			$this->createOption('dateFormat',  'Date format', 'text', "%e/%m/%g");
 
 			$this->createOption('Notify',	   'Send e-mail notification on ping receipt','yesno','no');
-                        $this->createOption('NoNotifyBlocked',   'Don\'t send e-mail notification for blocked pings','yesno','no');
+                        $this->createOption('NotifyBlocked',   'Send e-mail notification for blocked pings','yesno','no');
 			$this->createOption('NotifyEmail', 'Which e-mail address to send these notification to?','text','');	
 
 			$this->createOption('DropTable',   'Clear the database when uninstalling','yesno','no');
