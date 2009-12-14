@@ -76,7 +76,7 @@
 			echo '</tr><tr>';		
 			echo '<td>';
 
-                        echo '<a href="',$CONF['IndexURL'],createItemLink($aPendingInfo['itemid']),'"><strong>' , htmlspecialchars(shorten($aPendingInfo['itemtitle'],100,'...')), '</strong></a><br />'; 
+                        echo '<a href="',createItemLink($aPendingInfo['itemid']),'"><strong>' , htmlspecialchars(shorten($aPendingInfo['itemtitle'],100,'...')), '</strong></a><br />'; 
 
 			echo $aPendingInfo['comment'];
 			echo '</td>';
