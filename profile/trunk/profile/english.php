@@ -187,8 +187,6 @@ define('_PROFILE_OPT_EMAIL_PUBLIC_DENY_TEXT',		'<i>Not Authorized to View</i>');
 // new in 2.18
 define('_PROFILE_ADMIN_CONFIG_MS_INTRO',		'Here you can list the fields (comma-separated) that you would like to make available on the Member Settings page of the Admin Area.
         If left blank all enabled fields will be listed alphabetically.');
-define('_PROFILE_ADMIN_CONFIG_REG_INTRO',		'Here you can list the fields (comma-separated) that you would like to make available on the Member Registration page (createaccount.html).
-        A sample createaccount.html page will be generated from this list for you (see createaccount.html tab).');
 define('_PROFILE_ADMIN_CREATEACCOUNT_HEAD',     'Sample Code for createaccount.html File');
 define('_PROFILE_ADMIN_CREATEACCOUNT',     'createaccount.html');
 define('_PROFILE_ADMIN_CREATEACCOUNT_INTRO',    'If you would like new members to be able to complete certain profile fields during registration, you can list those fields in the &quot;registration&quot; field on the '._PROFILE_ADMIN_CONFIG.' tab.
@@ -214,13 +212,18 @@ define('_PROFILE_TEMPLATE',     'Templates');
 define('_PROFILE_BODY',     'Body');
 define('_PROFILE_ADMIN_TEMPLATES_EDIT_HEAD',     'Edit Template');
 define('_PROFILE_ADMIN_HELP_TEMPLATE_NAME',     'Name of template, must be unique. Only a-z and 0-9 allowed, no spaces.');
-define('_PROFILE_ADMIN_HELP_TEMPLATE_TYPE',     'Choose the type of template. Currently, only memberlist supported.');
-define('_PROFILE_ADMIN_HELP_TEMPLATE_BODY',     'Enter the html code and variables to format each item in the list. All variables will return the raw, unformated value of the corresponding field.
-		Valid variables are %memberlink%, %memberid%, and %fieldname%, where fieldname is the value of any field defined in your installation of NP_Profile.');
 define('_PROFILE_ACTION_DUPLICATE_TEMPLATE',	'This template name already exists. The name must be unique.');
 define('_PROFILE_ADMIN_TEMPLATES_ADD',		'Add New Template');
 define('_PROFILE_NEXT',		'&gt;&gt;');
 define('_PROFILE_PREV',		'&lt;&lt;');
 // new in 2.21
 define('_PROFILE_ADMIN_CONFIG_EP_HEADER_INTRO',		'Text that apprears above the form on the editprofile page.');
+//modified in 2.24
+define('_PROFILE_ADMIN_HELP_TEMPLATE_TYPE',     'Choose the type of template. Currently, only memberlist and regfieldlist are supported.');
+define('_PROFILE_ADMIN_HELP_TEMPLATE_BODY',     '<b>memberlist</b>: Enter the html code and variables to format each item in the list. All variables will return the raw, unformated value of the corresponding field.
+		Valid variables are %memberlink%, %memberid%, and %fieldname%, where fieldname is the value of any field defined in your installation of NP_Profile. <br /><b>regfieldlist</b>: Here you can list the fields 
+		(comma-separated) that you would like to make available on the custom Member Registration page');
+define('_PROFILE_ADMIN_CONFIG_REG_INTRO',		'Here you can list the fields (comma-separated) that you would like to make available on the Member Registration page (createaccount.php).
+        A sample createaccount.php page will be generated from this list for you (see createaccount.php tab) No need to modify createaccount.php from vesion 3.40 and higher.');
+
 ?>

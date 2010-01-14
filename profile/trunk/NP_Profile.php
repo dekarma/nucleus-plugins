@@ -160,6 +160,14 @@ History:
           * add API events for other plugins to add data variables to memberlist templates
   v2.23.01 -- fix release of v 2.23
           * fix big where not normalizing forder and fpublic as integers causing mysql errors in certain situations
+  v2.24 -- 21st release of version 2 adds the following to 2.23.01
+          * add doIf() method to allow using profile fields as conditionals. if(Profile,field(ME),>=value)
+		  (ME) after field name forces the check on field value for logged in user, omit to allow regular selction (memberinfo, authorid, member)
+		  >= before value indicates operation to use, valid are =,<,>,<=,>= with default being =
+         * add regfieldlist template type to allow other field lists to be used for registrations other than at createaccount.php file
+		 in registration code, change the type from createaccount.php to name of your regfieldlist in the calls to RegistrationFormExtraFields event
+		 
+		
 *
 [FUTURE]
 
@@ -184,7 +192,7 @@ class NP_Profile extends NucleusPlugin {
 	var $profile_values = array();
 	var $member_values = array();
 	//var $profile_templates = array();
-	var $template_types = array('memberlist');
+	var $template_types = array('memberlist','regfieldlist');
 	var $mllist_count = array(0,0,0);
 
 	function getName() { return 'Profile Plugin'; }
@@ -193,7 +201,7 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://revcetera.com/ftruscot';	}
 
-	function getVersion() {	return '2.23.01'; }
+	function getVersion() {	return '2.24.working'; }
 
 	function getDescription() {
         if (!$this->_optionExists('email_public_deny') && $this->_optionExists('email_public')) {
@@ -959,6 +967,63 @@ password
             $this->doSkinVar('adminmember','closeform','','',$memberinfo->getID());
         }
     }
+	
+	function doIf($key = '', $value = '') {
+		global $CONF, $memberid, $member, $memberinfo, $itemid;
+		$result = false;
+		$ops1 = array('=','>','<');
+		$ops2 = array('>=','<=');
+		$op = '=';
+		$key = trim($key);
+		list($key,$showwho) = explode("(",$key);
+		$showwho = strtoupper(str_replace(")","",$showwho));
+		$v1 = substr($value,0,1);
+		$v2 = substr($value,0,2);
+		if (in_array($v2,$ops2)) {
+			$op = $v2;
+			$value = substr($value,2);
+		}
+		if (in_array($v1,$ops1)) {
+			$op = $v1;
+			$value = substr($value,1);
+		}
+		
+		$pmid = 0;
+		if ($showwho == 'ME') {
+			$pmid = intval($member->getID());
+		}
+		elseif (isset($memberinfo) && $memberinfo->getID() > 0) {
+			$pmid = intval($memberinfo->getID());
+		}
+		elseif (isset($itemid) && $itemid > 0) {
+			$pmid = intval($this->_getAuthorFromItemId($itemid));
+		}
+		elseif (isset($member) && $member->getID() > 0) {
+			$pmid = intval($member->getID());
+		}		
+		$pmid = intval($pmid);
+		if ($pmid < 1) return false;
+		
+		$val = $this->getValue($pmid,$key);
+		switch ($op) {
+			case '>':
+				$result = ($val > $value);
+			break;
+			case '<':
+				$result = ($val < $value);
+			break;
+			case '>=':
+				$result = ($val >= $value);
+			break;
+			case '<=':
+				$result = ($val <= $value);
+			break;
+			default:
+				$result = ($val == $value);
+			break;
+		}
+		return $result;
+	}
 
 	function doTemplateVar(&$item) {
 		$args = func_get_args();
@@ -3157,7 +3222,14 @@ password
     }
 
 	function event_RegistrationFormExtraFields(&$data) {
-		$field_array = explode(',',$this->getConfigValue('registration'));
+		$fieldlist = '';
+		if ($data['type'] != 'createaccount.php') {
+			$fieldlist = quickQuery("SELECT tbody as result FROM ".sql_table('plugin_profile_templates')." WHERE ttype='regfieldlist' AND tname='".addslashes(trim($data['type']))."'");
+		}
+		if (trim($fieldlist) == '') 
+				$fieldlist = $this->getConfigValue('registration');
+		//$field_array = explode(',',$this->getConfigValue('registration'));
+		$field_array = explode(',',$fieldlist);
         foreach ($field_array as $rfield) {
             $rfield = trim($rfield);
             if (!in_array($rfield,array_merge($this->nufields,$this->specialfields)) && $this->getFieldAttribute($rfield,'enabled')) {
