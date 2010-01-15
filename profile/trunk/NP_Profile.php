@@ -162,8 +162,8 @@ History:
           * fix big where not normalizing forder and fpublic as integers causing mysql errors in certain situations
   v2.24 -- 21st release of version 2 adds the following to 2.23.01
           * add doIf() method to allow using profile fields as conditionals. if(Profile,field(ME),>=value)
-		  (ME) after field name forces the check on field value for logged in user, omit to allow regular selction (memberinfo, authorid, member)
-		  >= before value indicates operation to use, valid are =,<,>,<=,>= with default being =
+		     (ME) after field name forces the check on field value for logged in user, omit to allow regular selction (memberinfo, authorid, member)
+		     >= before value indicates operation to use, valid are =,<,>,<=,>= with default being =
          * add regfieldlist template type to allow other field lists to be used for registrations other than at createaccount.php file
 		 in registration code, change the type from createaccount.php to name of your regfieldlist in the calls to RegistrationFormExtraFields event
 		 
