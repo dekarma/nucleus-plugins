@@ -163,9 +163,16 @@ History:
   v2.24 -- 21st release of version 2 adds the following to 2.23.01
           * add doIf() method to allow using profile fields as conditionals. if(Profile,field(ME),>=value)
 		     (ME) after field name forces the check on field value for logged in user, omit to allow regular selction (memberinfo, authorid, member)
-		     >= before value indicates operation to use, valid are =,<,>,<=,>= with default being =
+		     >= before value indicates operation to use, valid are =,<,>,<=,>=,!= with default being =
+			 if field is isme, then checks if current user is browsing own profile
+			 if field is iseditmode, then checks to see if in edit mode and on member details page
          * add regfieldlist template type to allow other field lists to be used for registrations other than at createaccount.php file
 		 in registration code, change the type from createaccount.php to name of your regfieldlist in the calls to RegistrationFormExtraFields event
+		 * memberlist orderby field can now be fieldname(value)|sort to list only members with fieldname==value
+		 * memberlist orderby field can now be of form fieldname(value)|sort|fieldname2|sort2, 
+			but fieldname2 is only valid if mail,nick,realname,memberid,url,notes
+			fieldname2|sort2 set second sort key/order
+		 
 		 
 		
 *
@@ -201,7 +208,7 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://revcetera.com/ftruscot';	}
 
-	function getVersion() {	return '2.24.working'; }
+	function getVersion() {	return '2.24'; }
 
 	function getDescription() {
         if (!$this->_optionExists('email_public_deny') && $this->_optionExists('email_public')) {
@@ -972,7 +979,7 @@ password
 		global $CONF, $memberid, $member, $memberinfo, $itemid;
 		$result = false;
 		$ops1 = array('=','>','<');
-		$ops2 = array('>=','<=');
+		$ops2 = array('>=','<=','!=');
 		$op = '=';
 		$key = trim($key);
 		list($key,$showwho) = explode("(",$key);
@@ -1004,6 +1011,20 @@ password
 		$pmid = intval($pmid);
 		if ($pmid < 1) return false;
 		
+		if (strtolower($key) == 'isme') {
+			if($member->getId() > 0 && $member->getId() == $memberinfo->getId()) return true;
+			else return false;
+		}
+		
+		if (strtolower($key) == 'iseditmode') {
+			$isEdit = false;
+			if ((requestVar('edit') == 1) && (isset($memberinfo) && $memberinfo->getID() > 0) && ($member->id == $pmid || $member->isAdmin())) {
+				$isEdit = true;
+			}
+			if ($pmid == 999999999) $isEdit = true;
+			return $isEdit;
+		}
+		
 		$val = $this->getValue($pmid,$key);
 		switch ($op) {
 			case '>':
@@ -1017,6 +1038,9 @@ password
 			break;
 			case '<=':
 				$result = ($val <= $value);
+			break;
+			case '!=':
+				$result = ($val != $value);
 			break;
 			default:
 				$result = ($val == $value);
@@ -3279,8 +3303,12 @@ password
 			$ordarr[0] = 'mnumber';
 			$ordarr[1] = 'DESC';
 		}
-
+		
+		$val ='';
 		if ($ordarr[0] != '') {
+			list($ordarr[0],$val) = explode("(",$ordarr[0]);
+			$val = addslashes(strtoupper(str_replace(")","",$val)));
+			
 			if($this->fieldExists(trim($ordarr[0])) || $ordarr[0] == 'memberid') {
 				$ordarr[0] = str_replace(array('mail','nick','realname','url','notes','password','memberid'),array('memail','mname','mrealname','murl','mnotes','mpassword','mnumber'),$ordarr[0]);
 			}
@@ -3297,6 +3325,28 @@ password
                 $theorder = "ASC";
                 break;
 		}
+		if (isset($ordarr[3])) {
+			switch (strtoupper($ordarr[3])) {
+				case 'DESC':
+					$theorder2 = "DESC";
+				break;
+				case 'RANDOM':
+					$theorder2 = "RAND()";
+				break;
+				default:
+					$theorder2 = "ASC";
+					break;
+			}
+		}
+		if (isset($ordarr[2])) {
+			if($this->fieldExists(trim($ordarr[2])) || $ordarr[2] == 'memberid') {
+				$ordarr[2] = str_replace(array('mail','nick','realname','url','notes','password','memberid'),array('m.memail','m.mname','m.mrealname','m.murl','m.mnotes','m.mpassword','m.mnumber'),trim($ordarr[2]));
+				if (!in_array($ordarr[2],array('m.memail','m.mname','m.mrealname','m.murl','m.mnotes','m.mpassword','m.mnumber','')))
+					$ordarr[2] = '';
+			}
+			else $ordarr[2] = '';			
+		}
+		
 		$query = "SELECT m.mnumber as mid FROM ".sql_table('member')." as m";
 
 		if (in_array($ordarr[0],array('memail','mname','mrealname','murl','mnotes','mpassword','mnumber',''))) {
@@ -3307,9 +3357,10 @@ password
 		else {
 			$query .= ", ".sql_table('plugin_profile')." as p WHERE";
 			if ($blogteam != '') $query .= " $blogteam AND ";
-			$query .= " m.mnumber=p.memberid AND p.field='".$ordarr[0]."' AND p.value<>''";
+			$query .= " m.mnumber=p.memberid AND p.field='".$ordarr[0]."' AND ".($val ? "p.value='".$val."'" : "p.value<>''");
 			if ($theorder == "RAND()") $query .= " ORDER BY $theorder";
 			else $query .= " ORDER BY p.value $theorder";
+			if (isset($ordarr[2]) && $ordarr[2] != '') $query .= ", ".$ordarr[2]." $theorder2";
 		}
 		$query .= $limit;
 		$result = sql_query($query);

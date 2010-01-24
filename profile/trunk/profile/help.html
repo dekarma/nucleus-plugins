@@ -8,6 +8,7 @@
 <li><a href="#options">Plugin Options</a></li>
 <li><a href="#skinvars">SkinVars</a></li>
 <li><a href="#templatevars">TemplateVars</a></li>
+<li><a href="#ifvars">IfVars</a></li>
 <li><a href="#fieldnames">Field Names</a></li>
 <li><a href="#types">Field Types</a></li>
 <li><a href="#manage">Plugin Management</a></li>
@@ -29,6 +30,7 @@
 <p>Uppgrading from version 2.0x to 2.1x requires you follow this procedure, but step 2 can be skipped.</p>
 <p>Upgrading from version 2.1x to 2.1x does not require any special procedure. Simply copy the new files over the old files.</p>
 <p><b>Uppgrading from version 2.0x or 2.1x to 2.2x requires you follow this procedure, but step 2 can be skipped.</b></p>
+<p>Upgrading from version 2.2x to 2.2x does not require any special procedure. Simply copy the new files over the old files.</p>
 <ol>
 <li>Backup your database.</li>
 <li>Make a copy of your existing nucleus/plugins/NP_Profile.php file to a safe place. You will need this if you wish to revert later and to help you migrate your custom field settings to the version 2 database storage.</li>
@@ -124,11 +126,13 @@ where
 <ul>
 <li><i>template</i> is the name of a template defined in the NP_Profile admin page in the NucleusCMS admin area. There is a simple sample template called 'default' that is installed with 2.2x.</li>
 <li><i>amount</i> is the amount of members to list. Should be a positive integer. If left blank, or set to 0, all members will be listed.</li>
-<li><i>orderby</i> is an indication of how to sort the list. It has the format of <i>fieldname</i>|<i>sortType</i>
+<li><i>orderby</i> is an indication of how to sort the list. It has the format of <i>fieldname</i>|<i>sortType</i>|<i>fieldname2</i>|<i>sortType2</i>
 	, where <i>fieldname</i> is the name of a defined field or the special value of &quot;memberid&quot;, and <i>sortType</i> is one of ASC or DESC, for either ascending sorting, or descending sorting, respectively.
 	To sort the results randomly, just set <i>orderby</i> to <b>random</b>. Default is nick|ASC. 
+	<i>fieldname2</i> is a secondary sort field and cona only be one of nick, realname, mail, url, notes, or memberid and is optional.
 	If you decide to sort on one of the NP_Profile fields, and a member has not entered any data for that field, that member will <b>NOT</b> appear in the list. Optionally, a blog name can be appended to the <i>orderby</i> field
-	in this format: <i>fieldname</i>|<i>sortType</i>;<i>shortname</i></li>
+	in this format: <i>fieldname</i>|<i>sortType</i>;<i>shortname</i>. Also, you can specify a value with <i>fieldname</i> to indicate that you only want to list members with a specific value for <i>fieldname</i>, 
+	like this <i>fieldname</i>(<i>value</i>)|sortType</li>
 </ul>
 
 <p>More details about the formatting of the list using templates will be given below in the <a href="#manage">Plugin Management</a> section.</p>
@@ -141,6 +145,8 @@ where
 <li><b>&lt;%Profile(memberlistpager)%&gt;</b> when added below a memberlist call, like above,will add paging buttons to page through list.
 <li><b>&lt;%Profile(memberlist,default,10,memberid|DESC)%&gt;</b> will display the 10 newest members formatted using the default template.</li>
 <li><b>&lt;%Profile(memberlist,default,10,nick|ASC;mainblog)%&gt;</b> will display the first 10 members of the blog team for blog with shortname of <b>mainblog</b> formatted using the default template.</li>
+<li><b>&lt;%Profile(memberlist,default,0,sex(f)|ASC)%&gt;</b> will display all female members (i.e. have a value of 'f' for the sex field), using the default template.</li>
+<li><b>&lt;%Profile(memberlist,default,0,sex(f)|ASC|nick|ASC)%&gt;</b> will display all female members (i.e. have a value of 'f' for the sex field), sorted alphabetically by username, using the default template.</li>
 </ul>
 
 <p>For some ideas see the <a href="#tips">Tips and Tricks</a> section below.</p>
@@ -148,6 +154,26 @@ where
 <h3><a name="templatevars">TemplateVars</a></h3>
 
 <p>The skinvars described above can be used in the Item Body fields and Comment Body fields of any template. However, the special types of password, startform, endform, closeform, submitbutton, editlink, editprofile, memberlist and status, are not available.</p>
+
+<h3><a name="ifvars">IfVars</a></h3>
+
+<p>New as of 2.24, you can use the Nucleus &lt;%if%&gt; variable to conditionally display content on your skins based on the value of Profile fields. It is most useful on Member Details skin parts, 
+but can also be used on Item Pages skin parts to display based on the item author, or can be used anywhere with a special indicator to check based on the logged in user&squot;s profile. The general format is</p>
+&lt;%if(Profile,<i>field</i>,<i>value</i>)%&gt; where
+<ul>
+<li><i>field</i> is the name of the field of which the value will be checked. Append (ME) to the end of the field name to force the check to be done on the currently logged in user. 
+It can also have the special values of isme or iseditmode to check, respectively, if the currently logged on user is viewing his own profile or whether the member detail page is in edit mode.</li>
+<li><i>value</i> is the value being checked. By default the check is whether <i>field</i> = <i>value</i>, but you can also use one of the following operators before value: =, !=, &lt;, &lt;=, &gt;, &gt;= </li>
+</ul>
+
+<p>Some examples of the if variables: (remember that this is the if skinvar and it must be accompanied by an &lt;%endif%&gt; variable as required)</p>
+<ul>
+<li><b>&lt;%if(Profile,sex,m)%&gt;</b> will return true if the member whose profile is being viewed is male, or on an Item Page if the item author is male.</li>
+<li><b>&lt;%if(Profile,sex(ME),m)%&gt;</b> will return true if the member who is viewing the page is male.</li>
+<li><b>&lt;%if(Profile,yearsExperience,&gt;=5)%&gt;</b> will return true if the member whose profile is being viewed has 5 or more years or experience.</li>
+<li><b>&lt;%if(Profile,isme)%&gt;</b> will return true if the member is viewing his own profile.</li>
+<li><b>&lt;%if(Profile,iseditmode)%&gt;</b> will return true if the member is editing his own profile.</li>
+</ul>
 
 <h3><a name="fieldnames">Field Names</a></h3>
 
@@ -417,10 +443,10 @@ default setting set for that that field type in the type settings form.</p>
 All fields must contain valid data.</p>
 <ul>
 <li><b>Name</b> : The name of the template. Only a-z and 0-9 allowed. Must be unique. Only advanced users should change an existing template's name.</li>
-<li><b>Type</b> : Select the template type. As of 2.20, only memberlist type is valid.</li>
+<li><b>Type</b> : Select the template type. As of 2.24, only the memberlist and regfieldlist types are valid.</li>
 <li><b>Body</b> : A format string indicating how the member's data should be displayed in the list.</li>
 	<ul>
-    <li>The format can be any string, including html code, containing the special string variables (case matters), in the form of %fieldname%. Each occurance of these variables will be replaced by the raw data for the given field. Below some format variables are described and examples are given:</li>
+    <li>The format for the memberlist type can be any string, including html code, containing the special string variables (case matters), in the form of %fieldname%. Each occurance of these variables will be replaced by the raw data for the given field. Below some format variables are described and examples are given:</li>
         <br /><b>Format Variables:</b>
         <ul>
         <li><b>%memberlink%</b> - The raw URL to the member's page. To create a link, you must add the correct HTML tags around it. A sample output would be index.php?memberid=3 for a site using the default URL scheme.</li>
@@ -434,6 +460,14 @@ All fields must contain valid data.</p>
         <li>&lt;li&gt;&lt;a href=&quot;%memberlink%&quot; title=&quot;%realname%&quot;&gt;%nick% (%sex%, %zodiac%)&lt;/a&gt;&lt;/li&gt; would give a link to a users member page, displaying his nickname in the list, and also displaying his gender and zodiac sign, if fields called 'sex' and 'zodiac' are defined.</li>
         </ul><br />
     </ul>
+	<ul>
+	<li>The format for the regfieldlist type is a comma-separated list of field names to include in this special registration form that you will need to create. 
+	The registration form should be like the standard createaccount.php except the lines like this:
+	<pre><code>$manager-&gt;notify('RegistrationFormExtraFields', array('type' =&gt; 'createaccount.php', 'prelabel' =&gt; '', 'postlabel' =&gt; '&lt;br /&gt;', 'prefield' =&gt; '', 'postfield' =&gt; '&lt;br /&gt;&lt;br /&gt;'));</code></pre>
+	needs to be modified to replace createaccount.php to the name of this template, like this for a template called fred:
+	<pre><code>$manager-&gt;notify('RegistrationFormExtraFields', array('type' =&gt; 'fred', 'prelabel' =&gt; '', 'postlabel' =&gt; '&lt;br /&gt;', 'prefield' =&gt; '', 'postfield' =&gt; '&lt;br /&gt;&lt;br /&gt;'));</code></pre>
+	</li>
+	</ul>
 </ul>
 
 <h4>Edit Form Configuration Settings Form</h4>
@@ -609,6 +643,44 @@ http://forum.nucleuscms.org/viewtopic.php?t=13919</a> </p>
 <h3><a name="history">Version History</a></h3>
 
 <ul>
+<li>Version 2.24: <br />
+21th Release of version 2 adds the following to version 2.23
+	<ul>
+    <li> add doIf() method to allow using profile fields as conditionals.</li>
+	<li> add regfieldlist template type to allow other field lists to be used for registrations other than at createaccount.php file</li>
+	<li> memberlist orderby field can now be fieldname(value)|sort to list only members with fieldname==value.</li>
+	<li> memberlist orderby field can now be of form fieldname(value)|sort|fieldname2|sort2.</li>
+	</ul>
+</li>
+<li>Version 2.23.01: 
+	<ul>
+    <li> fix big where not normalizing forder and fpublic as integers causing mysql errors in certain situations.</li>
+	</ul>
+</li>
+<li>Version 2.23: <br />
+20th Release of version 2 adds the following to version 2.22.02
+	<ul>
+    <li> add API events for other plugins to add data variables to memberlist templates</li>
+	</ul>
+</li>
+<li>Version 2.22.02: 
+	<ul>
+    <li> fix errors in how lastupdated field stored.</li>
+	</ul>
+</li>
+<li>Version 2.22.01: 
+	<ul>
+    <li> fix errors in init() method when installing a fresh install.</li>
+	</ul>
+</li>
+<li>Version 2.22: <br />
+19th Release of version 2 adds the following to version 2.21
+	<ul>
+    <li> fix: logout after updating profile in certain circumstances (thanks wessite)</li> 
+    <li> add: enhance memberlist to allow sorting by memberid (can use to show newest members)</li>
+    <li> add: enhance memberlist to all displaying only members on given blog team</li>
+	</ul>
+</li>
 <li>Version 2.21: 04-09-2008 <br />
 18th Release of version 2 adds the following to version 2.20
 	<ul>
