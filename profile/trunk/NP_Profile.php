@@ -172,6 +172,8 @@ History:
 		 * memberlist orderby field can now be of form fieldname(value)|sort|fieldname2|sort2, 
 			but fieldname2 is only valid if mail,nick,realname,memberid,url,notes
 			fieldname2|sort2 set second sort key/order
+  v2.24.01
+	* fix registration bug where admin getting logged out when create member accounts
 		 
 		 
 		
@@ -208,7 +210,7 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://revcetera.com/ftruscot';	}
 
-	function getVersion() {	return '2.24'; }
+	function getVersion() {	return '2.24.01'; }
 
 	function getDescription() {
         if (!$this->_optionExists('email_public_deny') && $this->_optionExists('email_public')) {
@@ -933,9 +935,16 @@ password
 	}
 
     function event_PostRegister(&$data) {
-        global $_POST,$member,$memberid,$nucleus;
-        $member = $data['member'];
-        $memberid = $member->id;
+        global $_POST,$memberid,$nucleus,$member;	
+		if (is_object($member) && intval($member->getID()) > 0 && $member->isAdmin()) {
+			$thismember = $data['member'];
+			$memberid = $thismember->id;
+		}
+		else {
+			$member = $data['member'];
+			$memberid = $member->id;
+		}
+        
 		$nucversion = preg_replace('/[^0-9]/','',$nucleus['version']);
         if (intval($nucversion) < 330 ) $this->doAction('update',1,0);
 		else $this->doAction('update',1,1);
@@ -2277,9 +2286,12 @@ password
 			/* Actions for members go here (type='update')
 			 * Check if the POST is done by the right member*/
 			$destURL = serverVar('HTTP_REFERER');
+
             global $memberid;
+
             //if (postVar('action') != 'createaccount') $memberid = intPostVar('memberid');
             if (!$registering) $memberid = intPostVar('memberid');
+
 			if (intval($member->id) > 0 && ($member->id == $memberid || $member->isAdmin())) {
 				//$memberid = $member->id;
                 /* following code removed to fix bug where user apparently being logged out after updating in certain circumstances */
