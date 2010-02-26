@@ -85,7 +85,7 @@ only when permanently removing NP_Ordered. yes or no. (no)</li>
 <b>&lt;%Ordered(blog,<i>show,templatename,amount,category,blogname</i>)%&gt;</b>
 <br />where:<br />
 <ul>
-<li><code>show</code> : ordered,unordered or all. Optional. Sets which items to show, the ordered ones, the unordered ones, or all (ordered then unordered). Defaults to ordered. 
+<li><code>show</code> : ordered,unordered, all, or none. Optional. Sets which items to show, the ordered ones, the unordered ones, or all (ordered then unordered). none means to show all but not to regard the custom order number. Defaults to ordered. 
 Advanced - Accepts parameters of form (<i>field</i>-<i>order</i>|<i>low</i>|<i>high</i>) where <i>field</i> is time, title, author, category, authorname, or views (requires NP_Views) and where <i>order</i> is asc, desc or random, for custom sorting. 
 <i>low</i> is a number indicating the value above which all custom orders must be. <i>high</i> is the highest custom value an item can have. See examples for a sample.</li>
 <li><code>templatename</code> : string. Required. Name of template to use to display items. To force the template to be used in all cases append '(strict)' to templatename, e.g. default/index(strict).</li>
@@ -98,7 +98,7 @@ Advanced - Accepts parameters of form (<i>field</i>-<i>order</i>|<i>low</i>|<i>h
 <b>&lt;%Ordered(categorylist,<i>show,templatename,blogname,itemtemplate,itemamount</i>)%&gt;</b>
 <br />where:<br />
 <ul>
-<li><code>show</code> : ordered,unordered or all. Optional. Sets which categories to show, the ordered ones, the unordered ones, or all (ordered then unordered). Defaults to ordered. 
+<li><code>show</code> : ordered,unordered, all, or none. Optional. Sets which categories to show, the ordered ones, the unordered ones, or all (ordered then unordered). none allows use of advanced sorting options without overhead of numbered custom order. Defaults to ordered. 
 Advanced - Accepts parameters of form (<i>field</i>-<i>order</i>|<i>low</i>|<i>high</i>) where <i>field</i> is either name or desc and where <i>order</i> is asc, desc, or random, for custom sorting by name or description. 
 <i>low</i> is a number indicating the value above which all custom orders must be. <i>high</i> is the highest custom value a category can have. See examples for a sample.</li>
 <li><code>templatename</code> : string. Required. Name of template to use to display categorylist</li>
@@ -150,7 +150,7 @@ Advanced - Accepts parameters of form (<i>pre-tag</i>|<i>post-tag</i>) where <i>
 <b>&lt;%Ordered(setnavigation,<i>show,amount,setcat</i>)%&gt;</b>
 <br />where:<br />
 <ul>
-<li><code>show</code> : ordered,unordered or all. Optional. Sets which items to show, the ordered ones, the unordered ones, or all (ordered then unordered). Defaults to ordered. 
+<li><code>show</code> : ordered,unordered, all or none. Optional. Sets which items to show, the ordered ones, the unordered ones, or all (ordered then unordered). none allows advanced sorting features without overhead of numbered ordering. Defaults to ordered. 
 Advanced - Accepts parameters of form (<i>field</i>-<i>order</i>|<i>low</i>|<i>high</i>) where <i>field</i> is time, title, author, category, authorname, or views (requires NP_Views) and where <i>order</i> is asc, desc, or random, for custom sorting. 
 <i>low</i> is a number indicating the value above which all custom orders must be. <i>high</i> is the highest custom value an item can have. See examples for a sample.</li>
 <li><code>amount</code> : string. Optional. The amount of items to show (default = 10). Can also contain an offset telling Nucleus to start only from the given item. e.g. 10(5) shows 10 items starting from item 5</li>
@@ -176,6 +176,7 @@ posts displayed. Will usually take the place of the &lt;%blog(templatename,amoun
 <li><b>&lt;%Ordered(blog,unordered,default/index,10)%&gt;</b>: Displays the first 10 unordered items.</li>
 <li><b>&lt;%Ordered(blog,ordered,default/index,10,,Static)%&gt;</b>: Displays the first 10 ordered items from the blog with shortname of Static.</li>
 <li><b>&lt;%Ordered(blog,all(views-desc),default/index,10)%&gt;</b>: Displays ordered items sorted by order, then the unordered items sorted by number of views (measured by the NP_Views plugin), with most viewed first, up to a total of 10 posts.</li>
+<li><b>&lt;%Ordered(blog,none(views-desc),default/index,10)%&gt;</b>: Displays all items sorted by number of views (measured by the NP_Views plugin), with most viewed first, up to a total of 10 posts.</li>
 <li><b>&lt;%Ordered(categorylist,ordered,default/index)%&gt;</b>: Lists the ordered categories using the Category List format in the default/index template.</li>
 <li><b>&lt;%Ordered(categorylist,ordered(|50|500),default/index)%&gt;</b>: Lists the ordered categories, having order values between 51 and 500 inclusive, using the Category List format in the default/index template.</li>
 <li><b>&lt;%Ordered(categorylist,unordered,default/index)%&gt;</b>: Lists the unordered categories using the Category List format in the default/index template.</li>
@@ -304,6 +305,14 @@ http://forum.nucleuscms.org/viewtopic.php?t=14070</a></p>
 
 <h3><a name="history">Version History</a></h3>
 <ul>
+<li>Version 1.36 - 26 Oct 2010,
+<ul>
+  <li>allow a show parameter of 'none' to permit use of some of the features like sorting by author, and category-specific templates for items without overhead of ordered query.</li>
+</ul>
+<li>Version 1.35 - 14 Oct 2009,
+<ul>
+  <li>allow listing of items under each category in categorylist. See help file for syntax.</li>
+</ul>
 <li>Version 1.34 - 11 Jun 2009,
 <ul>
   <li>fix bug where call to member function on non-object errors displayed on error and member pages</li>

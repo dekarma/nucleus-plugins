@@ -55,6 +55,8 @@
 
 /* History:
  *
+ * 1.36 - 02/26/2010 -
+ *  * allow a show parameter of 'none' to permit use of some of the features like sorting by author, and category-specific templates for items without overhead of ordered query
  * 1.35 - 10/14/2009 -
  *  * allow listing of items under each category in categorylist. See help file for syntax.
  * 1.34.01 - 08/06/2009 -
@@ -139,7 +141,7 @@ class NP_Ordered extends NucleusPlugin {
 
 	// version of the plugin
 	function getVersion() {
-		return '1.35';
+		return '1.36';
 	}
 
 	// a description to be shown on the installed plugins listing
@@ -392,6 +394,7 @@ class NP_Ordered extends NucleusPlugin {
 
 			if (strtolower($show) == 'unordered') $this->setshowWhat(0);
 			elseif (strtolower($show) == 'all') $this->setshowWhat(2);
+			elseif (strtolower($show) == 'none') $this->setshowWhat(3);
 			else $this->setshowWhat(1);
 
 			$this->_setBlogCategory($b, $category);
@@ -460,6 +463,7 @@ class NP_Ordered extends NucleusPlugin {
 
 			if (strtolower($show) == 'unordered') $this->setshowWhat(0);
 			elseif (strtolower($show) == 'all') $this->setshowWhat(2);
+			elseif (strtolower($show) == 'none') $this->setshowWhat(3);
 			else $this->setshowWhat(1);
 
 			if ($blogname == '') {
@@ -513,7 +517,7 @@ class NP_Ordered extends NucleusPlugin {
 				$blg =& $blog;
 
 			$this->useitemtemplate = 1;
-            $this->setshowWhat(2);
+            $this->setshowWhat(3);
 
 			$this->_setBlogCategory($blg, '');	// need this to select default category
 			$this->_preBlogContent('item',$blg);
@@ -608,6 +612,7 @@ class NP_Ordered extends NucleusPlugin {
 
 			if (strtolower($show) == 'unordered') $this->setshowWhat(0);
 			elseif (strtolower($show) == 'all') $this->setshowWhat(2);
+			elseif (strtolower($show) == 'none') $this->setshowWhat(3);
 			else $this->setshowWhat(1);
 			$query = $this->_getBlogQuery($b,$extraQuery,$limit,$offset,$startpos,$theorder);
 			$res = sql_query($query);
@@ -640,6 +645,7 @@ class NP_Ordered extends NucleusPlugin {
             $show = $showwhat;
 			if (strtolower($show) == 'unordered') $this->setshowWhat(0);
 			elseif (strtolower($show) == 'all') $this->setshowWhat(2);
+			elseif (strtolower($show) == 'none') $this->setshowWhat(3);
 			else $this->setshowWhat(1);
 			$this->low = 0;
 			$this->high = 0;
@@ -839,7 +845,9 @@ class NP_Ordered extends NucleusPlugin {
     function getSqlBlog(&$b, $extraQuery, $mode = '', $theorder = 'itime DESC')
 	{
 		if ($mode == '') {
-			$query = 'SELECT i.inumber as itemid, i.ititle as title, i.ibody as body, m.mname as author, m.mrealname as authorname, i.itime as itime, i.imore as more, m.mnumber as authorid, m.memail as authormail, m.murl as authorurl, c.cname as category, i.icat as catid, i.iclosed as closed, o.onumber as myorder, oc.otemplate as otemplate, oc.oitemplate as oitemplate, oc.onumber as ocnumber, i.ititle as ititle';
+			$query = 'SELECT i.inumber as itemid, i.ititle as title, i.ibody as body, m.mname as author, m.mrealname as authorname, i.itime as itime, i.imore as more, m.mnumber as authorid, m.memail as authormail, m.murl as authorurl, c.cname as category, i.icat as catid, i.iclosed as closed, oc.otemplate as otemplate, oc.oitemplate as oitemplate, oc.onumber as ocnumber, i.ititle as ititle';
+			if ($this->getshowWhat() != 3) 
+				$query .= ", o.onumber as myorder";
 			if (strpos($theorder,'views') === 0) {
 				$useviews = 1;
 				$query .= ', v.views as views';
@@ -850,19 +858,24 @@ class NP_Ordered extends NucleusPlugin {
 			if ($this->getshowWhat() == 1 ) {
 				$query .= ', 1 as mysortcol';
 			}
-			else {
+			elseif ($this->getshowWhat() != 3 ) {
 				$query .= ', 2 as mysortcol';
 			}
+			else
+				$query .= ', 3 as mysortcol';
 		}
 		else
 			$query = 'SELECT COUNT(*) as result ';
-		$query .= ' FROM '.sql_table('item').' as i, '.sql_table('member').' as m, '.sql_table('category').' as c, '.sql_table('plug_ordered_blog').' as o, '.sql_table('plug_ordered_cat').' as oc';
+		$query .= ' FROM '.sql_table('item').' as i, '.sql_table('member').' as m, '.sql_table('category').' as c, '.sql_table('plug_ordered_cat').' as oc';
+		if ($this->getshowWhat() != 3 )
+			$query .= ', '.sql_table('plug_ordered_blog').' as o';
 		if ($useviews) $query .= ', '.sql_table('plugin_views').' as v';
 		$query .= ' WHERE i.iblog='.$b->blogid;
 		$query .= ' and i.iauthor=m.mnumber';
 		$query .= ' and i.icat=c.catid';
 		$query .= ' and i.icat=oc.ocatid';
-        $query .= ' and i.inumber=o.oitemid';
+		if ($this->getshowWhat() != 3 )
+			$query .= ' and i.inumber=o.oitemid';
 		$query .= ' and i.idraft=0';	// exclude drafts
 					// don't show future items
 		$query .= ' and i.itime<=' . mysqldate($b->getCorrectTime());
@@ -875,7 +888,7 @@ class NP_Ordered extends NucleusPlugin {
         if ($this->showWhat == 0 ) {
             $query .= ' and o.onumber=0 ';
         }
-        else {
+        elseif ($this->getshowWhat() != 3 ) {
             $query .= ' and o.onumber>'.$this->low.' ';
 			if ($this->high > $this->low)
 				$query .= ' and o.onumber<='.$this->high.' ';
@@ -887,6 +900,9 @@ class NP_Ordered extends NucleusPlugin {
             //$query .= ' ORDER BY i.'.$theorder;
             $query .= ' ORDER BY '.$theorder.', itime DESC';
         }
+		elseif ($this->getshowWhat() == 3 ) {
+			$query .= ' ORDER BY '.$theorder.', itime DESC';
+		}
         else {
             $query .= ' ORDER BY o.onumber ASC';
         }
@@ -920,6 +936,7 @@ class NP_Ordered extends NucleusPlugin {
 		$actions->setShowComments($comments);
 
 		// execute query
+//echo "<hr />$query <hr />";
 		$items = sql_query($query);
 
 		// loop over all items
@@ -1149,8 +1166,11 @@ class NP_Ordered extends NucleusPlugin {
 		if ($this->getshowWhat() == 1 ) {
 			$query .= ', 1 as mysortcol';
 		}
-		else {
+		elseif ($this->getshowWhat() != 3 ) {
 			$query .= ', 2 as mysortcol';
+		}
+		else {
+			$query .= ', 3 as mysortcol';
 		}
 		$query .= ' FROM '.sql_table('category').' as c, '.sql_table('plug_ordered_cat').' as o WHERE c.catid=o.ocatid AND c.cblog=' . $b->getID();
 
@@ -1159,6 +1179,10 @@ class NP_Ordered extends NucleusPlugin {
 			if ($theorder == " RAND()") $query .= ' ORDER BY'.$theorder;
             else $query .= ' ORDER BY c.c'.$theorder;
         }
+		elseif ($this->showWhat == 3 ) {
+			if ($theorder == " RAND()") $query .= ' ORDER BY'.$theorder;
+            else $query .= ' ORDER BY c.c'.$theorder;
+		}
         else {
 			$query .= ' AND o.onumber>'.$this->low;			
 			if ($this->high > $this->low)
@@ -1292,13 +1316,19 @@ class NP_Ordered extends NucleusPlugin {
 		if ($this->getshowWhat() == 1 ) {
 			$query .= ', 1 as mysortcol';
 		}
-		else {
+		elseif ($this->getshowWhat() != 3 ) {
 			$query .= ', 2 as mysortcol';
 		}
+		else
+			$query .= ', 3 as mysortcol';
 		$query .= ' FROM '.sql_table('blog').' as b, '.sql_table('plug_ordered_bloglist').' as o WHERE b.bnumber=o.oblogid';
 
         if ($this->showWhat == 0 ) {
 			$query .= ' AND o.onumber=0';
+			if ($theorder == "RAND()") $query .= ' ORDER BY '.$theorder;
+            else $query .= ' ORDER BY '.$theorder;
+        }
+		elseif ($this->showWhat == 3 ) {
 			if ($theorder == "RAND()") $query .= ' ORDER BY '.$theorder;
             else $query .= ' ORDER BY '.$theorder;
         }
