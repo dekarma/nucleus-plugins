@@ -82,11 +82,13 @@ where
 <ul>
 <li><i>fieldname</i> is the name of the field to display. By default, the valid values are <b>nick, realname, mail,
 notes, url</b>, msn, sex, birthdate, avatar, location, hobbies, secret, icq, favoritesite, bio, resume, privacylevel, and lastupdated (2.2x).
-The ones in bold are Nucleus member fields and represent data kept by the Nucleus Core. More details about these special Nucleus fields will be given later. It can also be one of a number of special values such as startform, endform, closeform, submitbutton, password, editlink, editprofile, memberlist (2.2x) or status, as described later.</li>
+The ones in bold are Nucleus member fields and represent data kept by the Nucleus Core. More details about these special Nucleus fields will be given later. It can also be one of a number of special values such as startform, endform, closeform, submitbutton, password, editlink, editprofile, memberlist (2.2x), myprofile (2.25+) or status, as described later.</li>
 <li><i>special</i> is one of label or show as described below (can be left blank, the default behavior):</li>
    <ul>
-   <li>label - Valid for all fields. Shows the label for the named field..</li>
+   <li>label - Valid for all fields. Shows the label for the named field.</li>
    <li>show - Valid for all fields. Directs NP_Profile to display the field value in all cases (so wont show input field to member on his own page, so useful to show fields outside of member form). Will be formatted according to <i>showas</i> type, where applicable.</li>
+   <li>editlink - Valid only for myprofile special field value. Generates link to member's profile in edit mode.</li>
+   <li>editprofile - Valid only for myprofile special field value. Generates link to member's editprofile page (like editprofile special field value).</li>
    </ul>
 <li><i>showas</i> is one of image, link, or raw, as described below (can be left blank, the default behavior):</li>
    <ul>
@@ -118,6 +120,9 @@ On an item page or in a template (see TemplateVar below) will show the real name
 <li><b>&lt;%Profile(endform)%&gt;</b> will add the html needed to end an input form for members, but only if a member is viewing his own member page. Otherwise, it displays nothing. Must be used on Member Details skin part if members will be allowed to edit their own profiles.</li>
 <li><b>&lt;%Profile(editlink)%&gt;</b> will add the html needed to display a link to the profile edit form, but only if a member is viewing his own member page. Otherwise, it displays nothing. Should be used on Member Details skin part if members will be allowed to edit their own profiles.</li>
 <li><b>&lt;%Profile(editprofile)%&gt;</b> will add the html needed to display a link to the profile edit page, but only if a member is viewing his own member page. Otherwise, it displays nothing. Should be used on Member Details skin part if members will be allowed to edit their own profiles.</li>
+<li><b>&lt;%Profile(myprofile,editlink)%&gt;</b> will add the html needed to display a link to the profile edit form for the currently logged on member from any page on the site. Otherwise, it displays nothing.</li>
+<li><b>&lt;%Profile(myprofile,editprofile)%&gt;</b> will add the html needed to display a link to the profile edit pagefor the currently logged on member from any page on the site. Otherwise, it displays nothing.</li>
+<li><b>&lt;%Profile(myprofile)%&gt;</b> will add the html needed to display a link to the profile for the currently logged on member from any page on the site. Otherwise, it displays nothing.</li>
 </ul>
 
 <p>The special 'memberlist' version of the skinvar (new in 2.2x) has a different format than shown above. It is used to list members of your site in a formatted way and including any of the custom fields of your site. It's format is given below:</p>
@@ -643,6 +648,17 @@ http://forum.nucleuscms.org/viewtopic.php?t=13919</a> </p>
 <h3><a name="history">Version History</a></h3>
 
 <ul>
+<li>Version 2.25: <br />
+22nd Release of version 2 adds the following to version 2.24.01
+	<ul>
+    <li> add myprofile special field to display links to current member's profile on any pages.</li>
+	</ul>
+</li>
+<li>Version 2.24.01: 
+	<ul>
+    <li>fix registration bug where admin getting logged out when creating member accounts.</li>
+	</ul>
+</li>
 <li>Version 2.24: <br />
 21th Release of version 2 adds the following to version 2.23
 	<ul>
@@ -654,7 +670,7 @@ http://forum.nucleuscms.org/viewtopic.php?t=13919</a> </p>
 </li>
 <li>Version 2.23.01: 
 	<ul>
-    <li> fix big where not normalizing forder and fpublic as integers causing mysql errors in certain situations.</li>
+    <li> fix bug where not normalizing forder and fpublic as integers causing mysql errors in certain situations.</li>
 	</ul>
 </li>
 <li>Version 2.23: <br />

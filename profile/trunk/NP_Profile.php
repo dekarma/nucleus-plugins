@@ -159,7 +159,7 @@ History:
   v2.23 -- 20th release of version 2 adds the following to v 2.22.02
           * add API events for other plugins to add data variables to memberlist templates
   v2.23.01 -- fix release of v 2.23
-          * fix big where not normalizing forder and fpublic as integers causing mysql errors in certain situations
+          * fix bug where not normalizing forder and fpublic as integers causing mysql errors in certain situations
   v2.24 -- 21st release of version 2 adds the following to 2.23.01
           * add doIf() method to allow using profile fields as conditionals. if(Profile,field(ME),>=value)
 		     (ME) after field name forces the check on field value for logged in user, omit to allow regular selction (memberinfo, authorid, member)
@@ -174,7 +174,8 @@ History:
 			fieldname2|sort2 set second sort key/order
   v2.24.01
 	* fix registration bug where admin getting logged out when create member accounts
-		 
+  v2.25 -- 22nd release of version 2 adds the following to 2.24.01
+	* add myprofile special field to display links to current member's profile on any pages.
 		 
 		
 *
@@ -195,7 +196,7 @@ class NP_Profile extends NucleusPlugin {
 	var $showEmail = 0;
     var $allowedProtocols = array("http","https"); // protocols that will be allowed in url fields
 	var $restrictView = 0;
-    var $specialfields = array('startform','endform','status','editlink','submitbutton','editprofile','closeform','memberlist','memberlistpager');
+    var $specialfields = array('startform','endform','status','editlink','submitbutton','editprofile','closeform','memberlist','memberlistpager','myprofile');
 	var $profile_types = array();
 	var $profile_fields = array();
 	var $profile_values = array();
@@ -210,7 +211,7 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://revcetera.com/ftruscot';	}
 
-	function getVersion() {	return '2.24.01'; }
+	function getVersion() {	return '2.25'; }
 
 	function getDescription() {
         if (!$this->_optionExists('email_public_deny') && $this->_optionExists('email_public')) {
@@ -1299,6 +1300,28 @@ password
 						}
 						break;
 */
+					case 'myprofile': 
+						//$link = '';
+						if ($member->isLoggedIn()) {
+							$editlink = createMemberLink($member->getID());
+							if (strtolower($param2) == 'editlink') {
+                                echo '<form enctype="multipart/form-data" name="editform" action="' . $editlink . '" method="post">' . "\n";
+								echo '<input type="hidden" name="edit" value="1" />' . "\n";
+                                echo '<input class="profileeditlink" type="submit" name="submit" value="'._PROFILE_SV_EDITLINK_EDIT.'" />' . "\n";
+                                echo "</form>\n";
+							}
+							elseif (strtolower($param2) == 'editprofile') {
+								global $blog;
+								$blogid = $blog->getID();
+								$editlink = $CONF['PluginURL']."profile/editprofile.php?edit=1&blogid=$blogid&memberid=".$member->getID();
+								echo '<a class="profileeditlink" href="'.$editlink.'">'._PROFILE_SV_EDITLINK_EDIT.'</a>';
+							}
+							else {
+								echo '<a href="'.$editlink.'" title="'._PROFILE_SV_VIEW_MYPROFILE.'">'._PROFILE_SV_VIEW_MYPROFILE.'</a>';
+							}							
+						}
+						//echo $link;
+						break;
 					case 'mail':
 						if ($this->restrictView && !$this->getFieldAttribute($param1,'fpublic')) break;
 						//$result = sql_query("SELECT memail FROM ".sql_table(member)." WHERE mnumber=" . $pmid);

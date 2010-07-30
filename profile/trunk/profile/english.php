@@ -225,5 +225,6 @@ define('_PROFILE_ADMIN_HELP_TEMPLATE_BODY',     '<b>memberlist</b>: Enter the ht
 		(comma-separated) that you would like to make available on the custom Member Registration page');
 define('_PROFILE_ADMIN_CONFIG_REG_INTRO',		'Here you can list the fields (comma-separated) that you would like to make available on the Member Registration page (createaccount.php).
         A sample createaccount.php page will be generated from this list for you (see createaccount.php tab) No need to modify createaccount.php from vesion 3.40 and higher.');
-
+// new in 2.25
+define('_PROFILE_SV_VIEW_MYPROFILE',		'View your profile');
 ?>
