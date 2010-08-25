@@ -25,6 +25,7 @@
 
 /*
     Version history:
+    * v 1.11 - updates badbehavior scripts to 2.0.38
     * v 1.10  - updates badbehavior scripts to 2.0.30
     * v 1.02  - adds global variable $np_bb_off to allow external php programs that include nucleus pages to not run badbehavior
     * v 1.01  - adds link in logs to ip whois lookup at ip-lookup.net 
@@ -68,7 +69,7 @@ class NP_BadBehavior extends NucleusPlugin {
 	function getName() {	return 'BadBehavior'; 	}
 	function getAuthor()  { return 'Frank Truscott'; 	}
 	function getURL() { return 'http://www.iai.com/'; }
-	function getVersion() {	return '1.10'; }
+	function getVersion() {	return '1.11'; }
 	function getDescription() {
 		return 'Give admin area for bad behavior spam fighting script';
 	}

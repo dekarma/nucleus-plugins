@@ -68,9 +68,13 @@ function bb2_whitelist($package)
 		}
 	}
 	if (!empty($bb2_whitelist_urls)) {
-		$request_uri = substr($settings['request_uri'], 0, strpos($settings['request_uri'], "?"));
+		if (strpos($package['request_uri'], "?") === FALSE) {
+			$request_uri = $package['request_uri'];
+		} else {
+			$request_uri = substr($package['request_uri'], 0, strpos($settings['request_uri'], "?"));
+		}
 		foreach ($bb2_whitelist_urls as $url) {
-			if (!strcmp($package['headers_mixed']['User-Agent'], $url)) return true;
+			if (!strcmp($request_uri, $url)) return true;
 		}
 	}
 	return false;
