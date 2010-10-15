@@ -176,7 +176,8 @@ History:
 	* fix registration bug where admin getting logged out when create member accounts
   v2.25 -- 22nd release of version 2 adds the following to 2.24.01
 	* add myprofile special field to display links to current member's profile on any pages.
-		 
+  v2.26 -- 23rd release of version 2 adds the following to 2.25
+	* add resizeimage option to fields of type file to resize images to given width/height
 		
 *
 [FUTURE]
@@ -211,7 +212,7 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://revcetera.com/ftruscot';	}
 
-	function getVersion() {	return '2.25'; }
+	function getVersion() {	return '2.26.beta'; }
 
 	function getDescription() {
         if (!$this->_optionExists('email_public_deny') && $this->_optionExists('email_public')) {
@@ -2669,11 +2670,22 @@ password
 					if (!$this->getFieldAttribute($field,'enabled')) {
 						doError(_PROFILE_ACTION_BAD_FILE_FIELD);
 					}
+					$foptions = strtolower(trim($this->getFieldAttribute($field,'foptions')));
+					if (strpos($foptions,'resizeimage') !== false)
+						$resizeit = true;
+					else
+						$resizeit = false;
 					$filesize = $_FILES[$field]['size'];
 					$type = $_FILES[$field]['type'];
 					$name = $_FILES[$field]['name'];
 					$tmp_name = $_FILES[$field]['tmp_name'];
 					$extention = $this->showExtention($name);
+					if (strpos($type,'image') !== false)
+						$isimage = true;
+					else {
+						$isimage = false;
+						$resizeit = false;
+					}
 
 
 					if (intval($filesize) > 1 && trim($tmp_name) != '') {
@@ -2682,7 +2694,7 @@ password
 						$max_filesize = intval($this->getFieldAttribute($field,'ffilesize'));
 						if ($max_filesize == 0) $max_filesize = intval($CONF['MaxUploadSize']);
 
-						if ($filesize > $max_filesize) {
+						if ($filesize > $max_filesize && !$resizeit) {
 							doError(_PROFILE_ACTION_BAD_FILE_SIZE . $this->getFieldAttribute($field,'ffilesize')/1024 . ' kB');
 						}
 
@@ -2702,24 +2714,37 @@ password
 
 						// Check size if upload is an image
 
-						if (strpos($type,'image') !== false) {
+						if ($isimage) {
 							$size = getimagesize($tmp_name);
 							$width = $size[0];
 							$height = $size[1];
 							$maxwidth = $this->getFieldAttribute($field,'fwidth');
 							$maxheight = $this->getFieldAttribute($field,'fheight');
-							if ($maxwidth < $width || $maxheight < $height) {
+							if (($maxwidth < $width || $maxheight < $height) && !$resizeit) {
 								doError(_PROFILE_ACTION_BAD_FILE_IMGSIZE .": $maxwidth * $maxheight pixels. ". _PROFILE_ACTION_BAD_FILE_IMGSIZE_YOU." $width * $height pixels.");
 							}
 						}
 
-						// Copy the file
 						$newname = $memberobj->id . ".$field.$extention";
-						copy ($tmp_name, $DIR_MEDIA.$newname) or doError(_PROFILE_ACTION_BAD_FILE_COPY);
-                        // chmod uploaded file
-                        $oldumask = umask(0000);
-                        @chmod($DIR_MEDIA.$newname, 0644);
-                        umask($oldumask);
+						if ($resizeit) {
+							$newThumb = $this->CroppedThumbnail($tmp_name,$maxwidth,$maxheight);
+							imagejpeg($newThumb,$DIR_MEDIA.$newname,85);
+							@unlink($tmp_name);
+							// chmod uploaded file
+							$oldumask = umask(0000);
+							@chmod($DIR_MEDIA.$newname, 0644);
+							umask($oldumask);
+						}
+						else {
+							// Copy the file
+							//$newname = $memberobj->id . ".$field.$extention";
+							copy ($tmp_name, $DIR_MEDIA.$newname) or doError(_PROFILE_ACTION_BAD_FILE_COPY);
+							@unlink($tmp_name);
+							// chmod uploaded file
+							$oldumask = umask(0000);
+							@chmod($DIR_MEDIA.$newname, 0644);
+							umask($oldumask);
+						}
                         //prep for database write
 						$newname = addslashes($newname);
 						$field = addslashes($field);
@@ -3483,6 +3508,53 @@ password
 			sql_query("DELETE FROM ".sql_table('plugin_profile_config')." WHERE csetting='dbversion'");
 			sql_query("INSERT INTO ".sql_table('plugin_profile_config')." VALUES('dbversion','$version')");
 		}
+	}
+	
+	function CroppedThumbnail($imgSrc,$thumbnail_width,$thumbnail_height) { //$imgSrc is a FILE - Returns an image resource.
+		//getting the image dimensions 
+		list($width_orig, $height_orig) = getimagesize($imgSrc); 
+		
+		$ext = strtolower(end(explode('.', $imgSrc)));
+		if ($ext == 'jpg' || $ext == 'jpeg') {
+			$myImage = @imagecreatefromjpeg($imgSrc);
+			$imgtype = 'jpg';
+		} else if ($ext == 'png') {
+			$myImage = @imagecreatefrompng($imgSrc);
+			$imgtype = 'png';
+		# Only if your version of GD includes GIF support
+		} else if ($ext == 'gif') {
+			if (function_exists('imagecreatefromgif')) {
+				$myImage = @imagecreatefromgif($imgSrc);
+				$imgtype = 'gif';
+			}
+		} else if ($ext == 'bmp') {
+			$myImage = @imagecreatefromwbmp($imgSrc);
+			$imgtype = 'bmp';
+		}
+		
+		//$myImage = imagecreatefromjpeg($imgSrc);
+		$ratio_orig = $width_orig/$height_orig;
+	   
+		if ($thumbnail_width/$thumbnail_height > $ratio_orig) {
+		   $new_height = $thumbnail_width/$ratio_orig;
+		   $new_width = $thumbnail_width;
+		} else {
+		   $new_width = $thumbnail_height*$ratio_orig;
+		   $new_height = $thumbnail_height;
+		}
+	   
+		$x_mid = $new_width/2;  //horizontal middle
+		$y_mid = $new_height/2; //vertical middle
+	   
+		$process = imagecreatetruecolor(round($new_width), round($new_height));
+	   
+		imagecopyresampled($process, $myImage, 0, 0, 0, 0, $new_width, $new_height, $width_orig, $height_orig);
+		$thumb = imagecreatetruecolor($thumbnail_width, $thumbnail_height);
+		imagecopyresampled($thumb, $process, 0, 0, ($x_mid-($thumbnail_width/2)), ($y_mid-($thumbnail_height/2)), $thumbnail_width, $thumbnail_height, $thumbnail_width, $thumbnail_height);
+
+		imagedestroy($process);
+		imagedestroy($myImage);
+		return $thumb;
 	}
 }
 ?>
