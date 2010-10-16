@@ -212,7 +212,7 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://revcetera.com/ftruscot';	}
 
-	function getVersion() {	return '2.26.beta'; }
+	function getVersion() {	return '2.26'; }
 
 	function getDescription() {
         if (!$this->_optionExists('email_public_deny') && $this->_optionExists('email_public')) {
@@ -2725,9 +2725,9 @@ password
 							}
 						}
 
-						$newname = $memberobj->id . ".$field.$extention";
 						if ($resizeit) {
-							$newThumb = $this->CroppedThumbnail($tmp_name,$maxwidth,$maxheight);
+							$newname = $memberobj->id . ".$field.jpg";
+							$newThumb = $this->CroppedThumbnail($tmp_name,$maxwidth,$maxheight,$extention);
 							imagejpeg($newThumb,$DIR_MEDIA.$newname,85);
 							@unlink($tmp_name);
 							// chmod uploaded file
@@ -2737,7 +2737,7 @@ password
 						}
 						else {
 							// Copy the file
-							//$newname = $memberobj->id . ".$field.$extention";
+							$newname = $memberobj->id . ".$field.$extention";
 							copy ($tmp_name, $DIR_MEDIA.$newname) or doError(_PROFILE_ACTION_BAD_FILE_COPY);
 							@unlink($tmp_name);
 							// chmod uploaded file
@@ -3510,11 +3510,10 @@ password
 		}
 	}
 	
-	function CroppedThumbnail($imgSrc,$thumbnail_width,$thumbnail_height) { //$imgSrc is a FILE - Returns an image resource.
+	function CroppedThumbnail($imgSrc,$thumbnail_width,$thumbnail_height,$ext = '') { //$imgSrc is a FILE - Returns an image resource.
 		//getting the image dimensions 
-		list($width_orig, $height_orig) = getimagesize($imgSrc); 
-		
-		$ext = strtolower(end(explode('.', $imgSrc)));
+		list($width_orig, $height_orig) = getimagesize($imgSrc); 		
+		$ext = strtolower($ext);
 		if ($ext == 'jpg' || $ext == 'jpeg') {
 			$myImage = @imagecreatefromjpeg($imgSrc);
 			$imgtype = 'jpg';

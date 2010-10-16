@@ -362,6 +362,11 @@ default setting set for that that field type in the type settings form.</p>
         <li>'&lt;b&gt;&lt;i&gt;&lt;u&gt;' allows use of the bold, italics, and underlines in your posts</li>
         <li>Again, this should not be used if you can't trust your members. Some formating tags, like b, i, and u, pose little risk, but any tags that add or present data (such as a, img, embed, etc...) can be mis-used by those with evil intentions. Do not add any tags here without being aware of the security risk it might impose.</li>
         </ul>
+	<li>For fields of type file: Optional. Sets any special options for the file field. Multiple option (if available) can be separated by commas. Valid options are given below:</li>
+        <ul>
+        <li>'resizeimage' (2.26) will not enforce file size, width, or height limits on uploaded image, but will instead try to crop and resize the image to fit the given height and width. Only valid for image files and always returns a jpg image.</li>
+        
+        </ul>
     </ul>
 <li><b>Default</b> : String. Default value for fields giving choices. Valid only for list, dropdown, and radio fields. The storage value should be given. e.g. for an options field of \'yes|1;no|0\', use 1 to set default to yes and 0 to set default to 0. New to 2.1.</li>
 <li><b>Public</b> : Should member data for this field be viewable by all site visitors, regardless of the privacylevel setting? Fields where this is set to yes, will display for guests even if the member has set his profile to Members Only. Fields like nick, avatar, url should be set to yes. New to 2.1.</li>
@@ -648,6 +653,12 @@ http://forum.nucleuscms.org/viewtopic.php?t=13919</a> </p>
 <h3><a name="history">Version History</a></h3>
 
 <ul>
+<li>Version 2.26: <br />
+23rd Release of version 2 adds the following to version 2.25
+	<ul>
+    <li> add resizeimage option to fields of type file to resize images to given width/height.</li>
+	</ul>
+</li>
 <li>Version 2.25: <br />
 22nd Release of version 2 adds the following to version 2.24.01
 	<ul>
