@@ -20,10 +20,12 @@
 
 /*
     Version history:
-    - 1.13 (2007-06-??): fix access control for blog admins, add some js into table select form (1.13.a.01)
+    - 1.13 (??): 
+	* fix access control for blog admins, add some js into table select form (1.13.a.01)
+	*Add reports tab and some sample reports (1.13.a.02)
     - 1.12 (2007-05-10): fix mysql data lookup bug when field not selected
     - 1.11 (): added NOT LIKE to data lookup options
-	- 1.1 (2006-08-31): added display of plugin event subscriptions, added find
+    - 1.1 (2006-08-31): added display of plugin event subscriptions, added find
 	feature for php/configuration settings and php/loaded modules.
     - 1.0 (2006-06-07): initial release (Frank Truscott)
 */
@@ -33,7 +35,7 @@ class NP_SystemInfo extends NucleusPlugin {
 	function getName() {	return 'SystemInfo'; 	}
 	function getAuthor()  { return 'Frank Truscott'; 	}
 	function getURL() { return 'http://www.iai.com/'; }
-	function getVersion() {	return '1.13.a01'; }
+	function getVersion() {	return '1.13.a02'; }
 	function getDescription() {
 		return 'Plugin to give ready access to system information for use in troubleshooting';
 	}

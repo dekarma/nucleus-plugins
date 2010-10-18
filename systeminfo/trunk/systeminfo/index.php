@@ -28,7 +28,7 @@
 	$thisquerystring = serverVar('QUERY_STRING');
 	$toplink = '<p class="center"><a href="'.$thispage.'?'.$thisquerystring.'#sitop" alt="Return to Top of Page">-top-</a></p>'."\n";
 	$showlist = strtolower(trim(requestVar('showlist')));
-	if (!in_array($showlist, array('nucleus','php','mysql','apache'))) $showlist = 'nucleus';
+	if (!in_array($showlist, array('nucleus','php','mysql','apache','reports'))) $showlist = 'nucleus';
 	$sublist = strtolower(trim(requestVar('sublist')));
 	$tname = trim(requestVar('tname'));
 	$fname = trim(requestVar('fname'));
@@ -144,6 +144,7 @@ border-bottom: 1px solid #778;
 	echo ' <li><a class="'.($showlist == 'php' ? 'current' : '').'" href="'.$thispage.'?showlist=php&amp;safe=true">PHP</a></li>'."\n";
 	echo ' <li><a class="'.($showlist == 'mysql' ? 'current' : '').'" href="'.$thispage.'?showlist=mysql&amp;safe=true">MySQL</a></li>'."\n";
 	echo ' <li><a class="'.($showlist == 'apache' ? 'current' : '').'" href="'.$thispage.'?showlist=apache&amp;safe=true">Apache</a></li>'."\n";
+	echo ' <li><a class="'.($showlist == 'reports' ? 'current' : '').'" href="'.$thispage.'?showlist=reports&amp;safe=true">Reports</a></li>'."\n";
 	echo " </ul></div>\n";
 /**************************************
  *	 Nucleus CMS					*
@@ -690,11 +691,81 @@ border-bottom: 1px solid #778;
  **************************************/
 	if ($showlist == "apache")
 	{
+		echo '<div class="center">'."\n";
 
-			echo '<div class="center">'."\n";
+		echo get_apacheinfo(INFO_MODULES);
+		echo $toplink;
+		echo "</div>\n";
 
-			echo get_apacheinfo(INFO_MODULES);
-			echo $toplink;
+	} //end apache
+	
+/**************************************
+ *	Reports							*
+ **************************************/
+	if ($showlist == "reports")
+	{
+		$report = postVar('report');
+		echo '<div class="center">'."\n";
+		
+		$sql = "SHOW TABLES from $MYSQL_DATABASE";
+		$result = mysql_query($sql);
+		echo '<form name="siRptChooser" method="post" action="">'."\n";
+		$manager->addTicketHidden();
+		echo '<select name="report" onChange="document.siRptChooser.submit()">'."\n";
+		$dir = $sysinfo->getDirectory().'reports/';
+		$files = array();
+		if($handle = opendir($dir))	{
+			while($file = readdir($handle))
+			{
+				clearstatcache();
+				if(is_file($dir.'/'.$file))
+					$files[] = $file;
+			}
+			closedir($handle);
+		} 
+		sort($files);
+		foreach ($files as $file) {
+			$menu .= '<option value="'.$file.'"';
+			$menu .= ($file == $report ? ' selected>' :'>');
+			$menu .= str_replace(array('.php'),array(''),$file)."</option>\n";
+		}
+		echo $menu;
+		echo '</select><input type="submit" value="Set" class="formbutton" /></form>'."\n";
+		
+		if ($report) {
+			global $siRptResults;
+			$siRptResults['header'] = array();
+			$siRptResults['data'] = array();
+			include($dir.$report);
+			echo "<h2>$report</h2>\n";
+			echo '<table border="0" cellpadding="3" width="600">'."\n";
+			if (isset($siRptResults['overheader'])) {
+				echo '<tr class="h">';
+				foreach ($siRptResults['overheader'] as $overheader) {
+					echo '<th colspan="'.$overheader[0].'">'.$overheader[1].'</th>';
+				}
+				echo "</tr>\n";
+			}
+			echo '<tr class="h">';
+			foreach ($siRptResults['header'] as $key=>$header) {
+				if (isset($siRptResults['width'][$key]) && is_int($siRptResults['width'][$key]))
+					$width = ' width="'.intval($siRptResults['width'][$key]).'px"';
+				echo '<th'.$width.'>'.$header.'</th>';
+			}
+			echo "</tr>\n";
+			//now the data ($data is array)
+			foreach ($siRptResults['data'] as $key=>$dataarr) {
+				echo "<tr>";
+				foreach ($dataarr as $data) {
+					echo '<td class="v">'.$data.'</td>';
+				}
+				echo "</tr>\n";
+			}
+			echo "</table>\n";
+		}
+		
+		echo $toplink;
+		echo "</div>\n";
 
 	} //end apache
 
