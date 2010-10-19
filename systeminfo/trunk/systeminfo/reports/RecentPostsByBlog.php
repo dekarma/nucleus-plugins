@@ -13,6 +13,14 @@
 
 	if (!($admin >= $minaccess)) doError("You do not have sufficient privileges.");
 	
+	/* 	The header values are set using the following array elements of the global $siRptResults array
+			header - Required. Array of strings representing the header text of each column in the report. Length should be equal to number of columns in report.
+			width - Optional. array of integers representing the width of each column in px. If not set, html render engine of the browser will set widths automagically. Length should equal number of columns in report.
+			overheader - Optional. Array of arrays. Each array element is an array with element 0 an integer representing number of columns to span and element 1 is a string to be displayed in cell. Not sum of element 0's must be equal to number of columns in report.
+			underheader - Optional. Array of arrays. Each array element is an array with element 0 an integer representing number of columns to span and element 1 is a string to be displayed in cell. Not sum of element 0's must be equal to number of columns in report.
+			
+		Examples of usage of each element above is given in the RecentPostsCommentsByBlog.php report definition file
+	*/
 	$siRptResults['header'] = array('ID','Blog Name','Past Day','Past 7 Days','Past 30 Days','Past 365 Days','All');
 	$siRptResults['width'] = array(15,100,45,45,45,45,45,45);
 	

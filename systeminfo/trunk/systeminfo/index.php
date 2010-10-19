@@ -753,6 +753,13 @@ border-bottom: 1px solid #778;
 				echo '<th'.$width.'>'.$header.'</th>';
 			}
 			echo "</tr>\n";
+			if (isset($siRptResults['underheader'])) {
+				echo '<tr class="h">';
+				foreach ($siRptResults['underheader'] as $underheader) {
+					echo '<th colspan="'.$underheader[0].'">'.$underheader[1].'</th>';
+				}
+				echo "</tr>\n";
+			}
 			//now the data ($data is array)
 			foreach ($siRptResults['data'] as $key=>$dataarr) {
 				echo "<tr>";
