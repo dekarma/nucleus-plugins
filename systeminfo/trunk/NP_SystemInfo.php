@@ -35,7 +35,7 @@ class NP_SystemInfo extends NucleusPlugin {
 	function getName() {	return 'SystemInfo'; 	}
 	function getAuthor()  { return 'Frank Truscott'; 	}
 	function getURL() { return 'http://www.iai.com/'; }
-	function getVersion() {	return '1.13'; }
+	function getVersion() {	return '1.13.01'; }
 	function getDescription() {
 		return 'Plugin to give ready access to system information for use in troubleshooting';
 	}

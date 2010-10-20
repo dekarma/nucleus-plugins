@@ -30,7 +30,7 @@
 	$mydata = array();
 	
 	while ($row = mysql_fetch_assoc($res)) {
-		$numposts = intval(quickQuery("SELECT COUNT(*) as result FROM ".sql_table('item')." WHERE iauthor=".intval($row['mid'])));
+		$numposts = intval(quickQuery("SELECT COUNT(*) as result FROM ".sql_table('item')." WHERE iauthor=".intval($row['mid'])." AND iposted=1 AND idraft=0"));
 		$data = array();
 		$data[] = $row['name'];
 		$data[] = (intval($row['isadmin']) > 0 ? 'Y' : 'N');

@@ -33,11 +33,11 @@
 		$data = array();
 		$data[] = intval($row['bid']);
 		$data[] = $row['name'];
-		$data[] = intval(quickQuery("SELECT COUNT(*) as result FROM ".sql_table('item')." WHERE iblog=".intval($row['bid'])." AND UNIX_TIMESTAMP(itime) > UNIX_TIMESTAMP() - 86400 "));
-		$data[] = intval(quickQuery("SELECT COUNT(*) as result FROM ".sql_table('item')." WHERE iblog=".intval($row['bid'])." AND UNIX_TIMESTAMP(itime) > UNIX_TIMESTAMP() - 604800 "));
-		$data[] = intval(quickQuery("SELECT COUNT(*) as result FROM ".sql_table('item')." WHERE iblog=".intval($row['bid'])." AND UNIX_TIMESTAMP(itime) > UNIX_TIMESTAMP() - 2592000 "));
-		$data[] = intval(quickQuery("SELECT COUNT(*) as result FROM ".sql_table('item')." WHERE iblog=".intval($row['bid'])." AND UNIX_TIMESTAMP(itime) > UNIX_TIMESTAMP() - 31536000 "));
-		$data[] = intval(quickQuery("SELECT COUNT(*) as result FROM ".sql_table('item')." WHERE iblog=".intval($row['bid'])." AND UNIX_TIMESTAMP(itime) > UNIX_TIMESTAMP() - 315360000 "));
+		$data[] = intval(quickQuery("SELECT COUNT(*) as result FROM ".sql_table('item')." WHERE iblog=".intval($row['bid'])." AND iposted=1 AND idraft=0 AND UNIX_TIMESTAMP(itime) < UNIX_TIMESTAMP() AND UNIX_TIMESTAMP(itime) > UNIX_TIMESTAMP() - 86400 "));
+		$data[] = intval(quickQuery("SELECT COUNT(*) as result FROM ".sql_table('item')." WHERE iblog=".intval($row['bid'])." AND iposted=1 AND idraft=0 AND UNIX_TIMESTAMP(itime) < UNIX_TIMESTAMP() AND UNIX_TIMESTAMP(itime) > UNIX_TIMESTAMP() - 604800 "));
+		$data[] = intval(quickQuery("SELECT COUNT(*) as result FROM ".sql_table('item')." WHERE iblog=".intval($row['bid'])." AND iposted=1 AND idraft=0 AND UNIX_TIMESTAMP(itime) < UNIX_TIMESTAMP() AND UNIX_TIMESTAMP(itime) > UNIX_TIMESTAMP() - 2592000 "));
+		$data[] = intval(quickQuery("SELECT COUNT(*) as result FROM ".sql_table('item')." WHERE iblog=".intval($row['bid'])." AND iposted=1 AND idraft=0 AND UNIX_TIMESTAMP(itime) < UNIX_TIMESTAMP() AND UNIX_TIMESTAMP(itime) > UNIX_TIMESTAMP() - 31536000 "));
+		$data[] = intval(quickQuery("SELECT COUNT(*) as result FROM ".sql_table('item')." WHERE iblog=".intval($row['bid'])." AND iposted=1 AND idraft=0 AND UNIX_TIMESTAMP(itime) < UNIX_TIMESTAMP() AND UNIX_TIMESTAMP(itime) > UNIX_TIMESTAMP() - 315360000 "));
 		$mydata[intval($row['bid'])] = $data;
 	}
 	ksort($mydata);
