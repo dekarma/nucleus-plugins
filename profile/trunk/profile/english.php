@@ -221,7 +221,7 @@ define('_PROFILE_ADMIN_CONFIG_EP_HEADER_INTRO',		'Text that apprears above the f
 //modified in 2.24
 define('_PROFILE_ADMIN_HELP_TEMPLATE_TYPE',     'Choose the type of template. Currently, only memberlist and regfieldlist are supported.');
 define('_PROFILE_ADMIN_HELP_TEMPLATE_BODY',     '<b>memberlist</b>: Enter the html code and variables to format each item in the list. All variables will return the raw, unformated value of the corresponding field.
-		Valid variables are %memberlink%, %memberid%, and %fieldname%, where fieldname is the value of any field defined in your installation of NP_Profile. <br /><b>regfieldlist</b>: Here you can list the fields 
+		Valid variables are %memberlink%, %memberid%, [%ml_level%, %ml_points% (if sorting by memberlevel and NP_MemberLevel is installed)], and %fieldname%, where fieldname is the value of any field defined in your installation of NP_Profile. <br /><b>regfieldlist</b>: Here you can list the fields 
 		(comma-separated) that you would like to make available on the custom Member Registration page');
 define('_PROFILE_ADMIN_CONFIG_REG_INTRO',		'Here you can list the fields (comma-separated) that you would like to make available on the Member Registration page (createaccount.php).
         A sample createaccount.php page will be generated from this list for you (see createaccount.php tab) No need to modify createaccount.php from vesion 3.40 and higher.');

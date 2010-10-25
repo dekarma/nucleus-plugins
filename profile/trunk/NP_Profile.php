@@ -178,6 +178,9 @@ History:
 	* add myprofile special field to display links to current member's profile on any pages.
   v2.26 -- 23rd release of version 2 adds the following to 2.25
 	* add resizeimage option to fields of type file to resize images to given width/height
+  v2.27 -- 24th release of version 2 adds the following to 2.26
+	* enhance memberlist feature with special memberlevel field type for sorting member list by level/points according to NP_MemberLevel
+	* make NOT blog option to list all members not on given blog team, i.e !blogname
 		
 *
 [FUTURE]
@@ -212,7 +215,7 @@ class NP_Profile extends NucleusPlugin {
 
 	function getURL()   { return 'http://revcetera.com/ftruscot';	}
 
-	function getVersion() {	return '2.26'; }
+	function getVersion() {	return '2.27'; }
 
 	function getDescription() {
         if (!$this->_optionExists('email_public_deny') && $this->_optionExists('email_public')) {
@@ -3332,15 +3335,30 @@ password
 
 		$templatebody = quickQuery("SELECT tbody as result FROM ".sql_table('plugin_profile_templates')." WHERE ttype='memberlist' AND tname='".addslashes(trim($templatename))."'");
 		if ($templatebody == '') return;
+		
+		$special_orders = array('memberid','memberlevel');
 
 		$blogteam = '';
+		$not = false;
 		if (strpos($orderby,';')) {
 			$obarr = explode(';',trim($orderby));
 			$short = trim($obarr[1]);
+			if (substr($short,0,1) == '!') {
+				$not = true;
+				$short = substr($short,1);
+			}
 			$orderby = $obarr[0];
 			if (trim($short) != '') {
-				$btid = intval(getBlogIdFromName(trim($short)));
-				if ($btid > 0) $blogteam = " m.mnumber IN (SELECT tmember FROM ".sql_table('team')." WHERE tblog=$btid)";
+				if (strtolower($short) == 'anyblog') {
+					if ($not) $blogteam = " m.mnumber NOT IN (SELECT tmember FROM ".sql_table('team').")";
+					else $blogteam = " m.mnumber IN (SELECT tmember FROM ".sql_table('team').")";
+				}
+				else {$btid = intval(getBlogIdFromName(trim($short)));
+					if ($btid > 0) {
+						if ($not) $blogteam = " m.mnumber NOT IN (SELECT tmember FROM ".sql_table('team')." WHERE tblog=$btid)";
+						else $blogteam = " m.mnumber IN (SELECT tmember FROM ".sql_table('team')." WHERE tblog=$btid)";
+					}
+				}
 			}
 		}
 
@@ -3369,7 +3387,7 @@ password
 			list($ordarr[0],$val) = explode("(",$ordarr[0]);
 			$val = addslashes(strtoupper(str_replace(")","",$val)));
 			
-			if($this->fieldExists(trim($ordarr[0])) || $ordarr[0] == 'memberid') {
+			if($this->fieldExists(trim($ordarr[0])) || in_array($ordarr[0],$special_orders)) {
 				$ordarr[0] = str_replace(array('mail','nick','realname','url','notes','password','memberid'),array('memail','mname','mrealname','murl','mnotes','mpassword','mnumber'),$ordarr[0]);
 			}
 			else return;
@@ -3399,12 +3417,84 @@ password
 			}
 		}
 		if (isset($ordarr[2])) {
-			if($this->fieldExists(trim($ordarr[2])) || $ordarr[2] == 'memberid') {
+			if($this->fieldExists(trim($ordarr[2])) || in_array($ordarr[2],$special_orders)) {
 				$ordarr[2] = str_replace(array('mail','nick','realname','url','notes','password','memberid'),array('m.memail','m.mname','m.mrealname','m.murl','m.mnotes','m.mpassword','m.mnumber'),trim($ordarr[2]));
 				if (!in_array($ordarr[2],array('m.memail','m.mname','m.mrealname','m.murl','m.mnotes','m.mpassword','m.mnumber','')))
 					$ordarr[2] = '';
 			}
 			else $ordarr[2] = '';			
+		}
+		
+		if ($ordarr[0] == 'memberlevel') {
+			global $manager;
+			if (!$manager->pluginInstalled('NP_MemberLevel')) 
+				return;
+			else 
+				$levelplug = $manager->getPlugin('NP_MemberLevel');
+			$query = "SELECT m.mnumber as mid FROM ".sql_table('member')." as m";
+			if ($blogteam != '') $query .= " WHERE $blogteam";
+			$result = sql_query($query);
+			$membs = array();
+			while ($row = mysql_fetch_assoc($result)) {
+				$mid = intval($row['mid']);
+				$level = $levelplug->getLevel($mid);				
+				if (!isset($val) || $val == '' || strtolower($level['name']) == strtolower($val)) {
+					$mvalues = array();
+					$mvalues['ml_level'] = $level['name'];
+					$mvalues['ml_points'] = $level['points'];
+					$mvalues['memberlink'] = createMemberLink($mid);
+					$mvalues['memberid'] = $mid;
+					foreach ($this->profile_fields as $key=>$value) {
+						if ($key != 'password') {
+							$mvalues[$key] = $this->doSkinVar('returnValue',$key,'show','raw',$mid);
+						}
+					}
+					$membs[(1000000000 + $level['points']).'.'.(100000000 + $mid)] = $mvalues;
+				}
+			}
+			krsort($membs);
+			
+			$this->mllist_count[0] = $amount;
+			//$this->mllist_count[1] = count($membs);
+			$this->mllist_count[2] = 0;
+			$currentPage = intPostVar('profile_ml_page');
+			if ($currentPage < 1) $currentPage = 1;
+			if ($amount > 1) {
+				if ($currentPage == 1) $offset = 0;
+				else $offset = ($currentPage - 1) * $amount;
+			}
+			if ((count($membs) - $offset) > $amount) $this->mllist_count[1] = $amount;
+			else $this->mllist_count[1] = 0;
+			$k = 0;
+			$j = 0;
+			foreach ($membs as $key=>$value) {			
+				if ($k >= $offset) {
+					$mid = $value['memberid'];
+					$mvalues = $value;
+					/* call event for other plugins to add variables to memberlist template */
+					$manager->notify(
+						'PreProfileMemberListItem',
+						array(
+							'memberid' => $mid,
+							'listitem' => &$mvalues
+						)
+					);
+					/* end code to call PostProfileUpdate event */
+
+					$fromarr = array();
+					$toarr = array();
+					foreach ($mvalues as $key=>$value) {
+						$fromarr[] = '%'.$key.'%';
+						$toarr[] = $value;
+					}
+					
+					echo str_replace($fromarr,$toarr,$templatebody);
+					$j = $j + 1;
+				}
+				$k = $k + 1;
+				if ($j >= $amount) return;
+			}
+			return;
 		}
 		
 		$query = "SELECT m.mnumber as mid FROM ".sql_table('member')." as m";
@@ -3431,20 +3521,6 @@ password
 		else $this->mllist_count[2] = 0;
 		while ($row = mysql_fetch_assoc($result)) {
 			$mid = intval($row['mid']);
-/*
-			$fromarr = array();
-			$toarr = array();
-			$fromarr[] = '%memberlink%';
-			$toarr[] = createMemberLink($mid);
-			$fromarr[] = '%memberid%';
-			$toarr[] = $mid;
-			foreach ($this->profile_fields as $key=>$value) {
-				if ($key != 'password') {
-					$fromarr[] = '%'.$key.'%';
-					$toarr[] = $this->doSkinVar('returnValue',$key,'show','raw',$mid);
-				}
-			}
-*/
 			$mvalues = array();
 			$mvalues['memberlink'] = createMemberLink($mid);
 			$mvalues['memberid'] = $mid;
