@@ -55,6 +55,8 @@
 
 /* History:
  *
+ * 1.37.a01 - -
+     * changes to setnavigation to make work better with nextlink prevlink and on index pages. Requires 3.60. Not fully tested (10/30/2010)
  * 1.36 - 02/26/2010 -
  *  * allow a show parameter of 'none' to permit use of some of the features like sorting by author, and category-specific templates for items without overhead of ordered query
  * 1.35 - 10/14/2009 -
@@ -141,7 +143,7 @@ class NP_Ordered extends NucleusPlugin {
 
 	// version of the plugin
 	function getVersion() {
-		return '1.36';
+		return '1.37.a01';
 	}
 
 	// a description to be shown on the installed plugins listing
@@ -529,115 +531,217 @@ class NP_Ordered extends NucleusPlugin {
 			$this->respectCategory = 1;
 			break;
 		case 'setnavigation':
-			if ($skinType != 'item') break;
-			global $itemidprev,$itemtitleprev,$itemidnext,$itemtitlenext,$itemid,$catid;
-			$setcat = $amount;
+			//if ($skinType != 'item') break;
+			if ($skinType == 'item') {
+				global $itemidprev,$itemtitleprev,$itemidnext,$itemtitlenext,$itemid,$catid;
+				$setcat = $amount;
 
-            list($showwhat,$specialorder) = explode("(",$show);
-			$specialorder = str_replace(")","",$specialorder);
-            $show = $showwhat;
-			$this->low = 0;
-			$this->high = 0;
-			if (strpos($specialorder, '|') !== false) {
-				$special = explode('|',$specialorder);
-				$specialorder = $special[0];
-				$low = intval($special[1]);
-				if (isset($special[2])) $high = intval($special[2]);
-				else $high = 0;
-				$this->low = $low;
-				if ($high > $low) $this->high = $high;
-			}
+				list($showwhat,$specialorder) = explode("(",$show);
+				$specialorder = str_replace(")","",$specialorder);
+				$show = $showwhat;
+				$this->low = 0;
+				$this->high = 0;
+				if (strpos($specialorder, '|') !== false) {
+					$special = explode('|',$specialorder);
+					$specialorder = $special[0];
+					$low = intval($special[1]);
+					if (isset($special[2])) $high = intval($special[2]);
+					else $high = 0;
+					$this->low = $low;
+					if ($high > $low) $this->high = $high;
+				}
 
-            if ($specialorder) {
-                $theorder_array = explode("-",$specialorder);
-                switch ($theorder_array[0]) {
-                    case 'title':
-                        $theorder = $theorder_array[0];
-                    break;
-                    case 'author':
-                        $theorder = $theorder_array[0];
-                    break;
-                    case 'authorname':
-                        $theorder = $theorder_array[0];
-                    break;
-                    case 'category':
-                        $theorder = $theorder_array[0];
-                    break;
-					case 'views':
-						if ($manager->pluginInstalled('NP_Views')) {
+				if ($specialorder) {
+					$theorder_array = explode("-",$specialorder);
+					switch ($theorder_array[0]) {
+						case 'title':
 							$theorder = $theorder_array[0];
-						}
-						else {
+						break;
+						case 'author':
+							$theorder = $theorder_array[0];
+						break;
+						case 'authorname':
+							$theorder = $theorder_array[0];
+						break;
+						case 'category':
+							$theorder = $theorder_array[0];
+						break;
+						case 'views':
+							if ($manager->pluginInstalled('NP_Views')) {
+								$theorder = $theorder_array[0];
+							}
+							else {
+								$theorder = 'itime';
+							}
+						break;
+						default:
 							$theorder = 'itime';
-						}
-					break;
-                    default:
-                        $theorder = 'itime';
-                    break;
-                }
-                switch (strtoupper($theorder_array[1])) {
-                    case 'ASC':
-                        $theorder .= " ASC";
-                    break;
-					case 'RANDOM':
-						$theorder = " RAND()";
-					break;
-                    default:
-                        $theorder .= " DESC";
-                    break;
-                }
-            }
-            else {
-                $theorder = "itime DESC";
-            }
+						break;
+					}
+					switch (strtoupper($theorder_array[1])) {
+						case 'ASC':
+							$theorder .= " ASC";
+						break;
+						case 'RANDOM':
+							$theorder = " RAND()";
+						break;
+						default:
+							$theorder .= " DESC";
+						break;
+					}
+				}
+				else {
+					$theorder = "itime DESC";
+				}
 
-			if (!intval($template)) $amount = 10;
-			else $amount = $template;
-//			list($limit, $offset) = sscanf($amount, '%d(%d)');
-			list($limit, $offset) = explode("(",str_replace(")","",$amount));
-			if (!is_numeric($limit)) $limit = 10;
-			if (!is_numeric($offset)) $offset = '';
-			$b =& $manager->getBlog(getBlogIDFromItemID($itemid));
-			
-			if (!is_object($b) || get_class($b) != 'BLOG') return "";
+				//if (!intval($template)) $amount = 0;
+				//else $amount = $template;
+	//			list($limit, $offset) = sscanf($amount, '%d(%d)');
+				//list($limit, $offset) = explode("(",str_replace(")","",$amount));
+				//if (!is_numeric($limit)) $limit = 0;
+				//if (!is_numeric($offset)) $offset = '';
+				$limit = 0;
+				$offset = '';
+				$amount = 0;
+				$b =& $manager->getBlog(getBlogIDFromItemID($itemid));
+				
+				if (!is_object($b) || get_class($b) != 'BLOG') return "";
 
-			$useSP = 1;
-			if (strtolower($setcat) == 'yes') {
-				if (intval($itemid) && $manager->existsItem(intval($itemid),0,0)) {
-					$iobj =& $manager->getItem(intval($itemid),0,0);
-					$catid = intval($iobj['catid']);
-					$b->setSelectedCategory($catid);
+				$useSP = 1;
+				if (strtolower($setcat) == 'yes') {
+					if (intval($itemid) && $manager->existsItem(intval($itemid),0,0)) {
+						$iobj =& $manager->getItem(intval($itemid),0,0);
+						$catid = intval($iobj['catid']);
+						$b->setSelectedCategory($catid);
+					}
+				}
+
+				if (strtolower($show) == 'unordered') $this->setshowWhat(0);
+				elseif (strtolower($show) == 'all') $this->setshowWhat(2);
+				elseif (strtolower($show) == 'none') $this->setshowWhat(3);
+				else $this->setshowWhat(1);
+				$query = $this->_getBlogQuery($b,$extraQuery,$limit,$offset,$startpos,$theorder,'itemnav');
+				$res = sql_query($query);
+				$idarr = array();
+				$titarr = array();
+				$i = 0;
+				$curritemloc = 0;
+				while ($row = mysql_fetch_object($res)) {
+					$idarr[$i] = $row->itemid;
+					$titarr[$i] = $row->title;
+					if ($itemid == $row->itemid) $curritemloc = $i;
+					$i = $i + 1;
+				}
+				$itemidprev = 0;
+				$itemtitleprev = '';
+				$itemidnext = 0;
+				$itemtitlenext = '';
+				if ($curritemloc > 0) {
+					$itemidprev = $idarr[$curritemloc - 1];
+					$itemtitleprev = $titarr[$curritemloc - 1];
+				}
+				if ($curritemloc < ($i - 1)) {
+					$itemidnext = $idarr[$curritemloc + 1];
+					$itemtitlenext = $titarr[$curritemloc + 1];
 				}
 			}
+			elseif ($skinType == 'index') {
+				list($showwhat,$specialorder) = explode("(",$show);
+				$specialorder = str_replace(")","",$specialorder);
+				$show = $showwhat;
+				$this->low = 0;
+				$this->high = 0;
+				if (strpos($specialorder, '|') !== false) {
+					$special = explode('|',$specialorder);
+					$specialorder = $special[0];
+					$low = intval($special[1]);
+					if (isset($special[2])) $high = intval($special[2]);
+					else $high = 0;
+					$this->low = $low;
+					if ($high > $low) $this->high = $high;
+				}
 
-			if (strtolower($show) == 'unordered') $this->setshowWhat(0);
-			elseif (strtolower($show) == 'all') $this->setshowWhat(2);
-			elseif (strtolower($show) == 'none') $this->setshowWhat(3);
-			else $this->setshowWhat(1);
-			$query = $this->_getBlogQuery($b,$extraQuery,$limit,$offset,$startpos,$theorder);
-			$res = sql_query($query);
-			$idarr = array();
-			$titarr = array();
-			$i = 0;
-			$curritemloc = 0;
-			while ($row = mysql_fetch_object($res)) {
-				$idarr[$i] = $row->itemid;
-				$titarr[$i] = $row->title;
-				if ($itemid == $row->itemid) $curritemloc = $i;
-				$i = $i + 1;
+				if ($specialorder) {
+					$theorder_array = explode("-",$specialorder);
+					$theorder_array[0] = strtolower($theorder_array[0]);
+					switch ($theorder_array[0]) {
+						case 'title':
+							$theorder = $theorder_array[0];
+						break;
+						case 'author':
+							$theorder = $theorder_array[0];
+						break;
+						case 'authorname':
+							$theorder = $theorder_array[0];
+						break;
+						case 'category':
+							$theorder = $theorder_array[0];
+						break;
+						case 'views':
+							if ($manager->pluginInstalled('NP_Views')) {
+								$theorder = $theorder_array[0];
+							}
+							else {
+								$theorder = 'itime';
+							}
+						break;
+						default:
+							$theorder = 'itime';
+						break;
+					}
+					switch (strtoupper($theorder_array[1])) {
+						case 'ASC':
+							$theorder .= " ASC";
+						break;
+						case 'RANDOM':
+							$theorder = " RAND()";
+						break;
+						default:
+							$theorder .= " DESC";
+						break;
+					}
+				}
+				else {
+					$theorder = "itime DESC";
+				}
+
+	//			list($limit, $offset) = sscanf($amount, '%d(%d)');
+				//if (!intval($template)) $amount = 10;
+				//list($limit, $offset) = explode("(",str_replace(")","",$amount));			
+				//if (!is_numeric($limit)) $limit = 10;
+				//if (!is_numeric($offset)) $offset = '';
+				//list($template,$tmode) = explode("(",$template);
+				//$this->templatemode = str_replace(")","",$tmode);
+				$limit = 0;
+				$offset = '';
+				$amount = 0;
+				if ($blogname != '') {
+					$b =& $manager->getBlog(getBlogIDFromName($blogname));
+					$btype = 'otherblog';
+					$useSP = 0;
+				}
+				else {
+					$b =& $blog;
+					$btype = 'blog';
+					$useSP = 1;
+				}
+			
+				//if (!is_object($b) || strtoupper(get_class($b)) != 'BLOG') return "";
+				if (!is_object($b) || !(strtoupper(get_class($b)) == 'BLOG' || is_subclass_of($b,'blog'))) return "";
+
+				if (strtolower($show) == 'unordered') $this->setshowWhat(0);
+				elseif (strtolower($show) == 'all') $this->setshowWhat(2);
+				elseif (strtolower($show) == 'none') $this->setshowWhat(3);
+				else $this->setshowWhat(1);
+
+				$this->_setBlogCategory($b, $category);
+				
+				$oquery = $this->_getBlogQuery($b,$extraQuery,$limit,$offset,$startpos,$theorder,'count');
+				global $navigationItems;
+				$navigationItems = intval(quickQuery($oquery));
+				
 			}
-			$itemidprev = 0;
-			$itemtitleprev = '';
-			$itemidnext = 0;
-			$itemtitlenext = '';
-			if ($curritemloc > 0) {
-				$itemidprev = $idarr[$curritemloc - 1];
-				$itemtitleprev = $titarr[$curritemloc - 1];
-			}
-			if ($curritemloc < ($i - 1)) {
-				$itemidnext = $idarr[$curritemloc + 1];
-				$itemtitlenext = $titarr[$curritemloc + 1];
-			}
+			else break;
 			break;
 		case 'bloglist':
 			list($showwhat,$specialorder) = explode("(",$show);
@@ -818,19 +922,19 @@ class NP_Ordered extends NucleusPlugin {
 		return $this->showUsingQuery($b,$template, $query, $highlight, $comments, $dateheads);
 	}
 // this gets the query for the blog form of the skinvar
-	function _getBlogQuery(&$b,$extraQuery,$amountEntries,$offset = 0, $startpos = 0, $theorder = 'itime DESC') {
+	function _getBlogQuery(&$b,$extraQuery,$amountEntries,$offset = 0, $startpos = 0, $theorder = 'itime DESC', $mode = '') {
 		if ($this->getshowWhat() == 2) {
 			$this->setshowWhat(1);
 			$query = '(';
-			$query .= $this->getSqlBlog($b, $extraQuery, '', $theorder);
+			$query .= $this->getSqlBlog($b, $extraQuery, $mode, $theorder);
 			$query .= ') UNION (';
 			$this->setshowWhat(0);
-			$query .= $this->getSqlBlog($b, $extraQuery, '', $theorder);
+			$query .= $this->getSqlBlog($b, $extraQuery, $mode, $theorder);
 			//$query .= ') ORDER BY mysortcol ASC, myorder ASC, itime DESC';
             $query .= ') ORDER BY mysortcol ASC, myorder ASC, '.$theorder.', itime DESC';
 			$this->setshowWhat(2);
 		}
-		else $query = $this->getSqlBlog($b, $extraQuery, '', $theorder);
+		else $query = $this->getSqlBlog($b, $extraQuery, $mode, $theorder);
 
 		if ($amountEntries > 0) {
 		        // $offset zou moeten worden:
@@ -864,8 +968,46 @@ class NP_Ordered extends NucleusPlugin {
 			else
 				$query .= ', 3 as mysortcol';
 		}
-		else
-			$query = 'SELECT COUNT(*) as result ';
+		elseif ($mode == 'itemnav') {
+			$query = 'SELECT i.inumber as itemid, i.ititle as title, i.itime as itime, m.mname as author, m.mrealname as authorname, c.cname as category';
+			if ($this->getshowWhat() != 3) 
+				$query .= ", o.onumber as myorder";
+			if (strpos($theorder,'views') === 0) {
+				$useviews = 1;
+				$query .= ', v.views as views';
+			}
+			else {
+				$useviews = 0;
+			}
+			if ($this->getshowWhat() == 1 ) {
+				$query .= ', 1 as mysortcol';
+			}
+			elseif ($this->getshowWhat() != 3 ) {
+				$query .= ', 2 as mysortcol';
+			}
+			else
+				$query .= ', 3 as mysortcol';
+		}
+		else {
+			$query = 'SELECT COUNT(*) as result, i.ititle as title, i.itime as itime, m.mname as author, m.mrealname as authorname, c.cname as category ';
+			if ($this->getshowWhat() != 3) 
+				$query .= ", o.onumber as myorder";
+			if (strpos($theorder,'views') === 0) {
+				$useviews = 1;
+				$query .= ', v.views as views';
+			}
+			else {
+				$useviews = 0;
+			}
+			if ($this->getshowWhat() == 1 ) {
+				$query .= ', 1 as mysortcol';
+			}
+			elseif ($this->getshowWhat() != 3 ) {
+				$query .= ', 2 as mysortcol';
+			}
+			else
+				$query .= ', 3 as mysortcol';
+		}
 		$query .= ' FROM '.sql_table('item').' as i, '.sql_table('member').' as m, '.sql_table('category').' as c, '.sql_table('plug_ordered_cat').' as oc';
 		if ($this->getshowWhat() != 3 )
 			$query .= ', '.sql_table('plug_ordered_blog').' as o';
