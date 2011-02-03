@@ -25,6 +25,7 @@
 
 /*
     Version history:
+    * v 1.13 - updates badbehavior scripts to 2.0.41 
     * v 1.12 - updates badbehavior scripts to 2.0.39 
     * v 1.11 - updates badbehavior scripts to 2.0.38
     * v 1.10  - updates badbehavior scripts to 2.0.30
@@ -69,8 +70,8 @@ class NP_BadBehavior extends NucleusPlugin {
 
 	function getName() {	return 'BadBehavior'; 	}
 	function getAuthor()  { return 'Frank Truscott'; 	}
-	function getURL() { return 'http://www.iai.com/'; }
-	function getVersion() {	return '1.12'; }
+	function getURL() { return 'http://revcetera.com/ftruscot/'; }
+	function getVersion() {	return '1.13'; }
 	function getDescription() {
 		return 'Give admin area for bad behavior spam fighting script';
 	}
