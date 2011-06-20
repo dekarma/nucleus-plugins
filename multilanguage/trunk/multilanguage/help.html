@@ -233,6 +233,20 @@ language list. If you need to edit an existing translation, use the edit link on
 
 <h3><a name="tips">Tips</a></h3>
 
+<p>As of 1.05, you can use skin conditionals based on currently selected language.</p>
+ <pre><code>
+	<%if(MultiLanguage,language,german)%>
+		<%Text(SL_POSITION)%>: <%Profile(position_de)%>
+	<%else%>
+		<%Text(SL_POSITION)%>: <%Profile(position)%>
+	<%endif%>
+	<%if(MultiLanguage,langId,2)%>
+		<%Text(SL_POSITION)%>: <%Profile(position_de)%>
+	<%else%>
+		<%Text(SL_POSITION)%>: <%Profile(position)%>
+	<%endif%>
+ </code></pre>
+
 <p>As of 1.03, output of plugins that are properly internationalized 
 (<a href="http://wiki.nucleuscms.org/plugindev:internationalize" title="Internationalize">see here</a>) 
 will be in the proper language, if the plugin has the language files matching your languages.</p>

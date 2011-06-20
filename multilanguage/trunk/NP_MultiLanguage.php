@@ -28,6 +28,7 @@ PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 /* History
   * 
+   * v 1.05 - (20 Jun 2011) - add doIf() method to do ifs against current language
   * v 1.04 - (06 Feb 2009) - Fix TableList() method
   * v 1.03 - (20 Jan 2009) - Additions to enhance usability
   *  * Enable internationalized plugins to output in correct language by using standard plugin language files, 
@@ -52,7 +53,7 @@ class NP_MultiLanguage extends NucleusPlugin {
 		{ return 'http://revcetera.com/ftruscot'; }
 
 	function getVersion()
-		{ return '1.04'; }
+		{ return '1.05'; }
 
 	function getDescription()
 		{ return 'This plugin allows you to have a multi-language site. Requires NP_Text and a skin that is multi-language capable.'; }
@@ -554,6 +555,11 @@ class NP_MultiLanguage extends NucleusPlugin {
 		return quickQuery("SELECT mllanguage as result FROM ".sql_table('plugin_multilanguage_languages')." WHERE mllangid=$lid");
 	}
 
+	function getLanguageIdFromName($lid) {
+		$lid = trim($lid);
+		return int(quickQuery("SELECT mllangid as result FROM ".sql_table('plugin_multilanguage_languages')." WHERE mllanguage=".sql_real_escape_string($lid)));
+	}
+
 	function getFlagFromLanguageId($lid) {
 		$lid = intval($lid);
 		return quickQuery("SELECT mlflag as result FROM ".sql_table('plugin_multilanguage_languages')." WHERE mllangid=$lid");
@@ -748,6 +754,21 @@ class NP_MultiLanguage extends NucleusPlugin {
 				</select>
 	}
 */
+	function doIf($key = '', $value = '') {
+		$result = false;
+		
+		$key = strtolower($key);
+		switch ($key) {
+			case 'langid':
+				$result = (intval($value) == $this->currentLanguage);
+			break;
+			case 'language':
+			default:
+				$result = ($this->getLanguageIdFromName($value) == $this->currentLanguage);
+			break;
+		}
+		return $result;
+	}
 
 }
 ?>
