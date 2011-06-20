@@ -557,7 +557,7 @@ class NP_MultiLanguage extends NucleusPlugin {
 
 	function getLanguageIdFromName($lid) {
 		$lid = trim($lid);
-		return int(quickQuery("SELECT mllangid as result FROM ".sql_table('plugin_multilanguage_languages')." WHERE mllanguage=".sql_real_escape_string($lid)));
+		return intval(quickQuery("SELECT mllangid as result FROM ".sql_table('plugin_multilanguage_languages')." WHERE mllanguage='".sql_real_escape_string($lid)."'"));
 	}
 
 	function getFlagFromLanguageId($lid) {
