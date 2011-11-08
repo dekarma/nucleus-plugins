@@ -55,6 +55,8 @@
 
 /* History:
  *
+ * 1.37.a02 - -
+     * fix to count query when setting navigation on index pages and showing all. Requires 3.60. Not fully tested (11/07/2011)
  * 1.37.a01 - -
      * changes to setnavigation to make work better with nextlink prevlink and on index pages. Requires 3.60. Not fully tested (10/30/2010)
  * 1.36 - 02/26/2010 -
@@ -143,7 +145,7 @@ class NP_Ordered extends NucleusPlugin {
 
 	// version of the plugin
 	function getVersion() {
-		return '1.37.a01';
+		return '1.37.a02';
 	}
 
 	// a description to be shown on the installed plugins listing
@@ -737,8 +739,13 @@ class NP_Ordered extends NucleusPlugin {
 				$this->_setBlogCategory($b, $category);
 				
 				$oquery = $this->_getBlogQuery($b,$extraQuery,$limit,$offset,$startpos,$theorder,'count');
+				$oresult = sql_query($oquery);
 				global $navigationItems;
-				$navigationItems = intval(quickQuery($oquery));
+				$navigationItems = 0;
+				while ($row = mysql_fetch_assoc($oresult)) {
+					$navigationItems = $navigationItems + intval($row['result']);
+				}
+				
 				
 			}
 			else break;
@@ -931,7 +938,11 @@ class NP_Ordered extends NucleusPlugin {
 			$this->setshowWhat(0);
 			$query .= $this->getSqlBlog($b, $extraQuery, $mode, $theorder);
 			//$query .= ') ORDER BY mysortcol ASC, myorder ASC, itime DESC';
-            $query .= ') ORDER BY mysortcol ASC, myorder ASC, '.$theorder.', itime DESC';
+			if ($mode == 'count') {
+				$query .= ')';
+			} else {
+				$query .= ') ORDER BY mysortcol ASC, myorder ASC, '.$theorder.', itime DESC';
+			}
 			$this->setshowWhat(2);
 		}
 		else $query = $this->getSqlBlog($b, $extraQuery, $mode, $theorder);
@@ -988,8 +999,12 @@ class NP_Ordered extends NucleusPlugin {
 			else
 				$query .= ', 3 as mysortcol';
 		}
+		elseif ($mode == 'count') {
+			$query = 'SELECT COUNT(*) as result ';
+			
+		}
 		else {
-			$query = 'SELECT COUNT(*) as result, i.ititle as title, i.itime as itime, m.mname as author, m.mrealname as authorname, c.cname as category ';
+			$query = 'SELECT i.ititle as title, i.itime as itime, m.mname as author, m.mrealname as authorname, c.cname as category ';
 			if ($this->getshowWhat() != 3) 
 				$query .= ", o.onumber as myorder";
 			if (strpos($theorder,'views') === 0) {
@@ -1037,18 +1052,19 @@ class NP_Ordered extends NucleusPlugin {
         }
 
 		$query .= $extraQuery;
-
-        if ($this->showWhat == 0 ) {
-            //$query .= ' ORDER BY i.'.$theorder;
-            $query .= ' ORDER BY '.$theorder.', itime DESC';
-        }
-		elseif ($this->getshowWhat() == 3 ) {
-			$query .= ' ORDER BY '.$theorder.', itime DESC';
+		
+		if ($mode != 'count') {
+			if ($this->showWhat == 0 ) {
+				//$query .= ' ORDER BY i.'.$theorder;
+				$query .= ' ORDER BY '.$theorder.', itime DESC';
+			}
+			elseif ($this->getshowWhat() == 3 ) {
+				$query .= ' ORDER BY '.$theorder.', itime DESC';
+			}
+			else {
+				$query .= ' ORDER BY o.onumber ASC';
+			}
 		}
-        else {
-            $query .= ' ORDER BY o.onumber ASC';
-        }
-
 
 		return $query;
 	}

@@ -776,22 +776,22 @@ border-bottom: 1px solid #778;
 
 		Login Name (required):
 		&lt;br /&gt;
-		&lt;input name="name" size="20" &lt;?php if(isset($_POST['name'])){echo 'value="'.$_POST['name'].'"';}?&gt;/&gt; &lt;small&gt;(only a-z, 0-9)&lt;/small&gt;
+		&lt;input name="name" size="20" &lt;?php if(isset($_POST['name'])){echo 'value="'.htmlspecialchars($_POST['name']).'"';}?&gt;/&gt; &lt;small&gt;(only a-z, 0-9)&lt;/small&gt;
 		&lt;br /&gt;
 		&lt;br /&gt;
 		Real Name (required):
 		&lt;br /&gt;
-		&lt;input name="realname" size="40" &lt;?php if(isset($_POST['realname'])){echo 'value="'.$_POST['realname'].'"';}?&gt;/&gt;
+		&lt;input name="realname" size="40" &lt;?php if(isset($_POST['realname'])){echo 'value="'.htmlspecialchars($_POST['realname']).'"';}?&gt;/&gt;
 		&lt;br /&gt;
 		&lt;br /&gt;
 		Email (required):
 		&lt;br /&gt;
-		&lt;input name="email" size="40" &lt;?php if(isset($_POST['email'])){echo 'value="'.$_POST['email'].'"';}?&gt;/&gt; &lt;small&gt;(must be valid, because an activation link will be sent over there)&lt;/small&gt;
+		&lt;input name="email" size="40" &lt;?php if(isset($_POST['email'])){echo 'value="'.htmlspecialchars($_POST['email']).'"';}?&gt;/&gt; &lt;small&gt;(must be valid, because an activation link will be sent over there)&lt;/small&gt;
 		&lt;br /&gt;
 		&lt;br /&gt;
 		URL:
 		&lt;br /&gt;
-		&lt;input name="url" size="60" &lt;?php if(isset($_POST['url'])){echo 'value="'.$_POST['url'].'"';}?&gt;/&gt;
+		&lt;input name="url" size="60" &lt;?php if(isset($_POST['url'])){echo 'value="'.htmlspecialchars($_POST['url']).'"';}?&gt;/&gt;
 		&lt;br /&gt;
 		&lt;?php
 		// add extra fields from NP_Profile
