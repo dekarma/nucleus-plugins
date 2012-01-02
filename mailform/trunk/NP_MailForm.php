@@ -50,7 +50,7 @@ class NP_MailForm extends NucleusPlugin {
 
 	// version of the plugin
 	function getVersion() {
-		return '1.13';
+		return '1.14';
 	}
 
 	// a description to be shown on the installed plugins listing
@@ -660,6 +660,9 @@ class NP_MailForm extends NucleusPlugin {
 
                     $recips = explode(',',$formdata->mailto);
                     $result = $mail->send($recips);
+					
+					$data = array('result' => $result, 'formname' => $formname, 'body' => &$body);
+					$manager->notify('PostMailFormSend', &$data);
 
                     //echo $result ? 'Mail sent!' : 'Failed to send mail';
                 }
