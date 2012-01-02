@@ -44,6 +44,8 @@ $bb2_timer_start = $bb2_mtime[1] + $bb2_mtime[0];
 define('BB2_CWD', dirname(__FILE__));
 
 // Settings you can adjust for Bad Behavior.
+// DO NOT EDIT HERE; instead make changes in settings.ini.
+// These settings are used when settings.ini is not present.
 global $bb2_settings_defaults;
 $bb2_settings_defaults = array(
 	'log_table' => sql_table('bad_behavior'),
@@ -58,6 +60,7 @@ $bb2_settings_defaults = array(
 );
 
 // Bad Behavior callback functions.
+require_once("bad-behavior-mysql.php");
 
 // Return current time in the format preferred by your database.
 function bb2_db_date() {
@@ -66,18 +69,18 @@ function bb2_db_date() {
 
 // Return affected rows from most recent query.
 function bb2_db_affected_rows($result) {
-	return mysql_affected_rows();
+	return sql_affected_rows();
 }
 
 // Escape a string for database usage
 function bb2_db_escape($string) {
-	return addslashes($string);
+	return sql_real_escape_string($string);
 }
 
 // Return the number of rows in a particular query.
 function bb2_db_num_rows($result) {
 	if ($result !== FALSE)
-		return mysql_num_rows ($result);
+		return sql_num_rows ($result);
 	return 0;
 }
 
@@ -86,7 +89,7 @@ function bb2_db_num_rows($result) {
 // Bad Behavior will use the return value here in other callbacks.
 function bb2_db_query($query) {
     $result = sql_query($query);
-	if (mysql_error()) {
+	if (sql_error()) {
 		return FALSE;
 	}
 	return $result;
@@ -98,11 +101,18 @@ function bb2_db_query($query) {
 // For WP this is pretty much a no-op.
 function bb2_db_rows($result) {
     $rows = array();
-	while ($row = mysql_fetch_assoc($result)) {
+	while ($row = sql_fetch_assoc($result)) {
 		$rows[] = $row;
 	}
 	return $rows;
 }
+
+// Create the SQL query for inserting a record in the database.
+// See example for MySQL elsewhere.
+/*function bb2_insert($settings, $package, $key)
+{
+	return "--";
+}*/
 
 // Return emergency contact email address.
 function bb2_email() {
@@ -118,10 +128,12 @@ function bb2_read_settings() {
 	$query = 'SELECT * FROM ' . sql_table('bad_behavior_admin');
 	$res = sql_query($query);
 
-	while ($obj = mysql_fetch_object($res) ) {
+	while ($obj = sql_fetch_object($res) ) {
 		$bbconf[$obj->name] = $obj->value;
-	}
-	return $bbconf;
+	}	
+	$settings = @parse_ini_file(dirname(__FILE__) . "/settings.ini");
+	return @array_merge($bb_conf, $settings);	
+	//return $bbconf;
 }
 
 // This Bad Behavior-related function is a stub. You can help NucleusCMS by expanding it.
@@ -140,7 +152,7 @@ function bb2_write_settings($settings) {
 	$query = "INSERT INTO ".sql_table('bad_behavior_admin')." VALUES ";
 	$j = 0;
 	foreach ($settings as $key=>$value) {
-		$query .= ($j == 0 ? '' : ', ')."('".addslashes($key)."','".addslashes($value)."')";
+		$query .= ($j == 0 ? '' : ', ')."('".sql_real_escape_string($key)."','".sql_real_escape_string($value)."')";
 		$j = $j + 1;
 	}
 	sql_query($query);
@@ -170,14 +182,14 @@ function bb2_insert_stats($force = false) {
     global $CONF;
 	if ($force || $settings['display_stats']) {
 		//$blocked = bb2_db_query("SELECT COUNT(*) as blocks FROM " . $settings['log_table'] . " WHERE `key` NOT LIKE '00000000'");
-        $blocked = mysql_num_rows(sql_query("SELECT id FROM " . $settings['log_table'] . " WHERE `key` NOT LIKE '00000000'"));
+        $blocked = sql_num_rows(sql_query("SELECT id FROM " . $settings['log_table'] . " WHERE `key` NOT LIKE '00000000'"));
 		if ($blocked !== FALSE) {
             require_once(BB2_CORE . "/responses.inc.php");
 			echo sprintf('<p><a href="http://www.bad-behavior.ioerror.us/">%1$s</a> %2$s <strong>%3$s</strong> %4$s</p>', 'Bad Behavior', 'has blocked', $blocked, 'access attempts in the last 7 days.');
             $res = sql_query("SELECT `key`, COUNT(*) FROM " . $settings['log_table'] . " WHERE `key` NOT LIKE '00000000' GROUP BY `key`");
             echo "<table>\n";
             echo "<tr><th>Count</th><th>Key</th><th>Response</th><th>Explanation</th><th>Log</th><th>Details</th></tr>\n";
-            while ($row = mysql_fetch_assoc($res)) {
+            while ($row = sql_fetch_assoc($res)) {
                 $response = bb2_get_response($row['key']);
                 echo "<tr>\n";
                 echo "<td>".$row['COUNT(*)']."</td>\n";
@@ -217,15 +229,14 @@ function bb2_relative_path() {
 //add_action('wp_footer', 'bb2_insert_stats');
 
 // Calls inward to Bad Behavor itself.
-require_once(BB2_CWD . "/bad-behavior/version.inc.php");
 require_once(BB2_CWD . "/bad-behavior/core.inc.php");
 bb2_install();	// FIXME: see above
 
 global $member, $CONF;
 
-if ($member->isAdmin() || strstr($_SERVER['PHP_SELF'], $CONF['AdminURL'])) {	// 1.5 kludge
+//if ($member->isAdmin() || strstr($_SERVER['PHP_SELF'], $CONF['AdminURL'])) {	// 1.5 kludge
 	//require_once(BB2_CWD . "/bad-behavior/admin.inc.php");
-}
+//}
 
 bb2_start(bb2_read_settings());
 

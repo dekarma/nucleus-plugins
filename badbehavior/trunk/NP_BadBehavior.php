@@ -25,6 +25,7 @@
 
 /*
     Version history:
+    * v 2.2.rc3 - updates to new 2.2 versions of BadBehavior scripts
     * v 1.14 - updates badbehavior scripts to 2.0.43 
     * v 1.13 - updates badbehavior scripts to 2.0.41 
     * v 1.12 - updates badbehavior scripts to 2.0.39 
@@ -66,13 +67,15 @@ class NP_BadBehavior extends NucleusPlugin {
 		'httpbl_key' => '',
 		'httpbl_threat' => '25',
 		'httpbl_maxage' => '30',
-		'offsite_forms' => false
+		'offsite_forms' => false,		
+		'reverse_proxy' = false,
+		'reverse_proxy_header' = "X-Forwarded-For"
 	);
 
 	function getName() {	return 'BadBehavior'; 	}
 	function getAuthor()  { return 'Frank Truscott'; 	}
 	function getURL() { return 'http://revcetera.com/ftruscot/'; }
-	function getVersion() {	return '1.14'; }
+	function getVersion() {	return '2.2.rc3'; }
 	function getDescription() {
 		return 'Give admin area for bad behavior spam fighting script';
 	}
@@ -113,7 +116,7 @@ class NP_BadBehavior extends NucleusPlugin {
 			$j = 0;
 			$this->bbconf['log_table'] = sql_table($this->bbconf['log_table']);
 			foreach ($this->bbconf as $key=>$value) {
-				$query .= ($j == 0 ? '' : ', ')."('".addslashes($key)."','".addslashes($value)."')";
+				$query .= ($j == 0 ? '' : ', ')."('".sql_real_escape_string($key)."','".sql_real_escape_string($value)."')";
 				$j = $j + 1;
 			}
 			sql_query($query);
@@ -134,7 +137,7 @@ class NP_BadBehavior extends NucleusPlugin {
 		// override this feature
 		//$this->minRights = 8;
 
-		if (!mysql_num_rows(sql_query("SHOW TABLES LIKE '".sql_table('bad_behavior_admin')."'"))) {
+		if (!sql_num_rows(sql_query("SHOW TABLES LIKE '".sql_table('bad_behavior_admin')."'"))) {
 			$this->init_tables();
 		}
 	}
@@ -178,7 +181,7 @@ class NP_BadBehavior extends NucleusPlugin {
 */
 	
 	function doSkinVar($skinType) {
-        $blocked = mysql_num_rows(sql_query("SELECT id FROM " . sql_table('bad_behavior') . " WHERE `key` NOT LIKE '00000000'"));
+        $blocked = sql_num_rows(sql_query("SELECT id FROM " . sql_table('bad_behavior') . " WHERE `key` NOT LIKE '00000000'"));
         echo $blocked;
     }
 
@@ -218,7 +221,7 @@ class NP_BadBehavior extends NucleusPlugin {
 		$query = 'SELECT * FROM '.sql_table('team').' WHERE'
 		       . ' tmember='. $member->getID();
 		$res = sql_query($query);
-		if (mysql_num_rows($res) == 0)
+		if (sql_num_rows($res) == 0)
 			return 0;
 		else
 			return 2;

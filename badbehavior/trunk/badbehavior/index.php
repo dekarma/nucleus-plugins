@@ -194,8 +194,8 @@ border-bottom: 1px solid #778;
 */
         $tname = sql_table('bad_behavior');
         if ($tname) {
-            $fsql = "SHOW COLUMNS FROM ".addslashes($tname);
-            $fresult = mysql_query($fsql);
+            $fsql = "SHOW COLUMNS FROM ".sql_real_escape_string($tname);
+            $fresult = sql_query($fsql);
             echo '<form method="post" action="'.$thispage.'?showlist=logs">'."\n";
             echo '<input type="hidden" name="tname" value="'.$tname.'" />'."\n";
             echo add_field_select_field($fresult,$fname,0);
@@ -211,16 +211,16 @@ border-bottom: 1px solid #778;
             echo '<div class="center">'."\n";
             $op = $opers[$oname];
             if ($op == '') $op = 'NOT LIKE';
-            $iname = addslashes($iname);
+            $iname = sql_real_escape_string($iname);
             if ($op == 'LIKE' || $op == 'NOT LIKE') $iname = "%$iname%";
             if ($fname == '') $fname = 'id';
-            $dlsql = "SELECT * FROM ".addslashes($tname)." WHERE `".addslashes($fname)."` $op '$iname' ORDER BY date DESC";
+            $dlsql = "SELECT * FROM ".sql_real_escape_string($tname)." WHERE `".sql_real_escape_string($fname)."` $op '$iname' ORDER BY date DESC";
             echo "Your Query: $dlsql \n";
-            $dlresult = mysql_query($dlsql);
+            $dlresult = sql_query($dlsql);
 
-            if (mysql_num_rows($dlresult) > 0) {
-                echo " - Found ".mysql_num_rows($dlresult)." match(es)\n";
-                while ($row = mysql_fetch_assoc($dlresult)) {
+            if (sql_num_rows($dlresult) > 0) {
+                echo " - Found ".sql_num_rows($dlresult)." match(es)\n";
+                while ($row = sql_fetch_assoc($dlresult)) {
                     echo '<table border="0" cellpadding="3" width="600">'."\n";
                     echo '<tr class="h"><th>Field</th><th>Value</th>'."</tr>\n";
                     foreach ($row as $key => $value) {
@@ -247,8 +247,6 @@ border-bottom: 1px solid #778;
 		if (!$member->isAdmin())
 			echo "You are not authorized to edit settings.";
 		else {
-			//require_once(BB2_CWD . "/bad-behavior/admin.inc.php");
-
 			$settings = bb2_read_settings();
 
 			if ($_POST) {
@@ -267,10 +265,30 @@ border-bottom: 1px solid #778;
 				} else {
 					$settings['verbose'] = false;
 				}
+				if (!$_POST['logging']) {
+					$settings['logging'] = false;
+				} else {
+					$settings['logging'] = true;
+				}
 				if ($_POST['httpbl_key']) {
 					$settings['httpbl_key'] = $_POST['httpbl_key'];
 				} else {
 					$settings['httpbl_key'] = '';
+				}
+				if (intval($_POST['httpbl_threat']) > 0) {
+					$settings['httpbl_threat'] = intval($_POST['httpbl_threat']);
+				} else {
+					$settings['httpbl_threat'] = 25;
+				}
+				if (intval($_POST['httpbl_maxage']) > 0) {
+					$settings['httpbl_maxage'] = intval($_POST['httpbl_maxage']);
+				} else {
+					$settings['httpbl_maxage'] = 30;
+				}
+				if ($_POST['offsite_forms']) {
+					$settings['offsite_forms'] = true;
+				} else {
+					$settings['offsite_forms'] = false;
 				}
 				bb2_write_settings($settings);
 ?>
@@ -293,14 +311,35 @@ border-bottom: 1px solid #778;
 -->
 	<fieldset class="options">
 	<legend><?php echo 'Logging'; ?></legend>
-	<p><label><input type="checkbox" name="verbose" value="true" <?php if ($settings['verbose']) { ?>checked="checked" <?php } ?>/> <?php echo 'Verbose HTTP request logging'; ?></label></p>
+	<p><label><input type="checkbox" name="verbose" value="true" <?php if ($settings['verbose']) { ?>checked="checked" <?php } ?>/> <?php echo 'Advanced. (Default is Off). Enable Verbose HTTP request logging. Not recommended in production. For debug only.'; ?></label></p>
+	<p><label><input type="checkbox" name="logging" value="true" <?php if ($settings['logging']) { ?>checked="checked" <?php } ?>/> <?php echo 'Advanced. (Default is On). Enable all HTTP request logging. Turning this off will allow more spam to pass through.'; ?></label></p>
+	</fieldset>
+	
+	<fieldset class="options">
 	<legend><?php echo 'Strict Mode'; ?></legend>
-	<p><label><input type="checkbox" name="strict" value="true" <?php if ($settings['strict']) { ?>checked="checked" <?php } ?>/> <?php echo 'Strict checking (blocks more spam but may block some people)'; ?></label></p>
+	<p><label><input type="checkbox" name="strict" value="true" <?php if ($settings['strict']) { ?>checked="checked" <?php } ?>/> <?php echo 'Advanced. (Default is Off) Strict checking (blocks more spam but may block some people).'; ?></label></p>
 	</fieldset>
 
 	<fieldset class="options">
 	<legend><?php echo 'Project HoneyPot'; ?></legend>
 	<p><label><input type="text" name="httpbl_key" value="<?php echo $settings['httpbl_key']?>" /> <?php echo 'HTTPBL Key for Project HoneyPot'; ?></label></p>
+	<p><label><input type="text" name="httpbl_threat" value="<?php echo $settings['httpbl_threat']?>" /> <?php echo 'Advanced. (Default is 25). This number provides a measure of how suspicious an IP address is, based on activity observed at Project Honey Pot. Bad Behavior will block requests with a threat level equal or higher to this setting. <a href="http://www.projecthoneypot.org/threat_info.php" title="HTTPBL Threat Level" target="_blank">Project Honey Pot has more information on this parameter</a>.'; ?></label></p>
+	<p><label><input type="text" name="httpbl_maxage" value="<?php echo $settings['httpbl_maxage']?>" /> <?php echo 'Advanced. (Default is 30). This is the number of days since suspicious activity was last observed from an IP address by Project Honey Pot. Bad Behavior will block requests with a maximum age equal to or less than this setting.'; ?></label></p>
+	</fieldset>
+	
+	<fieldset class="options">
+	<legend><?php echo 'Offsite Forms'; ?></legend>
+	<p><label><input type="checkbox" name="offsite_forms" value="true" <?php if ($settings['offsite_forms']) { ?>checked="checked" <?php } ?>/> <?php echo 'Advanced. (Default is Off) Bad Behavior normally prevents your site from receiving data posted from forms on other web sites. This prevents spammers from, e.g., using a Google cached version of your web site to send you spam. However, some web applications such as OpenID require that your site be able to receive form data in this way. If you are running OpenID, enable this option.'; ?></label></p>
+	</fieldset>
+	
+	<fieldset class="options">
+	<legend><?php echo 'Reverse Proxy'; ?></legend>
+	<p>Reverse Proxy settings are for advanced users and can only be set in the settings.ini file. To use this file, rename the settings-sample.ini file found in your $DIR_NUCLEUS/plugins/badbehavior/ folder to settings.ini and edit the settings in there.</p>
+	</fieldset>
+	
+	<fieldset class="options">
+	<legend><?php echo 'Whitelisting'; ?></legend>
+	<p>Whitelisting settings are for advanced users and can only be set in the whitelist.ini file. To use this file, rename the whitelist-sample.ini file found in your $DIR_NUCLEUS/plugins/badbehavior/ folder to whitelist.ini and edit the settings in there.</p>
 	</fieldset>
 
 	<p class="submit"><input type="submit" name="submit" value="<?php echo 'Update &raquo;'; ?>" /></p>
@@ -322,7 +361,7 @@ border-bottom: 1px solid #778;
 		echo '<select name="tname">'."\n";
 		if ($hasAll) $menu = '<option value="all"'.($tname == 'all' ? ' selected>' : '>')."all</option>\n";
 
-		while ($row = mysql_fetch_row($result)) {
+		while ($row = sql_fetch_row($result)) {
 			$data = $row[0];
 			$menu .= '<option value="'.$data.'"';
 			$menu .= ($data == $tname ? ' selected>' :'>');
@@ -337,7 +376,7 @@ border-bottom: 1px solid #778;
 		echo '<select name="fname">'."\n";
 		if ($hasAll) $menu = '<option value="all"'.($fname == 'all' ? ' selected>' : '>')."all</option>\n";
 
-		while ($row = mysql_fetch_row($result)) {
+		while ($row = sql_fetch_row($result)) {
 			$data = $row[0];
 			$menu .= '<option value="'.$data.'"';
 			$menu .= ($data == $fname ? ' selected>' :'>');
