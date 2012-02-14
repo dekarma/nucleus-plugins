@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Bad Behavior
-Version: 2.0.10
+Version: 2.2.01
 Description: Deny automated spambots access to your PHP-based Web site.
 Plugin URI: http://www.bad-behavior.ioerror.us/
 Author: Michael Hampton
@@ -107,36 +107,28 @@ function bb2_db_rows($result) {
 	return $rows;
 }
 
-// Create the SQL query for inserting a record in the database.
-// See example for MySQL elsewhere.
-/*function bb2_insert($settings, $package, $key)
-{
-	return "--";
-}*/
-
 // Return emergency contact email address.
 function bb2_email() {
     global $CONF;
 	return $CONF['AdminEmail'];
 }
 
-// This Bad Behavior-related function is a stub. You can help NucleusCMS by expanding it.
 // retrieve settings from database
 function bb2_read_settings() {
 	global $bb2_settings_defaults;
-	$bbconf = $bb2_settings_defaults;
+	$bb_conf = $bb2_settings_defaults;
+
 	$query = 'SELECT * FROM ' . sql_table('bad_behavior_admin');
 	$res = sql_query($query);
 
 	while ($obj = sql_fetch_object($res) ) {
-		$bbconf[$obj->name] = $obj->value;
+		$bb_conf[$obj->name] = $obj->value;
 	}	
 	$settings = @parse_ini_file(dirname(__FILE__) . "/settings.ini");
+
 	return @array_merge($bb_conf, $settings);	
-	//return $bbconf;
 }
 
-// This Bad Behavior-related function is a stub. You can help NucleusCMS by expanding it.
 // write settings to database
 function bb2_write_settings($settings) {
 	
@@ -220,23 +212,12 @@ function bb2_relative_path() {
 	return $url['path'] . '/';
 }
 
-// FIXME: some sort of hack to run install on 1.5 (and older?) blogs
-// FIXME: figure out what's wrong on 2.0 that this doesn't work
-// register_activation_hook(__FILE__, 'bb2_install');
-//add_action('activate_bb2/bad-behavior-wordpress.php', 'bb2_install');
-
-//add_action('wp_head', 'bb2_insert_head');
-//add_action('wp_footer', 'bb2_insert_stats');
-
 // Calls inward to Bad Behavor itself.
 require_once(BB2_CWD . "/bad-behavior/core.inc.php");
 bb2_install();	// FIXME: see above
 
 global $member, $CONF;
 
-//if ($member->isAdmin() || strstr($_SERVER['PHP_SELF'], $CONF['AdminURL'])) {	// 1.5 kludge
-	//require_once(BB2_CWD . "/bad-behavior/admin.inc.php");
-//}
 
 bb2_start(bb2_read_settings());
 

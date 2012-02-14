@@ -18,14 +18,19 @@
  * can be used in troubleshooting and determining your server capabilities.
  * It is intended to work on Nucleus CMS v3.2 or higher, but may work on
  * earlier versions. The latest Nucleus version is always recommended.
- * It requires PHP v 4.0.6 or higher. It has only been tested using
+ * It requires PHP v 5 or higher. It has only been tested using
  * MySQL version 4.1.16 and higher, but should theoretically work on all
- * MySQL versions supported by Nucleus CMS 3.2+.
+ * MySQL versions supported by Nucleus CMS 3.5 or newer
  */
 
 /*
     Version history:
-    * v 2.2.rc3 - updates to new 2.2 versions of BadBehavior scripts
+    * v 2.2.01 - updates to new 2.2.1 versions of BadBehavior scripts
+****************************************************************************************************************************
+*************IMPORTANT UPGRADE CONSIDERATIONS NEEDED TO GO TO 2.2.x*************************************************
+*****Requires Nucleus CMS 3.50 or newer. **************************************************************************************
+*****No need to uninstall old version, but please remove all old files from the nucleus/plugins/badbehavior/ folder before uploading the new****
+****************************************************************************************************************************
     * v 1.14 - updates badbehavior scripts to 2.0.43 
     * v 1.13 - updates badbehavior scripts to 2.0.41 
     * v 1.12 - updates badbehavior scripts to 2.0.39 
@@ -68,14 +73,15 @@ class NP_BadBehavior extends NucleusPlugin {
 		'httpbl_threat' => '25',
 		'httpbl_maxage' => '30',
 		'offsite_forms' => false,		
-		'reverse_proxy' = false,
-		'reverse_proxy_header' = "X-Forwarded-For"
+		'reverse_proxy' => false,
+		'reverse_proxy_header' => "X-Forwarded-For"
 	);
 
 	function getName() {	return 'BadBehavior'; 	}
 	function getAuthor()  { return 'Frank Truscott'; 	}
 	function getURL() { return 'http://revcetera.com/ftruscot/'; }
-	function getVersion() {	return '2.2.rc3'; }
+	function getVersion() {	return '2.2.01'; }
+	function getMinNucleusVersion() { return 350; }
 	function getDescription() {
 		return 'Give admin area for bad behavior spam fighting script';
 	}
@@ -91,7 +97,7 @@ class NP_BadBehavior extends NucleusPlugin {
 		}
 	}
 
-	function getEventList() { return array('QuickMenu',/*'PreSendContentType',*/'PostAuthentication'); }
+	function getEventList() { return array('QuickMenu','PostAuthentication'); }
 	function getTableList() { return array(sql_table('bad_behavior'),sql_table('bad_behavior_admin')); }
 
 	function install() {
@@ -164,21 +170,6 @@ class NP_BadBehavior extends NucleusPlugin {
         	}			
 		}
 	}
-/*
-	function event_PreSendContentType(&$data) {
-
-		global $DIR_PLUGINS;
-		//global $nuc_strict,$nuc_verbose,$nuc_httpbl_key,$BBCONF;
-		if ($this->getOption('bb_enabled') == 'yes') {
-			//$nuc_strict = $this->bbconf['strict'];
-			//$nuc_verbose = $this->bbconf['verbose'];
-			//$nuc_httpbl_key = $this->bbconf['httpbl_key'];
-			//$BBCONF = $this->getConfig();
-
-			includephp($DIR_PLUGINS.'badbehavior/bad-behavior-nucleuscms.php');
-		}
-	}
-*/
 	
 	function doSkinVar($skinType) {
         $blocked = sql_num_rows(sql_query("SELECT id FROM " . sql_table('bad_behavior') . " WHERE `key` NOT LIKE '00000000'"));
@@ -204,12 +195,7 @@ class NP_BadBehavior extends NucleusPlugin {
 
     function siIsBlogAdmin() {
         global $member;
-/*		$query = 'SELECT tadmin FROM '.sql_table('team').' WHERE'
-		       . ' tmember='. $member->getID();
-		$res = sql_query($query);
 
-		if (mysql_num_rows($res) == 0)
-*/
 		if (count($member->getAdminBlogs()) < 1)
 			return 0;
 		else

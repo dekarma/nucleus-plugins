@@ -8,7 +8,7 @@
  *
  */
  
- $newhead = '
+$newhead = '
 <style>
 .navlist
 {
@@ -119,20 +119,11 @@ border-bottom: 1px solid #778;
 // make sure bad behavior is loaded
     if (!defined('BB2_CORE')) {
         //echo "loading necessary bad behavior libraries...";
-        /*
-        global $DIR_NUCLEUS;
-        $homepath = str_replace('\\','/',$DIR_NUCLEUS);
-        $hparr = explode('/', rtrim($DIR_NUCLEUS,'/'));
-        $adn = array_pop($hparr);
-        $homepath = implode('/',$hparr);
-        */
         global $DIR_PLUGINS;
         $homepath = $DIR_PLUGINS.'/badbehavior/';
         require_once($homepath.'/bad-behavior-nucleuscms.php');
         //echo " OK. Completed <br />\n";
     }
-
-
 
 	$plugin =& $oPluginAdmin->plugin;
 	$sipid = $plugin->getID();
@@ -185,13 +176,7 @@ border-bottom: 1px solid #778;
     if ($showlist == 'logs') {
         echo "<h2>Bad Behavior Logs</h2>\n";
         echo "<p>Find data values by selecting parameters.</p>\n";
-/*
-        $sql = "SHOW TABLES from $MYSQL_DATABASE LIKE '%bad%behavior%'";
-        $result = mysql_query($sql);
-        echo '<form method="post" action="">'."\n";
-        echo add_table_select_field($result,$tname,0);
-        echo '</select><input type="submit" value="Set" class="formbutton" /></form>'."\n";
-*/
+
         $tname = sql_table('bad_behavior');
         if ($tname) {
             $fsql = "SHOW COLUMNS FROM ".sql_real_escape_string($tname);
@@ -302,13 +287,7 @@ border-bottom: 1px solid #778;
 	<p>For more information please visit the <a href="http://www.bad-behavior.ioerror.us/">Bad Behavior</a> homepage.</p>
 	<p>If you find Bad Behavior valuable, please consider making a <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=error%40ioerror%2eus&item_name=Bad%20Behavior%20<?php echo BB2_VERSION; ?>%20%28From%20Admin%29&no_shipping=1&cn=Comments%20about%20Bad%20Behavior&tax=0&currency_code=USD&bn=PP%2dDonationsBF&charset=UTF%2d8">financial contribution</a> to further development of Bad Behavior.</p>
 	<p>Bad Behavior now incorporates data on harvesters and comment spammers compiled by <a href="http://www.projecthoneypot.org/?rf=24694">Project Honey Pot</a> and published through its http:BL service. In order to enable this feature, you must obtain an <a href="http://www.projecthoneypot.org/httpbl_configure.php?rf=24694">http:BL access key</a> and provide this key to Bad Behavior in its settings. While the http:BL settings can be fine-tuned to block or allow requests based on the threat level and age of a harvester or comment spammer record, the default settings have been extensively tested and found to block virtually all spammers known to http:BL while allowing all legitimate users, even those that http:BL may have classified as suspicious. This feature obsoletes any other http:BL plugins you may have, and they can be removed.</p>
-<!--
-	<fieldset class="options">
-	<legend><?php echo 'Statistics'; ?></legend>
-	<?php //bb2_insert_stats(true); ?>
-	<p><label><input type="checkbox" name="display_stats" value="true" <?php if ($settings['display_stats']) { ?>checked="checked" <?php } ?>/> <?php echo 'Display statistics in blog footer'; ?></label></p>
-	</fieldset>
--->
+
 	<fieldset class="options">
 	<legend><?php echo 'Logging'; ?></legend>
 	<p><label><input type="checkbox" name="verbose" value="true" <?php if ($settings['verbose']) { ?>checked="checked" <?php } ?>/> <?php echo 'Advanced. (Default is Off). Enable Verbose HTTP request logging. Not recommended in production. For debug only.'; ?></label></p>
@@ -335,6 +314,7 @@ border-bottom: 1px solid #778;
 	<fieldset class="options">
 	<legend><?php echo 'Reverse Proxy'; ?></legend>
 	<p>Reverse Proxy settings are for advanced users and can only be set in the settings.ini file. To use this file, rename the settings-sample.ini file found in your $DIR_NUCLEUS/plugins/badbehavior/ folder to settings.ini and edit the settings in there.</p>
+	<p>For details about the available Reverse Proxy (and other settings), please see the <a href="http://bad-behavior.ioerror.us/documentation/configuration/" title="Bad Behavior Configuration" target="_blank">Bad Behavior Configuration documentation</a>.</p>
 	</fieldset>
 	
 	<fieldset class="options">
