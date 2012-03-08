@@ -52,7 +52,7 @@ class NP_ShowComments extends NucleusPlugin {
 
 	// version of the plugin
 	function getVersion() {
-		return '1.20';
+		return '1.30';
 	}
 
 	// a description to be shown on the installed plugins listing
@@ -122,7 +122,8 @@ class NP_ShowComments extends NucleusPlugin {
 			if (!$manager->existsItem($iid,0,0) ) {
 				return "";
 			}
-            $item1 =& new ITEM($iid);
+            //$item1 =& new ITEM($iid);
+			$item1 = ITEM::getitem($iid, 0, 0);
             $actions->setCurrentItem($item1);
             $comments =& new COMMENTS($iid);
             $comments->setItemActions($actions);
