@@ -25,7 +25,8 @@
 
 /*
     Version history:
-    * v 2.2.01 - updates to new 2.2.1 versions of BadBehavior scripts
+     * v 2.2.02 - updates to new 2.2.2 version of BadBehavior scripts, fix bug in reading of settings
+     * v 2.2.01 - updates to new 2.2.1 versions of BadBehavior scripts
 ****************************************************************************************************************************
 *************IMPORTANT UPGRADE CONSIDERATIONS NEEDED TO GO TO 2.2.x*************************************************
 *****Requires Nucleus CMS 3.50 or newer. **************************************************************************************
@@ -80,7 +81,7 @@ class NP_BadBehavior extends NucleusPlugin {
 	function getName() {	return 'BadBehavior'; 	}
 	function getAuthor()  { return 'Frank Truscott'; 	}
 	function getURL() { return 'http://revcetera.com/ftruscot/'; }
-	function getVersion() {	return '2.2.01'; }
+	function getVersion() {	return '2.2.02'; }
 	function getMinNucleusVersion() { return 350; }
 	function getDescription() {
 		return 'Give admin area for bad behavior spam fighting script';

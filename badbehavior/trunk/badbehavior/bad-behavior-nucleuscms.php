@@ -123,10 +123,18 @@ function bb2_read_settings() {
 
 	while ($obj = sql_fetch_object($res) ) {
 		$bb_conf[$obj->name] = $obj->value;
-	}	
-	$settings = @parse_ini_file(dirname(__FILE__) . "/settings.ini");
-
-	return @array_merge($bb_conf, $settings);	
+	}
+	
+	if (is_file(dirname(__FILE__) . "/settings.ini")) {
+		$settings = @parse_ini_file(dirname(__FILE__) . "/settings.ini");
+		if (is_array($settings)) 
+			return @array_merge($bb_conf, $settings);
+		else
+			return $bb_conf;
+	}
+	else {
+		return $bb_conf;
+	}
 }
 
 // write settings to database
