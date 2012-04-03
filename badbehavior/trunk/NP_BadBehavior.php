@@ -25,6 +25,7 @@
 
 /*
     Version history:
+     * v 2.2.03 - updates to new 2.2.3 version of BadBehavior scripts, implement new bb2_read_whitelist() function for future enabling of maintaining whitelist in admin
      * v 2.2.02 - updates to new 2.2.2 version of BadBehavior scripts, fix bug in reading of settings
      * v 2.2.01 - updates to new 2.2.1 versions of BadBehavior scripts
 ****************************************************************************************************************************
@@ -81,7 +82,7 @@ class NP_BadBehavior extends NucleusPlugin {
 	function getName() {	return 'BadBehavior'; 	}
 	function getAuthor()  { return 'Frank Truscott'; 	}
 	function getURL() { return 'http://revcetera.com/ftruscot/'; }
-	function getVersion() {	return '2.2.02'; }
+	function getVersion() {	return '2.2.03'; }
 	function getMinNucleusVersion() { return 350; }
 	function getDescription() {
 		return 'Give admin area for bad behavior spam fighting script';

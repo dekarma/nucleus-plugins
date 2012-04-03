@@ -113,6 +113,11 @@ function bb2_email() {
 	return $CONF['AdminEmail'];
 }
 
+// retrieve whitelist
+function bb2_read_whitelist() {
+	return @parse_ini_file(dirname(BB2_CWD) . "/whitelist.ini");
+}
+
 // retrieve settings from database
 function bb2_read_settings() {
 	global $bb2_settings_defaults;
