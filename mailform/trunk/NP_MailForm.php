@@ -50,7 +50,7 @@ class NP_MailForm extends NucleusPlugin {
 
 	// version of the plugin
 	function getVersion() {
-		return '1.14';
+		return '1.15';
 	}
 
 	// a description to be shown on the installed plugins listing
@@ -547,7 +547,11 @@ class NP_MailForm extends NucleusPlugin {
                 } // end if formdata->filesize >= 0
 
                 if ($error == '') {
-                    //check captcha if needed right before sending
+                    //validate form using plugins
+					$result = '';
+					$manager->notify('ValidateForm', array('type' => 'np_mailform', 'formname' => $formname, 'error' => &$result) );
+					
+					//check captcha if needed right before sending
                     if ($formdata->captcha && !$member->isLoggedIn()) {
                         $ckey = postVar('ver_key');
                         $csol = postVar('ver_sol');
@@ -747,7 +751,7 @@ class NP_MailForm extends NucleusPlugin {
 	}
 
     function parse($matches) {
-		global $CONF,$_SESSION;
+		global $CONF,$_SESSION,$manager;
         $r = '';
 		$matches[1] = str_replace(",","|",$matches[1]);
 		$sections = explode("|", $matches[1]);
@@ -796,7 +800,8 @@ if ($sections[0] == 'field') {
                     $sticket = intval(quickQuery('SELECT sticket as result FROM '.sql_table('plug_mailform').' WHERE formname="'.addslashes($formname).'"'));
                     if ($sticket) $r = $this->returnTicketHidden();
                 }
-                else $r = $this->returnTicketHidden();
+                else $r = $this->returnTicketHidden();				
+                $manager->notify('FormExtra', array('type' => 'np_mailform', 'formname' => $formname));
                 break;
             case 'captcha':
                 global $manager, $member;
@@ -844,7 +849,7 @@ if ($sections[0] == 'field') {
 	<input type="hidden" name="action" value="plugin" />
 	<input type="hidden" name="name" value="MailForm" />
 	<input type="hidden" name="type" value="submit" />
-	<input type="hidden" name="formname" value="'.$formname.'" />';
+	<input type="hidden" name="formname" value="'.$formname.'" />';	
 						if ($param4 == 'yes') $r .= '</fieldset>';
 					}
 					else $r = "Invalid Form Name.";
@@ -855,7 +860,7 @@ if ($sections[0] == 'field') {
 				break;
 			case 'template':
 				if ($formname) {
-					global $DIR_NUCLEUS,$memberid, $memberinfo, $member, $item, $itemid, $_GET;
+					global $DIR_NUCLEUS,$memberid, $memberinfo, $member, $item, $itemid, $_GET, $manager;
 					if ($this->formExists($formname)) {
 						if (strtolower(trim($param3)) == 'yes') $param3 = 'yes';
 						else $param3 = 'no';

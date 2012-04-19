@@ -59,6 +59,8 @@ MailForm features to your form. You can store the form in one of three ways as d
 you cannot use the following names for fields within your forms: name, action, type.</span>
 </p>
 
+<p>If you are using the NP_SpamSlower plugin, you must enable the sticket system for your form and your form must have &lt;%MailForm(sticket,<i>formname</i>)%&gt; in the form somewhere.</p>
+
 <p>
 A sample form is shown below: 
 </p>
@@ -308,6 +310,18 @@ http://forum.nucleuscms.org/viewtopic.php?t=16811</a></p>
 <h3><a name="history"></a>Version History</h3>
 
 <ul>
+	<li> Version 1.15, release 19 April 2012
+		<ul>
+			<li> better handling of input for html emails, i.e. newlines and entities</li>
+			<li> Add event for other plugins to process the data, i.e. to add to a db or whatever</li>
+			<li> Hooks to work with NP_SpamSlower (must use sticket in form)</li>
+		</ul>
+	</li>
+	<li> Version 1.13, release 12 Jan 2012
+		<ul>
+			<li> Fix bug where formname not handled well in status, sticket, captcha variables</li>
+		</ul>
+	</li>
 	<li> Version 1.12, release 10 June 2009
 		<ul>
 			<li> Fix more XHTML strict compliance issues (thanks, Leng)</li>
