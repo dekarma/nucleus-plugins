@@ -1,30 +1,39 @@
 <?php
 /* NP_BadBehavior plugin
  * A plugin for Nucleus CMS (http://nucleuscms.org)
- * (c)Frank Truscott, http://www.iai.com
+ * (c)Frank Truscott, http://revcetera.com/ftruscot
  *
- * License information:
- * http://creativecommons.org/licenses/GPL/2.0/
+ * License information: LGPLv3
+ * http://www.gnu.org/licenses/
  *
  */
 
 /* uses Bad Behavior scripts by MichaelHampton,MarkJaquith,FirasDurri,AndySkelton
  *
- * see http://www.bad-behavior.ioerror.us/
- */
-
-/* This plugin displays all kinds of information about your Nucleus CMS
- * installation, including data about PHP, MySQL, and Apache. This data
- * can be used in troubleshooting and determining your server capabilities.
- * It is intended to work on Nucleus CMS v3.2 or higher, but may work on
- * earlier versions. The latest Nucleus version is always recommended.
- * It requires PHP v 5 or higher. It has only been tested using
- * MySQL version 4.1.16 and higher, but should theoretically work on all
- * MySQL versions supported by Nucleus CMS 3.5 or newer
+ * License: LGPLv3
+ * 
+ * Bad Behavior - detects and blocks unwanted Web accesses
+ * Copyright (C) 2005,2006,2007,2008,2009,2010,2011,2012 Michael Hampton
+ * 
+ * Bad Behavior is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option) any
+ * later version.
+ * 
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ * PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License along
+ * with this program. If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * Please report any problems to bad . bots AT ioerror DOT us
+ * http://www.bad-behavior.ioerror.us/
  */
 
 /*
     Version history:
+     * v 2.2.07 - updates to new 2.2.7 version of BadBehavior scripts, identifies new bot types.  License updated to LGPLv3 for compliance with badbehavior scripts
      * v 2.2.03 - updates to new 2.2.3 version of BadBehavior scripts, implement new bb2_read_whitelist() function for future enabling of maintaining whitelist in admin
      * v 2.2.02 - updates to new 2.2.2 version of BadBehavior scripts, fix bug in reading of settings
      * v 2.2.01 - updates to new 2.2.1 versions of BadBehavior scripts
@@ -82,7 +91,7 @@ class NP_BadBehavior extends NucleusPlugin {
 	function getName() {	return 'BadBehavior'; 	}
 	function getAuthor()  { return 'Frank Truscott'; 	}
 	function getURL() { return 'http://revcetera.com/ftruscot/'; }
-	function getVersion() {	return '2.2.03'; }
+	function getVersion() {	return '2.2.07'; }
 	function getMinNucleusVersion() { return 350; }
 	function getDescription() {
 		return 'Give admin area for bad behavior spam fighting script';

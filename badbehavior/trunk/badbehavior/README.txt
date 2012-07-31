@@ -2,9 +2,9 @@
 Tags: comment,trackback,referrer,spam,robot,antispam
 Contributors: error, markjaquith, skeltoac
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=error%40ioerror%2eus&item_name=Bad%20Behavior%20%28From%20WordPress%20Page%29&no_shipping=1&cn=Comments%20about%20Bad%20Behavior&tax=0&currency_code=USD&bn=PP%2dDonationsBF&charset=UTF%2d8
-Requires at least: 2.7
-Tested up to: 3.3.1
-Stable tag: 2.2.1
+Requires at least: 3.1
+Tested up to: 3.4
+Stable tag: 2.2.7
 
 Bad Behavior prevents spammers from ever delivering their junk, and in many
 cases, from ever reading your site in the first place.

@@ -1,36 +1,30 @@
 <?php
 /*
 Plugin Name: Bad Behavior
-Version: 2.2.01
+Version: 2.2.7
 Description: Deny automated spambots access to your PHP-based Web site.
-Plugin URI: http://www.bad-behavior.ioerror.us/
+Plugin URI: http://bad-behavior.ioerror.us/
 Author: Michael Hampton
-Author URI: http://www.homelandstupidity.us/
-License: GPL
+Author URI: http://bad-behavior.ioerror.us/
+License: LGPLv3
 
 Bad Behavior - detects and blocks unwanted Web accesses
-Copyright (C) 2005 Michael Hampton
+Copyright (C) 2005,2006,2007,2008,2009,2010,2011,2012 Michael Hampton
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
+Bad Behavior is free software; you can redistribute it and/or modify it under
+the terms of the GNU Lesser General Public License as published by the Free
+Software Foundation; either version 3 of the License, or (at your option) any
+later version.
 
-As a special exemption, you may link this program with any of the
-programs listed below, regardless of the license terms of those
-programs, and distribute the resulting program, without including the
-source code for such programs: ExpressionEngine
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+You should have received a copy of the GNU Lesser General Public License along
+with this program. If not, see <http://www.gnu.org/licenses/>.
 
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
-Please report any problems to badbots AT ioerror DOT us
+Please report any problems to bad . bots AT ioerror DOT us
+http://www.bad-behavior.ioerror.us/
 */
 
 ###############################################################################
