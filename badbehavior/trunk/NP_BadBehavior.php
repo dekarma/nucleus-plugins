@@ -28,11 +28,12 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  * 
  * Please report any problems to bad . bots AT ioerror DOT us
- * http://www.bad-behavior.ioerror.us/
+ * http://bad-behavior.ioerror.us/
  */
 
 /*
     Version history:
+     * v 2.2.11 - updates to new 2.2.11 version of BadBehavior scripts, identifies new bot types.  fixes whitelisting issue.
      * v 2.2.07 - updates to new 2.2.7 version of BadBehavior scripts, identifies new bot types.  License updated to LGPLv3 for compliance with badbehavior scripts
      * v 2.2.03 - updates to new 2.2.3 version of BadBehavior scripts, implement new bb2_read_whitelist() function for future enabling of maintaining whitelist in admin
      * v 2.2.02 - updates to new 2.2.2 version of BadBehavior scripts, fix bug in reading of settings
@@ -91,7 +92,7 @@ class NP_BadBehavior extends NucleusPlugin {
 	function getName() {	return 'BadBehavior'; 	}
 	function getAuthor()  { return 'Frank Truscott'; 	}
 	function getURL() { return 'http://revcetera.com/ftruscot/'; }
-	function getVersion() {	return '2.2.07'; }
+	function getVersion() {	return '2.2.11'; }
 	function getMinNucleusVersion() { return 350; }
 	function getDescription() {
 		return 'Give admin area for bad behavior spam fighting script';
